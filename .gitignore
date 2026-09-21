@@ -1,0 +1,79 @@
+# ==========================================================
+#  KOORDINAKSI — .gitignore
+#  File sensitif & folder besar tetap aman di lokal,
+#  aman untuk di-push ke GitHub.
+# ==========================================================
+
+# ----------------------------------------------------------
+# 1. SECRETS & FILE SENSITIF (JANGAN PERNAH DI-PUSH)
+# ----------------------------------------------------------
+/.env
+/.env.*
+!/.env.example
+
+# Composer auth (API token / kredensial repo privat)
+/auth.json
+
+# Kunci aplikasi & OAuth (APP_KEY, passport, dll.)
+/storage/*.key
+
+# Jika file di bawah ini berisi token/API key, hapus tanda komentar:
+# /.mcp.json
+# /.npmrc
+
+# ----------------------------------------------------------
+# 2. FOLDER BESAR — di-install ulang via:
+#    composer install  &  npm install
+# ----------------------------------------------------------
+/vendor/
+/node_modules/
+
+# ----------------------------------------------------------
+# 3. BUILD & CACHE LARAVEL
+# ----------------------------------------------------------
+/bootstrap/cache/*.php
+/public/build
+/public/hot
+/public/storage
+/public/fonts-manifest.dev.json
+
+# Database SQLite lokal (berisi data asli, bukan sample)
+*.sqlite
+*.sqlite-journal
+*.sqlite-wal
+*.sqlite-shm
+
+# ----------------------------------------------------------
+# 4. LOG & CACHE TEST
+# ----------------------------------------------------------
+*.log
+/storage/pail
+/.phpunit.cache
+.phpunit.result.cache
+
+# ----------------------------------------------------------
+# 5. IDE & EDITOR
+# ----------------------------------------------------------
+/.idea
+/.vscode
+/.zed
+/.fleet
+/.nova
+/.codex
+/.cursor/
+/.phpactor.json
+_ide_helper.php
+.claude/settings.local.json
+
+# ----------------------------------------------------------
+# 6. FILE OS (Windows / macOS / Linux)
+# ----------------------------------------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ----------------------------------------------------------
+# 7. DEV ENVIRONMENT
+# ----------------------------------------------------------
+Homestead.json
+Homestead.yaml

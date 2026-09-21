@@ -1,0 +1,207 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Laravel\Boost\Install;
+
+use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
+use Laravel\Boost\Install\Assists\Inertia;
+use Laravel\Boost\Support\PackageRegistry;
+use Laravel\Roster\Enums\JsPackageManager;
+use Laravel\Roster\ProjectManager;
+use Symfony\Component\Finder\Finder;
+
+class GuidelineAssist
+{
+    /** @var array<string, string> */
+    protected array $enumPaths = [];
+
+    public function __construct(public ProjectManager $project, public GuidelineConfig $config, public ?Collection $skills = null)
+    {
+        $this->skills ??= collect();
+        $this->enumPaths = $this->discover();
+    }
+
+    /**
+     * @return array<string, string> - className, absolutePath
+     */
+    public function enums(): array
+    {
+        return $this->enumPaths;
+    }
+
+    /**
+     * Discover all enum files in the application directory.
+     *
+     * @return array<string, string>
+     */
+    protected function discover(): array
+    {
+        $appPath = app_path();
+
+        if (! is_dir($appPath)) {
+            return [];
+        }
+
+        $enums = [];
+
+        $finder = Finder::create()
+            ->in($appPath)
+            ->files()
+            ->name('/[A-Z].*\.php$/');
+
+        foreach ($finder as $file) {
+            $path = $file->getRealPath();
+            $code = file_get_contents($path);
+
+            if ($code === false) {
+                continue;
+            }
+
+            if (stripos($code, 'enum') === false) {
+                continue;
+            }
+
+            $tokens = token_get_all($code);
+
+            foreach ($tokens as $token) {
+                if (is_array($token) && $token[0] === T_ENUM) {
+                    $className = app()->getNamespace().str_replace(
+                        ['/', '.php'],
+                        ['\\', ''],
+                        $file->getRelativePathname()
+                    );
+                    $enums[$className] = $path;
+
+                    break;
+                }
+            }
+        }
+
+        return $enums;
+    }
+
+    public function enumContents(): string
+    {
+        return collect($this->enumPaths)
+            ->sortKeys()
+            ->map(fn (string $path): string => is_file($path) ? (file_get_contents($path) ?: '') : '')
+            ->filter()
+            ->join(PHP_EOL);
+    }
+
+    public function inertia(): Inertia
+    {
+        return new Inertia($this->project);
+    }
+
+    public function supportsPintAgentFormatter(): bool
+    {
+        return $this->project->php()->uses(PackageRegistry::PINT, '>=1.27.0');
+    }
+
+    public function hasPackage(string $package, ?string $constraint = null): bool
+    {
+        if ($this->project->php()->uses($package, $constraint)) {
+            return true;
+        }
+
+        return $this->project->js()->uses($package, $constraint);
+    }
+
+    public function nodePackageManager(): string
+    {
+        return ($this->project->js()->packageManager() ?? JsPackageManager::Npm)->value;
+    }
+
+    protected function detectedNodePackageManager(): string
+    {
+        return $this->nodePackageManager();
+    }
+
+    public function nodePackageManagerCommand(string $command): string
+    {
+        $npmExecutable = config('boost.executable_paths.npm');
+
+        if ($npmExecutable) {
+            return "{$npmExecutable} {$command}";
+        }
+
+        if ($this->config->usesSail) {
+            return Sail::nodePackageManagerCommand($this->detectedNodePackageManager())." {$command}";
+        }
+
+        return "{$this->detectedNodePackageManager()} {$command}";
+    }
+
+    public function artisanCommand(string $command): string
+    {
+        return "{$this->artisan()} {$command}";
+    }
+
+    public function composerCommand(string $command): string
+    {
+        $composerExecutable = config('boost.executable_paths.composer');
+
+        if ($composerExecutable) {
+            return "{$composerExecutable} {$command}";
+        }
+
+        if ($this->config->usesSail) {
+            return Sail::composerCommand()." {$command}";
+        }
+
+        return "composer {$command}";
+    }
+
+    public function binCommand(string $command): string
+    {
+        $vendorBinPrefix = config('boost.executable_paths.vendor_bin');
+
+        if ($vendorBinPrefix) {
+            return "{$vendorBinPrefix}{$command}";
+        }
+
+        if ($this->config->usesSail) {
+            return Sail::binCommand().$command;
+        }
+
+        return "vendor/bin/{$command}";
+    }
+
+    public function artisan(): string
+    {
+        $phpExecutable = config('boost.executable_paths.php');
+
+        if ($phpExecutable) {
+            return "{$phpExecutable} artisan";
+        }
+
+        return $this->config->usesSail
+            ? Sail::artisanCommand()
+            : 'php artisan';
+    }
+
+    public function sailBinaryPath(): string
+    {
+        return Sail::binaryPath();
+    }
+
+    public function appPath(string $path = ''): string
+    {
+        $relativePath = ltrim(Str::after(app_path($path), base_path()), DIRECTORY_SEPARATOR);
+
+        return str_replace(DIRECTORY_SEPARATOR, '/', $relativePath);
+    }
+
+    public function hasSkillsEnabled(): bool
+    {
+        return $this->config->hasSkills;
+    }
+
+    public function hasMcpEnabled(): bool
+    {
+        return $this->config->hasMcp;
+    }
+}
