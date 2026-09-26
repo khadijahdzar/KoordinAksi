@@ -1,0 +1,195 @@
+/* ==========================================================================
+   KoordinAksi - Design System & Custom Styles
+   Colors: Emerald (#0A7C59), Deep Blue (#2563EB), Dark Navy (#0F172A), Soft Grey (#F8FAFC)
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap');
+
+:root {
+    --color-primary: #0A7C59;
+    --color-primary-hover: #086548;
+    --color-primary-light: #E6F4EF;
+    --color-secondary: #2563EB;
+    --color-secondary-hover: #1D4ED8;
+    --color-dark: #0F172A;
+    --color-light-bg: #F8FAFC;
+    --font-heading: 'Poppins', sans-serif;
+    --font-body: 'Plus Jakarta Sans', sans-serif;
+}
+
+body {
+    font-family: var(--font-body);
+    background-color: var(--color-light-bg);
+    color: var(--color-dark);
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Buttons */
+.btn-primary-emerald {
+    background-color: var(--color-primary);
+    color: #ffffff;
+    transition: all 0.2s ease-in-out;
+}
+.btn-primary-emerald:hover {
+    background-color: var(--color-primary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(10, 124, 89, 0.25);
+}
+
+.btn-primary-blue {
+    background-color: var(--color-secondary);
+    color: #ffffff;
+    transition: all 0.2s ease-in-out;
+}
+.btn-primary-blue:hover {
+    background-color: var(--color-secondary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+}
+
+.btn-outline-emerald {
+    border: 1.5px solid var(--color-primary);
+    color: var(--color-primary);
+    background-color: transparent;
+    transition: all 0.2s ease-in-out;
+}
+.btn-outline-emerald:hover {
+    background-color: var(--color-primary-light);
+    transform: translateY(-1px);
+}
+
+/* Dynamic View Switcher Transitions */
+.app-view {
+    display: none;
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.app-view.active {
+    display: block;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Badge Color Variations */
+.badge-donor {
+    background-color: #FEE2E2;
+    color: #991B1B;
+    border: 1px solid #FCA5A5;
+}
+.badge-bencana {
+    background-color: #DBEAFE;
+    color: #1E40AF;
+    border: 1px solid #93C5FD;
+}
+.badge-baksos {
+    background-color: #F3E8FF;
+    color: #6B21A8;
+    border: 1px solid #D8B4FE;
+}
+.badge-penghijauan {
+    background-color: #DCFCE7;
+    color: #166534;
+    border: 1px solid #86EFAC;
+}
+.badge-pendidikan {
+    background-color: #FEF3C7;
+    color: #92400E;
+    border: 1px solid #FDE68A;
+}
+.badge-kesehatan {
+    background-color: #FFE4E6;
+    color: #9F1239;
+    border: 1px solid #FECDD3;
+}
+
+/* Card Hover Effects */
+.kegiatan-card, .org-card, .relawan-card {
+    transition: all 0.25s ease;
+    cursor: pointer;
+}
+.kegiatan-card:hover, .org-card:hover, .relawan-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px -6px rgba(0, 0, 0, 0.08), 0 4px 8px -4px rgba(0, 0, 0, 0.04);
+}
+
+/* Active Nav Link Styling */
+.nav-link-item.active {
+    color: var(--color-primary);
+    font-weight: 700;
+    border-bottom: 2.5px solid var(--color-primary);
+}
+
+/* Sidebar Item Styling */
+.sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    color: #475569;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+.sidebar-item:hover {
+    background-color: #F1F5F9;
+    color: var(--color-primary);
+}
+.sidebar-item.active {
+    background-color: var(--color-primary);
+    color: #ffffff;
+}
+.sidebar-item-admin.active {
+    background-color: #2563EB;
+    color: #ffffff;
+}
+
+/* Centered Alignment Utilities */
+.text-center-title {
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.flex-center-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Logo Presentation */
+.logo-container {
+    border: none !important;
+    text-decoration: none !important;
+    box-shadow: none !important;
+}
+
+/* Modal Backdrop */
+.modal-backdrop {
+    background-color: rgba(15, 23, 42, 0.65);
+    backdrop-filter: blur(5px);
+}

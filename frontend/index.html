@@ -1,0 +1,2094 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KoordinAksi - Bersama Bergerak, Berdampak Nyata</title>
+    
+    <!-- Meta SEO & Description -->
+    <meta name="description" content="KoordinAksi adalah platform digital sosial yang menghubungkan organisasi dan relawan untuk mewujudkan kegiatan sosial yang lebih terstruktur, efektif, dan berdampak.">
+    <meta name="keywords" content="KoordinAksi, Relawan, Organisasi Sosial, Donor Darah, Bantuan Bencana, Bakti Sosial, Penghijauan">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome 6 Icons CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        emerald: {
+                            50: '#E6F4EF',
+                            100: '#CCE9DF',
+                            500: '#0A7C59',
+                            600: '#086548',
+                            700: '#064E38',
+                            800: '#043828',
+                        },
+                        navy: {
+                            800: '#1E293B',
+                            900: '#0F172A',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Inline Custom Stylesheet -->
+    <style>
+        :root {
+            --color-primary: #0A7C59;
+            --color-primary-hover: #086548;
+            --color-primary-light: #E6F4EF;
+            --color-secondary: #2563EB;
+            --color-secondary-hover: #1D4ED8;
+            --color-dark: #0F172A;
+            --color-light-bg: #F8FAFC;
+            --font-heading: 'Poppins', sans-serif;
+            --font-body: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        body {
+            font-family: var(--font-body);
+            background-color: var(--color-light-bg);
+            color: var(--color-dark);
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: var(--font-heading);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Primary Button Styling */
+        .btn-primary-emerald {
+            background-color: var(--color-primary);
+            color: #ffffff;
+            transition: all 0.2s ease-in-out;
+        }
+        .btn-primary-emerald:hover {
+            background-color: var(--color-primary-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(10, 124, 89, 0.25);
+        }
+
+        .btn-primary-blue {
+            background-color: var(--color-secondary);
+            color: #ffffff;
+            transition: all 0.2s ease-in-out;
+        }
+        .btn-primary-blue:hover {
+            background-color: var(--color-secondary-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+        }
+
+        .btn-outline-emerald {
+            border: 1.5px solid var(--color-primary);
+            color: var(--color-primary);
+            background-color: transparent;
+            transition: all 0.2s ease-in-out;
+        }
+        .btn-outline-emerald:hover {
+            background-color: var(--color-primary-light);
+            transform: translateY(-1px);
+        }
+
+        /* Dynamic View Switcher Transitions */
+        .app-view {
+            display: none;
+            opacity: 0;
+            transform: translateY(6px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .app-view.active {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Badge Colors */
+        .badge-donor {
+            background-color: #FEE2E2;
+            color: #991B1B;
+            border: 1px solid #FCA5A5;
+        }
+        .badge-bencana {
+            background-color: #DBEAFE;
+            color: #1E40AF;
+            border: 1px solid #93C5FD;
+        }
+        .badge-baksos {
+            background-color: #F3E8FF;
+            color: #6B21A8;
+            border: 1px solid #D8B4FE;
+        }
+        .badge-penghijauan {
+            background-color: #DCFCE7;
+            color: #166534;
+            border: 1px solid #86EFAC;
+        }
+        .badge-pendidikan {
+            background-color: #FEF3C7;
+            color: #92400E;
+            border: 1px solid #FDE68A;
+        }
+        .badge-kesehatan {
+            background-color: #FFE4E6;
+            color: #9F1239;
+            border: 1px solid #FECDD3;
+        }
+
+        /* Card Hover Effects */
+        .kegiatan-card, .org-card, .relawan-card {
+            transition: all 0.25s ease;
+            cursor: pointer;
+        }
+        .kegiatan-card:hover, .org-card:hover, .relawan-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px -6px rgba(0, 0, 0, 0.08), 0 4px 8px -4px rgba(0, 0, 0, 0.04);
+        }
+
+        /* Active Nav Link Styling */
+        .nav-link-item.active {
+            color: var(--color-primary);
+            font-weight: 700;
+            border-bottom: 2.5px solid var(--color-primary);
+        }
+
+        /* Sidebar Item Styling */
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            color: #475569;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        .sidebar-item:hover {
+            background-color: #F1F5F9;
+            color: var(--color-primary);
+        }
+        .sidebar-item.active {
+            background-color: var(--color-primary);
+            color: #ffffff;
+        }
+        .sidebar-item-admin.active {
+            background-color: #2563EB;
+            color: #ffffff;
+        }
+
+        /* Centered Alignment Utilities */
+        .text-center-title {
+            text-align: center;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .flex-center-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Logo Presentation */
+        .logo-container {
+            border: none !important;
+            text-decoration: none !important;
+            box-shadow: none !important;
+        }
+
+        /* Modal Backdrop */
+        .modal-backdrop {
+            background-color: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(5px);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased flex flex-col min-h-screen">
+
+    <!-- ========================================== -->
+    <!-- TOP NAVIGATION BAR                         -->
+    <!-- ========================================== -->
+    <header id="main-navbar" class="bg-white border-b border-slate-200 sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
+                
+                <!-- Official Logo Asset (Clean without underline or dividing line) -->
+                <a href="#home" data-target-view="view-home" class="logo-container nav-link-item flex items-center gap-3 cursor-pointer group py-1">
+                    <img src="images/koordinaksilogo.png" alt="KoordinAksi Logo - Bersama Bergerak, Berdampak Nyata" 
+                         class="h-12 w-auto object-contain transition-transform group-hover:scale-105 border-0 outline-none" 
+                         onerror="this.onerror=null; this.src='https://via.placeholder.com/180x50?text=KoordinAksi';">
+                </a>
+
+                <!-- Navigation Links (Beranda, Kegiatan, Organisasi, Relawan, Dashboard Admin) -->
+                <nav class="hidden md:flex items-center space-x-1 lg:space-x-3">
+                    <a href="#home" data-target-view="view-home" class="nav-link-item active px-3 py-2 text-sm font-semibold transition-all">Beranda</a>
+                    <a href="#kegiatan" data-target-view="view-kegiatan" class="nav-link-item px-3 py-2 text-sm font-medium text-slate-600 hover:text-emerald-600 transition-all">Kegiatan</a>
+                    <a href="#organisasi" data-target-view="view-organisasi-public" class="nav-link-item px-3 py-2 text-sm font-medium text-slate-600 hover:text-emerald-600 transition-all">Organisasi</a>
+                    <a href="#relawan" data-target-view="view-relawan-public" class="nav-link-item px-3 py-2 text-sm font-medium text-slate-600 hover:text-emerald-600 transition-all">Relawan</a>
+                    <a href="#admin" data-target-view="view-admin" class="nav-link-item px-3 py-2 text-sm font-medium text-blue-600 hover:text-blue-700 bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-200 transition-all">
+                        <i class="fas fa-user-shield mr-1"></i> Dashboard Admin
+                    </a>
+                </nav>
+
+                <!-- Auth State Dependent Buttons (State Management) -->
+                <div class="flex items-center space-x-3">
+                    <!-- User Profile Button -->
+                    <button id="btn-my-profile" class="nav-link-item flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-semibold text-slate-700 transition-colors">
+                        <img id="nav-user-avatar" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80" class="w-6 h-6 rounded-full object-cover">
+                        <span id="nav-user-name">Profil Saya</span>
+                    </button>
+
+                    <!-- Logged Out Auth Buttons -->
+                    <div id="nav-auth-logged-out" class="flex items-center space-x-2">
+                        <button class="btn-open-login px-4 py-2 text-xs font-semibold text-slate-700 hover:text-emerald-600 transition-colors">
+                            Masuk
+                        </button>
+                        <button class="btn-open-register btn-primary-blue px-5 py-2 rounded-lg text-xs font-semibold shadow-md">
+                            Daftar
+                        </button>
+                    </div>
+
+                    <!-- Logged In User Logout Button -->
+                    <div id="nav-auth-logged-in" class="hidden flex items-center">
+                        <button id="btn-logout" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 transition-colors flex items-center gap-1.5">
+                            <i class="fas fa-sign-out-alt"></i> Keluar
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </header>
+
+
+    <!-- ========================================== -->
+    <!-- MAIN CONTENT AREA (SPA VIEWS)              -->
+    <!-- ========================================== -->
+    <main class="flex-grow">
+
+        <!-- -------------------------------------- -->
+        <!-- VIEW 1: HOMEPAGE (BERANDA)             -->
+        <!-- -------------------------------------- -->
+        <section id="view-home" class="app-view active">
+            
+            <!-- Hero Banner Section -->
+            <div class="bg-gradient-to-br from-emerald-50 via-white to-slate-50 py-12 lg:py-20 border-b border-slate-100">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+                        
+                        <!-- Left Hero Column -->
+                        <div class="lg:col-span-6 space-y-6 text-left">
+                            <span class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
+                                <i class="fas fa-heart-pulse"></i> Platform Aksi Sosial Terpercaya
+                            </span>
+                            <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-navy-900 leading-tight">
+                                Bersama Bergerak,<br>
+                                <span class="text-emerald-600">Berdampak Nyata</span>
+                            </h1>
+                            <p class="text-lg text-slate-600 leading-relaxed max-w-xl">
+                                KoordinAksi adalah platform digital yang menghubungkan organisasi dan relawan untuk mewujudkan kegiatan sosial yang lebih terstruktur, efektif, dan berdampak.
+                            </p>
+                            <div class="flex flex-wrap items-center gap-4 pt-2">
+                                <button data-target-view="view-kegiatan" class="btn-primary-blue px-7 py-3.5 rounded-xl text-base font-semibold shadow-lg shadow-blue-500/20">
+                                    Jelajahi Kegiatan
+                                </button>
+                                <button data-target-view="view-relawan-public" class="btn-outline-emerald px-7 py-3.5 rounded-xl text-base font-semibold">
+                                    Lihat Direktori Relawan
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Right Hero Column (Illustration Card) -->
+                        <div class="lg:col-span-6">
+                            <div class="relative rounded-3xl overflow-hidden shadow-2xl border-4 border-white bg-slate-900 group">
+                                <img src="https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=1200&q=80" 
+                                     alt="Relawan Penghijauan Lingkungan" 
+                                     class="w-full h-80 sm:h-96 object-cover transform group-hover:scale-105 transition-transform duration-500 opacity-90">
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent flex items-end p-6 sm:p-8">
+                                    <div class="text-white">
+                                        <div class="text-xs uppercase tracking-wider text-emerald-400 font-bold mb-1">Aksi Nyata Lapangan</div>
+                                        <h3 class="text-xl font-bold">Penanaman 1.000 Bibit Pohon di Bogor</h3>
+                                        <p class="text-xs text-slate-200 mt-1">Komunitas Hijau Bersama 80+ Relawan Aktif</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistics Counter Row -->
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 relative z-20">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
+                    
+                    <div class="bg-white p-6 rounded-2xl shadow-lg border border-slate-100 flex items-center gap-4">
+                        <div class="w-14 h-14 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-2xl">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div>
+                            <div class="text-2xl sm:text-3xl font-extrabold text-navy-900">850+</div>
+                            <div class="text-xs font-semibold text-slate-500">Relawan Aktif</div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-2xl shadow-lg border border-slate-100 flex items-center gap-4">
+                        <div class="w-14 h-14 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-2xl">
+                            <i class="fas fa-building"></i>
+                        </div>
+                        <div>
+                            <div class="text-2xl sm:text-3xl font-extrabold text-navy-900">120+</div>
+                            <div class="text-xs font-semibold text-slate-500">Organisasi Terdaftar</div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-2xl shadow-lg border border-slate-100 flex items-center gap-4">
+                        <div class="w-14 h-14 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-2xl">
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
+                        <div>
+                            <div class="text-2xl sm:text-3xl font-extrabold text-navy-900">250+</div>
+                            <div class="text-xs font-semibold text-slate-500">Kegiatan Terlaksana</div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-2xl shadow-lg border border-slate-100 flex items-center gap-4">
+                        <div class="w-14 h-14 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-2xl">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div>
+                            <div class="text-2xl sm:text-3xl font-extrabold text-navy-900">15K+</div>
+                            <div class="text-xs font-semibold text-slate-500">Jam Kontribusi</div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Section: Kegiatan Unggulan (Centered Title Alignment) -->
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+                <div class="text-center max-w-2xl mx-auto mb-10">
+                    <h2 class="text-3xl font-bold text-navy-900">Kegiatan Unggulan</h2>
+                    <p class="text-sm text-slate-500 mt-2">Peluang kontribusi terbaik yang membutuhkan uluran tanganmu segera.</p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    
+                    <div class="kegiatan-card bg-white rounded-2xl overflow-hidden border border-slate-200 flex flex-col justify-between" data-activity-id="donor-darah">
+                        <div>
+                            <div class="relative h-44 overflow-hidden">
+                                <img src="https://images.unsplash.com/photo-1615461066841-6116e61058f4?auto=format&fit=crop&w=600&q=80" alt="Donor Darah" class="w-full h-full object-cover">
+                                <span class="absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-bold badge-donor">Donor Darah</span>
+                            </div>
+                            <div class="p-5">
+                                <h3 class="font-bold text-base text-navy-900 mb-2 line-clamp-2">Donor Darah untuk Kemanusiaan</h3>
+                                <div class="space-y-1.5 text-xs text-slate-500 mb-4">
+                                    <div class="flex items-center gap-2"><i class="fas fa-map-marker-alt text-red-500 w-4"></i> Jakarta Selatan</div>
+                                    <div class="flex items-center gap-2"><i class="fas fa-calendar text-slate-400 w-4"></i> 25 Mei 2025</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-5 pt-0">
+                            <button class="w-full py-2.5 text-sm font-semibold text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50 transition-colors">Lihat Detail</button>
+                        </div>
+                    </div>
+
+                    <div class="kegiatan-card bg-white rounded-2xl overflow-hidden border border-slate-200 flex flex-col justify-between" data-activity-id="bencana-banjir">
+                        <div>
+                            <div class="relative h-44 overflow-hidden">
+                                <img src="https://images.unsplash.com/photo-1547683905-f686c993aae5?auto=format&fit=crop&w=600&q=80" alt="Bencana" class="w-full h-full object-cover">
+                                <span class="absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-bold badge-bencana">Bantuan Bencana</span>
+                            </div>
+                            <div class="p-5">
+                                <h3 class="font-bold text-base text-navy-900 mb-2 line-clamp-2">Aksi Peduli Bencana Banjir</h3>
+                                <div class="space-y-1.5 text-xs text-slate-500 mb-4">
+                                    <div class="flex items-center gap-2"><i class="fas fa-map-marker-alt text-red-500 w-4"></i> Bekasi, Jawa Barat</div>
+                                    <div class="flex items-center gap-2"><i class="fas fa-calendar text-slate-400 w-4"></i> 2 Juni 2025</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-5 pt-0">
+                            <button class="w-full py-2.5 text-sm font-semibold text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50 transition-colors">Lihat Detail</button>
+                        </div>
+                    </div>
+
+                    <div class="kegiatan-card bg-white rounded-2xl overflow-hidden border border-slate-200 flex flex-col justify-between" data-activity-id="bakti-sosial">
+                        <div>
+                            <div class="relative h-44 overflow-hidden">
+                                <img src="https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=600&q=80" alt="Bakti Sosial" class="w-full h-full object-cover">
+                                <span class="absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-bold badge-baksos">Bakti Sosial</span>
+                            </div>
+                            <div class="p-5">
+                                <h3 class="font-bold text-base text-navy-900 mb-2 line-clamp-2">Bakti Sosial untuk Anak Yatim</h3>
+                                <div class="space-y-1.5 text-xs text-slate-500 mb-4">
+                                    <div class="flex items-center gap-2"><i class="fas fa-map-marker-alt text-red-500 w-4"></i> Depok, Jawa Barat</div>
+                                    <div class="flex items-center gap-2"><i class="fas fa-calendar text-slate-400 w-4"></i> 15 Juni 2025</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-5 pt-0">
+                            <button class="w-full py-2.5 text-sm font-semibold text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50 transition-colors">Lihat Detail</button>
+                        </div>
+                    </div>
+
+                    <div class="kegiatan-card bg-white rounded-2xl overflow-hidden border border-slate-200 flex flex-col justify-between" data-activity-id="penghijauan">
+                        <div>
+                            <div class="relative h-44 overflow-hidden">
+                                <img src="https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=600&q=80" alt="Penghijauan" class="w-full h-full object-cover">
+                                <span class="absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-bold badge-penghijauan">Penghijauan</span>
+                            </div>
+                            <div class="p-5">
+                                <h3 class="font-bold text-base text-navy-900 mb-2 line-clamp-2">Penghijauan Lingkungan Kita</h3>
+                                <div class="space-y-1.5 text-xs text-slate-500 mb-4">
+                                    <div class="flex items-center gap-2"><i class="fas fa-map-marker-alt text-red-500 w-4"></i> Bogor, Jawa Barat</div>
+                                    <div class="flex items-center gap-2"><i class="fas fa-calendar text-slate-400 w-4"></i> 16 Juni 2025</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-5 pt-0">
+                            <button class="w-full py-2.5 text-sm font-semibold text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50 transition-colors">Lihat Detail</button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Section: Mengapa KoordinAksi? -->
+            <div class="bg-white py-16 border-t border-slate-100">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+                    <div class="text-center max-w-2xl mx-auto space-y-2">
+                        <h2 class="text-3xl font-bold text-navy-900">Mengapa KoordinAksi?</h2>
+                        <p class="text-slate-600 text-sm leading-relaxed">
+                            Kami hadir untuk memudahkan koordinasi kegiatan sosial, pendataan relawan, pembagian tugas, hingga dokumentasi kontribusi sosial dalam satu platform terintegrasi.
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                        <div class="p-6 bg-slate-50 rounded-2xl text-center border border-slate-100 hover:border-emerald-200 transition-all shadow-sm">
+                            <div class="w-14 h-14 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-2xl mx-auto mb-3"><i class="fas fa-th-large"></i></div>
+                            <h4 class="font-bold text-navy-900 text-base">Terstruktur</h4>
+                            <p class="text-xs text-slate-500 mt-1">Pengelolaan tugas & agenda rapi</p>
+                        </div>
+                        <div class="p-6 bg-slate-50 rounded-2xl text-center border border-slate-100 hover:border-emerald-200 transition-all shadow-sm">
+                            <div class="w-14 h-14 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-2xl mx-auto mb-3"><i class="fas fa-search-location"></i></div>
+                            <h4 class="font-bold text-navy-900 text-base">Transparan</h4>
+                            <p class="text-xs text-slate-500 mt-1">Laporan kontribusi terbuka</p>
+                        </div>
+                        <div class="p-6 bg-slate-50 rounded-2xl text-center border border-slate-100 hover:border-emerald-200 transition-all shadow-sm">
+                            <div class="w-14 h-14 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-2xl mx-auto mb-3"><i class="fas fa-chart-line"></i></div>
+                            <h4 class="font-bold text-navy-900 text-base">Efektif</h4>
+                            <p class="text-xs text-slate-500 mt-1">Alokasi relawan tepat sasaran</p>
+                        </div>
+                        <div class="p-6 bg-slate-50 rounded-2xl text-center border border-slate-100 hover:border-emerald-200 transition-all shadow-sm">
+                            <div class="w-14 h-14 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-2xl mx-auto mb-3"><i class="fas fa-hand-holding-heart"></i></div>
+                            <h4 class="font-bold text-navy-900 text-base">Berdampak</h4>
+                            <p class="text-xs text-slate-500 mt-1">Memberikan perubahan nyata</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- -------------------------------------- -->
+        <!-- VIEW 2: KEGIATAN SOSIAL (KATALOG)      -->
+        <!-- -------------------------------------- -->
+        <section id="view-kegiatan" class="app-view py-12">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+                
+                <div class="text-center max-w-2xl mx-auto">
+                    <h1 class="text-3xl sm:text-4xl font-extrabold text-navy-900">Kegiatan Sosial</h1>
+                    <p class="text-slate-600 mt-2 text-sm sm:text-base">Temukan kegiatan sosial yang sesuai dengan minat dan lokasimu. Klik card kegiatan untuk membuka detail lengkap.</p>
+                </div>
+
+                <!-- Filter Bar -->
+                <div class="bg-white p-4 sm:p-6 rounded-2xl shadow-md border border-slate-200">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-4 items-center">
+                        <div class="lg:col-span-4 relative">
+                            <i class="fas fa-search absolute left-4 top-3.5 text-slate-400"></i>
+                            <input type="text" id="search-kegiatan" placeholder="Cari kegiatan..." 
+                                   class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500">
+                        </div>
+                        <div class="lg:col-span-3">
+                            <select id="filter-kategori" class="w-full py-2.5 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700">
+                                <option value="semua">Kategori (Semua)</option>
+                                <option value="donor darah">Donor Darah</option>
+                                <option value="bantuan bencana">Bantuan Bencana</option>
+                                <option value="bakti sosial">Bakti Sosial</option>
+                                <option value="penghijauan">Penghijauan</option>
+                                <option value="pendidikan">Pendidikan</option>
+                                <option value="kesehatan">Kesehatan</option>
+                            </select>
+                        </div>
+                        <div class="lg:col-span-3">
+                            <select id="filter-lokasi" class="w-full py-2.5 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700">
+                                <option value="semua">Lokasi (Semua)</option>
+                                <option value="jakarta">Jakarta</option>
+                                <option value="bekasi">Bekasi</option>
+                                <option value="depok">Depok</option>
+                                <option value="bogor">Bogor</option>
+                                <option value="bandung">Bandung</option>
+                            </select>
+                        </div>
+                        <div class="lg:col-span-2">
+                            <button id="btn-apply-filter" class="btn-primary-blue w-full py-2.5 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 shadow-md">
+                                <i class="fas fa-filter text-xs"></i> Filter
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Activities Grid -->
+                <div id="kegiatan-grid-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="kegiatan-grid-item kegiatan-card bg-white rounded-2xl overflow-hidden border border-slate-200 flex flex-col justify-between"
+                         data-activity-id="donor-darah" data-title="Donor Darah untuk Kemanusiaan" data-category="donor darah" data-location="jakarta">
+                        <div>
+                            <div class="relative h-48 overflow-hidden">
+                                <img src="https://images.unsplash.com/photo-1615461066841-6116e61058f4?auto=format&fit=crop&w=600&q=80" class="w-full h-full object-cover">
+                                <span class="absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-bold badge-donor">Donor Darah</span>
+                            </div>
+                            <div class="p-5">
+                                <h3 class="font-bold text-lg text-navy-900 mb-2">Donor Darah untuk Kemanusiaan</h3>
+                                <p class="text-xs text-slate-500 line-clamp-2 mb-4">Aksi donor darah serentak membantu persediaan darah PMI untuk rumah sakit di wilayah Jakarta Selatan.</p>
+                                <div class="space-y-1.5 text-xs text-slate-500 mb-4">
+                                    <div class="flex items-center gap-2"><i class="fas fa-map-marker-alt text-red-500 w-4"></i> Jakarta Selatan</div>
+                                    <div class="flex items-center gap-2"><i class="fas fa-calendar text-slate-400 w-4"></i> 25 Mei 2025</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-5 pt-0">
+                            <button class="w-full py-2.5 text-sm font-semibold text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50 transition-colors">Detail & Daftar</button>
+                        </div>
+                    </div>
+
+                    <div class="kegiatan-grid-item kegiatan-card bg-white rounded-2xl overflow-hidden border border-slate-200 flex flex-col justify-between"
+                         data-activity-id="bencana-banjir" data-title="Aksi Peduli Bencana Banjir" data-category="bantuan bencana" data-location="bekasi">
+                        <div>
+                            <div class="relative h-48 overflow-hidden">
+                                <img src="https://images.unsplash.com/photo-1547683905-f686c993aae5?auto=format&fit=crop&w=600&q=80" class="w-full h-full object-cover">
+                                <span class="absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-bold badge-bencana">Bantuan Bencana</span>
+                            </div>
+                            <div class="p-5">
+                                <h3 class="font-bold text-lg text-navy-900 mb-2">Aksi Peduli Bencana Banjir</h3>
+                                <p class="text-xs text-slate-500 line-clamp-2 mb-4">Penyaluran logistik makanan, sembako, dan pembersihan fasilitas umum terdampak banjir di Bekasi.</p>
+                                <div class="space-y-1.5 text-xs text-slate-500 mb-4">
+                                    <div class="flex items-center gap-2"><i class="fas fa-map-marker-alt text-red-500 w-4"></i> Bekasi, Jawa Barat</div>
+                                    <div class="flex items-center gap-2"><i class="fas fa-calendar text-slate-400 w-4"></i> 2 Juni 2025</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-5 pt-0">
+                            <button class="w-full py-2.5 text-sm font-semibold text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50 transition-colors">Detail & Daftar</button>
+                        </div>
+                    </div>
+
+                    <div class="kegiatan-grid-item kegiatan-card bg-white rounded-2xl overflow-hidden border border-slate-200 flex flex-col justify-between"
+                         data-activity-id="bakti-sosial" data-title="Bakti Sosial untuk Anak Yatim" data-category="bakti sosial" data-location="depok">
+                        <div>
+                            <div class="relative h-48 overflow-hidden">
+                                <img src="https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=600&q=80" class="w-full h-full object-cover">
+                                <span class="absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-bold badge-baksos">Bakti Sosial</span>
+                            </div>
+                            <div class="p-5">
+                                <h3 class="font-bold text-lg text-navy-900 mb-2">Bakti Sosial untuk Anak Yatim</h3>
+                                <p class="text-xs text-slate-500 line-clamp-2 mb-4">Berbagi santunan, alat tulis, dan kelas inspirasi bersama anak-anak panti asuhan.</p>
+                                <div class="space-y-1.5 text-xs text-slate-500 mb-4">
+                                    <div class="flex items-center gap-2"><i class="fas fa-map-marker-alt text-red-500 w-4"></i> Depok, Jawa Barat</div>
+                                    <div class="flex items-center gap-2"><i class="fas fa-calendar text-slate-400 w-4"></i> 15 Juni 2025</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-5 pt-0">
+                            <button class="w-full py-2.5 text-sm font-semibold text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50 transition-colors">Detail & Daftar</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- -------------------------------------- -->
+        <!-- VIEW 3A: DAFTAR ORGANISASI (PUBLIK)   -->
+        <!-- -------------------------------------- -->
+        <section id="view-organisasi-public" class="app-view py-12">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+                
+                <div class="text-center max-w-2xl mx-auto">
+                    <h1 class="text-3xl sm:text-4xl font-extrabold text-navy-900">Direktori Organisasi</h1>
+                    <p class="text-slate-600 mt-2 text-sm sm:text-base">Temukan lembaga, yayasan, dan komunitas sosial terverifikasi yang menginspirasi perubahan positif.</p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    
+                    <div class="org-card bg-white p-6 rounded-2xl border border-slate-200 flex flex-col justify-between space-y-4" data-org-id="ypn">
+                        <div class="space-y-4">
+                            <div class="flex items-center gap-4">
+                                <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=200&q=80" alt="YPN" class="w-14 h-14 rounded-2xl object-cover border border-emerald-500">
+                                <div>
+                                    <div class="flex items-center gap-1.5">
+                                        <h3 class="font-bold text-base text-navy-900">Yayasan Peduli Negeri</h3>
+                                        <i class="fas fa-check-circle text-blue-500 text-xs" title="Terverifikasi"></i>
+                                    </div>
+                                    <span class="text-xs text-slate-500">Jakarta Selatan &bull; Sosial & Kemanusiaan</span>
+                                </div>
+                            </div>
+                            <p class="text-xs text-slate-600 line-clamp-3">Yayasan non-profit yang berfokus pada tanggap bencana, pemberdayaan masyarakat, dan bakti sosial di seluruh Indonesia.</p>
+                        </div>
+                        <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+                            <span class="font-semibold text-emerald-600"><i class="fas fa-users mr-1"></i> 320 Relawan</span>
+                            <button class="btn-primary-emerald px-4 py-2 rounded-lg font-semibold">Lihat Detail Organisasi</button>
+                        </div>
+                    </div>
+
+                    <div class="org-card bg-white p-6 rounded-2xl border border-slate-200 flex flex-col justify-between space-y-4" data-org-id="khb">
+                        <div class="space-y-4">
+                            <div class="flex items-center gap-4">
+                                <img src="https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=200&q=80" alt="KHB" class="w-14 h-14 rounded-2xl object-cover border border-emerald-500">
+                                <div>
+                                    <div class="flex items-center gap-1.5">
+                                        <h3 class="font-bold text-base text-navy-900">Komunitas Hijau Bogor</h3>
+                                        <i class="fas fa-check-circle text-blue-500 text-xs" title="Terverifikasi"></i>
+                                    </div>
+                                    <span class="text-xs text-slate-500">Bogor, Jawa Barat &bull; Lingkungan</span>
+                                </div>
+                            </div>
+                            <p class="text-xs text-slate-600 line-clamp-3">Komunitas pemuda pencinta alam yang menginisiasi gerakan penanaman pohon dan konservasi lingkungan di Bogor.</p>
+                        </div>
+                        <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+                            <span class="font-semibold text-emerald-600"><i class="fas fa-users mr-1"></i> 180 Relawan</span>
+                            <button class="btn-primary-emerald px-4 py-2 rounded-lg font-semibold">Lihat Detail Organisasi</button>
+                        </div>
+                    </div>
+
+                    <div class="org-card bg-white p-6 rounded-2xl border border-slate-200 flex flex-col justify-between space-y-4" data-org-id="sbi">
+                        <div class="space-y-4">
+                            <div class="flex items-center gap-4">
+                                <img src="https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=200&q=80" alt="SBI" class="w-14 h-14 rounded-2xl object-cover border border-emerald-500">
+                                <div>
+                                    <div class="flex items-center gap-1.5">
+                                        <h3 class="font-bold text-base text-navy-900">Sahabat Belajar Indonesia</h3>
+                                        <i class="fas fa-check-circle text-blue-500 text-xs" title="Terverifikasi"></i>
+                                    </div>
+                                    <span class="text-xs text-slate-500">Bandung, Jawa Barat &bull; Pendidikan</span>
+                                </div>
+                            </div>
+                            <p class="text-xs text-slate-600 line-clamp-3">Gerakan relawan pengajar yang membuka rumah belajar gratis dan bimbingan belajar untuk anak-anak jalanan.</p>
+                        </div>
+                        <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+                            <span class="font-semibold text-emerald-600"><i class="fas fa-users mr-1"></i> 145 Relawan</span>
+                            <button class="btn-primary-emerald px-4 py-2 rounded-lg font-semibold">Lihat Detail Organisasi</button>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </section>
+
+        <!-- -------------------------------------- -->
+        <!-- VIEW 3B: DETAIL ORGANISASI             -->
+        <!-- -------------------------------------- -->
+        <section id="view-organisasi-detail" class="app-view py-8 bg-slate-100">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+                
+                <button data-target-view="view-organisasi-public" class="text-xs font-semibold text-emerald-700 hover:underline flex items-center gap-1">
+                    <i class="fas fa-arrow-left"></i> Kembali ke Daftar Organisasi
+                </button>
+
+                <div class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                    <div class="flex items-center gap-5">
+                        <img id="detail-org-image" src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=300&q=80" class="w-20 h-20 rounded-2xl object-cover border-2 border-emerald-500">
+                        <div class="space-y-1">
+                            <div class="flex items-center gap-2">
+                                <h2 id="detail-org-name" class="text-2xl font-extrabold text-navy-900">Yayasan Peduli Negeri</h2>
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-700"><i class="fas fa-check-circle"></i> Terverifikasi</span>
+                            </div>
+                            <p id="detail-org-desc" class="text-xs text-slate-500 max-w-xl">Lembaga sosial nirlaba yang berfokus pada penanggulangan bencana, bantuan kemanusiaan, dan bakti sosial anak yatim piatu di Indonesia.</p>
+                            <!-- Interactive Contact Links (Email, Phone, Maps) -->
+                            <div class="text-xs text-slate-400 pt-1 flex flex-wrap items-center gap-4">
+                                <a href="https://maps.google.com/?q=Jakarta+Selatan" target="_blank" class="hover:text-red-500 transition-colors flex items-center gap-1">
+                                    <i class="fas fa-map-marker-alt text-red-500"></i> Jakarta Selatan (Buka Maps)
+                                </a>
+                                <a href="mailto:contact@pedulinegeri.or.id" class="hover:text-emerald-600 transition-colors flex items-center gap-1">
+                                    <i class="fas fa-envelope text-emerald-600"></i> contact@pedulinegeri.or.id
+                                </a>
+                                <a href="https://wa.me/6281234567890" target="_blank" class="hover:text-emerald-600 transition-colors flex items-center gap-1">
+                                    <i class="fab fa-whatsapp text-emerald-500"></i> 0812-3456-7890
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button id="btn-follow-org" class="btn-primary-emerald px-6 py-2.5 rounded-xl text-xs font-bold shadow-md transition-all flex items-center gap-1.5">
+                        <i class="fas fa-plus"></i> Ikuti Organisasi
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                        <div id="detail-org-stat-relawan" class="text-3xl font-extrabold text-emerald-600 mb-1">320</div>
+                        <div class="text-xs font-medium text-slate-500">Total Relawan Terdaftar</div>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                        <div class="text-3xl font-extrabold text-navy-900 mb-1">8</div>
+                        <div class="text-xs font-medium text-slate-500">Total Kegiatan</div>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                        <div class="text-3xl font-extrabold text-blue-600 mb-1">5</div>
+                        <div class="text-xs font-medium text-slate-500">Kegiatan Berlangsung</div>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                        <div class="text-3xl font-extrabold text-purple-600 mb-1">3</div>
+                        <div class="text-xs font-medium text-slate-500">Kegiatan Selesai</div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    <div class="lg:col-span-7 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                        <h3 class="font-bold text-navy-900 text-base flex items-center gap-2">
+                            <i class="fas fa-calendar-alt text-emerald-600"></i> Daftar Kegiatan Organisasi
+                        </h3>
+
+                        <div class="space-y-3">
+                            <div class="kegiatan-card p-4 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between" data-activity-id="donor-darah">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-lg bg-red-100 text-red-600 flex items-center justify-center"><i class="fas fa-tint"></i></div>
+                                    <div>
+                                        <div class="text-xs font-bold text-navy-900">Donor Darah untuk Kemanusiaan</div>
+                                        <div class="text-[10px] text-slate-400">25 Mei 2025 | Jakarta Selatan</div>
+                                    </div>
+                                </div>
+                                <span class="px-2.5 py-1 text-[10px] font-bold rounded-full bg-emerald-100 text-emerald-700">Berlangsung</span>
+                            </div>
+
+                            <div class="kegiatan-card p-4 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between" data-activity-id="bencana-banjir">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center"><i class="fas fa-water"></i></div>
+                                    <div>
+                                        <div class="text-xs font-bold text-navy-900">Aksi Peduli Bencana Banjir</div>
+                                        <div class="text-[10px] text-slate-400">2 Juni 2025 | Bekasi, Jawa Barat</div>
+                                    </div>
+                                </div>
+                                <span class="px-2.5 py-1 text-[10px] font-bold rounded-full bg-emerald-100 text-emerald-700">Berlangsung</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Synchronized Followers List -->
+                    <div class="lg:col-span-5 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                        <div class="flex items-center justify-between">
+                            <h3 class="font-bold text-navy-900 text-base flex items-center gap-2">
+                                <i class="fas fa-user-friends text-blue-600"></i> Relawan Bergabung
+                            </h3>
+                            <span class="text-xs text-slate-400">Klik nama untuk profil</span>
+                        </div>
+
+                        <div id="detail-org-volunteers-list" class="space-y-3">
+                            <div data-volunteer-id="siti" class="btn-volunteer-item p-3 bg-slate-50 hover:bg-emerald-50 rounded-xl border border-slate-100 flex items-center justify-between cursor-pointer transition-colors">
+                                <div class="flex items-center gap-3">
+                                    <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80" class="w-10 h-10 rounded-full object-cover border border-emerald-500">
+                                    <div>
+                                        <div class="text-xs font-bold text-navy-900 hover:text-emerald-600">Siti Nurhaliza</div>
+                                        <div class="text-[10px] text-slate-400">12 Kegiatan &bull; 86 Jam Kontribusi</div>
+                                    </div>
+                                </div>
+                                <i class="fas fa-chevron-right text-xs text-slate-400"></i>
+                            </div>
+
+                            <div data-volunteer-id="ricky" class="btn-volunteer-item p-3 bg-slate-50 hover:bg-emerald-50 rounded-xl border border-slate-100 flex items-center justify-between cursor-pointer transition-colors">
+                                <div class="flex items-center gap-3">
+                                    <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80" class="w-10 h-10 rounded-full object-cover border border-emerald-500">
+                                    <div>
+                                        <div class="text-xs font-bold text-navy-900 hover:text-emerald-600">Ricky Maulana</div>
+                                        <div class="text-[10px] text-slate-400">10 Kegiatan &bull; 64 Jam Kontribusi</div>
+                                    </div>
+                                </div>
+                                <i class="fas fa-chevron-right text-xs text-slate-400"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- -------------------------------------- -->
+        <!-- VIEW 4A: DAFTAR RELAWAN (PUBLIK)       -->
+        <!-- -------------------------------------- -->
+        <section id="view-relawan-public" class="app-view py-12">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+                
+                <div class="text-center max-w-2xl mx-auto">
+                    <h1 class="text-3xl sm:text-4xl font-extrabold text-navy-900">Direktori Relawan</h1>
+                    <p class="text-slate-600 mt-2 text-sm sm:text-base">Temukan sosok-sosok pemuda dan relawan inspiratif yang berdedikasi tinggi untuk aksi sosial.</p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    
+                    <div class="relawan-card bg-white p-6 rounded-2xl border border-slate-200 text-center flex flex-col justify-between space-y-4" data-volunteer-id="siti">
+                        <div class="space-y-3">
+                            <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=300&q=80" class="w-20 h-20 rounded-full object-cover mx-auto border-2 border-emerald-500 shadow-sm">
+                            <div>
+                                <h3 class="font-bold text-base text-navy-900">Siti Nurhaliza</h3>
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700">Relawan Aktif</span>
+                            </div>
+                            <p class="text-xs text-slate-500"><i class="fas fa-map-marker-alt text-red-500 mr-1"></i> Jakarta, Indonesia</p>
+                            <div class="grid grid-cols-2 gap-2 text-center pt-2 border-t border-slate-100 text-xs">
+                                <div class="bg-slate-50 p-2 rounded-lg"><strong class="text-emerald-600 font-extrabold block">12</strong> Kegiatan</div>
+                                <div class="bg-slate-50 p-2 rounded-lg"><strong class="text-blue-600 font-extrabold block">86</strong> Jam</div>
+                            </div>
+                        </div>
+                        <button class="w-full py-2 bg-slate-100 hover:bg-emerald-600 hover:text-white rounded-xl text-xs font-semibold transition-colors">Lihat Profil Lengkap</button>
+                    </div>
+
+                    <div class="relawan-card bg-white p-6 rounded-2xl border border-slate-200 text-center flex flex-col justify-between space-y-4" data-volunteer-id="ricky">
+                        <div class="space-y-3">
+                            <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80" class="w-20 h-20 rounded-full object-cover mx-auto border-2 border-emerald-500 shadow-sm">
+                            <div>
+                                <h3 class="font-bold text-base text-navy-900">Ricky Maulana</h3>
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700">Relawan Aktif</span>
+                            </div>
+                            <p class="text-xs text-slate-500"><i class="fas fa-map-marker-alt text-red-500 mr-1"></i> Bekasi, Jawa Barat</p>
+                            <div class="grid grid-cols-2 gap-2 text-center pt-2 border-t border-slate-100 text-xs">
+                                <div class="bg-slate-50 p-2 rounded-lg"><strong class="text-emerald-600 font-extrabold block">10</strong> Kegiatan</div>
+                                <div class="bg-slate-50 p-2 rounded-lg"><strong class="text-blue-600 font-extrabold block">64</strong> Jam</div>
+                            </div>
+                        </div>
+                        <button class="w-full py-2 bg-slate-100 hover:bg-emerald-600 hover:text-white rounded-xl text-xs font-semibold transition-colors">Lihat Profil Lengkap</button>
+                    </div>
+
+                    <div class="relawan-card bg-white p-6 rounded-2xl border border-slate-200 text-center flex flex-col justify-between space-y-4" data-volunteer-id="dewi">
+                        <div class="space-y-3">
+                            <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80" class="w-20 h-20 rounded-full object-cover mx-auto border-2 border-emerald-500 shadow-sm">
+                            <div>
+                                <h3 class="font-bold text-base text-navy-900">Dewi Anjani</h3>
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700">Relawan Aktif</span>
+                            </div>
+                            <p class="text-xs text-slate-500"><i class="fas fa-map-marker-alt text-red-500 mr-1"></i> Bogor, Jawa Barat</p>
+                            <div class="grid grid-cols-2 gap-2 text-center pt-2 border-t border-slate-100 text-xs">
+                                <div class="bg-slate-50 p-2 rounded-lg"><strong class="text-emerald-600 font-extrabold block">8</strong> Kegiatan</div>
+                                <div class="bg-slate-50 p-2 rounded-lg"><strong class="text-blue-600 font-extrabold block">52</strong> Jam</div>
+                            </div>
+                        </div>
+                        <button class="w-full py-2 bg-slate-100 hover:bg-emerald-600 hover:text-white rounded-xl text-xs font-semibold transition-colors">Lihat Profil Lengkap</button>
+                    </div>
+
+                    <div class="relawan-card bg-white p-6 rounded-2xl border border-slate-200 text-center flex flex-col justify-between space-y-4" data-volunteer-id="budi">
+                        <div class="space-y-3">
+                            <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80" class="w-20 h-20 rounded-full object-cover mx-auto border-2 border-emerald-500 shadow-sm">
+                            <div>
+                                <h3 class="font-bold text-base text-navy-900">Budi Santoso</h3>
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700">Relawan Aktif</span>
+                            </div>
+                            <p class="text-xs text-slate-500"><i class="fas fa-map-marker-alt text-red-500 mr-1"></i> Depok, Jawa Barat</p>
+                            <div class="grid grid-cols-2 gap-2 text-center pt-2 border-t border-slate-100 text-xs">
+                                <div class="bg-slate-50 p-2 rounded-lg"><strong class="text-emerald-600 font-extrabold block">15</strong> Kegiatan</div>
+                                <div class="bg-slate-50 p-2 rounded-lg"><strong class="text-blue-600 font-extrabold block">98</strong> Jam</div>
+                            </div>
+                        </div>
+                        <button class="w-full py-2 bg-slate-100 hover:bg-emerald-600 hover:text-white rounded-xl text-xs font-semibold transition-colors">Lihat Profil Lengkap</button>
+                    </div>
+
+                </div>
+
+            </div>
+        </section>
+
+        <!-- -------------------------------------- -->
+        <!-- VIEW 4B: PORTOFOLIO / PROFIL SAYA      -->
+        <!-- -------------------------------------- -->
+        <section id="view-relawan-profile" class="app-view py-8 bg-slate-100">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+                
+                <!-- 1. Logged Out State Warning Callout -->
+                <div id="profile-logged-out-state" class="hidden text-center py-16 bg-white rounded-3xl border border-slate-200 shadow-sm max-w-xl mx-auto space-y-4">
+                    <div class="w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center text-3xl mx-auto">
+                        <i class="fas fa-lock"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-navy-900">Akses Profil Dibatasi</h3>
+                    <p class="text-slate-600 text-sm max-w-md mx-auto">Anda belum masuk ke akun KoordinAksi. Silakan masuk atau mendaftar akun terlebih dahulu untuk mengakses profil pribadi, riwayat kegiatan, dan sertifikat digital Anda.</p>
+                    <div class="flex items-center justify-center gap-3 pt-2">
+                        <button class="btn-open-login btn-primary-emerald px-6 py-2.5 rounded-xl font-bold text-sm shadow-md">Masuk Sekarang</button>
+                        <button class="btn-open-register btn-primary-blue px-6 py-2.5 rounded-xl font-bold text-sm shadow-md">Daftar Akun Baru</button>
+                    </div>
+                </div>
+
+                <!-- 2. Logged In Full Profile Dashboard -->
+                <div id="profile-logged-in-container" class="space-y-6">
+                    
+                    <!-- Profile Header Card & Summary Box -->
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                        
+                        <div class="lg:col-span-7 bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-center gap-6">
+                            <img id="vol-profile-avatar" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=300&q=80" alt="Avatar" class="w-28 h-28 rounded-full object-cover border-4 border-emerald-500 shadow-md">
+                            <div class="space-y-1.5 text-center sm:text-left text-xs text-slate-600">
+                                <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                                    <h2 id="vol-profile-name" class="text-2xl font-extrabold text-navy-900">Siti Nurhaliza</h2>
+                                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700">Relawan Aktif</span>
+                                </div>
+                                <p id="vol-profile-role" class="text-slate-500 text-xs">Relawan Sosial & Tanggap Bencana</p>
+                                
+                                <!-- Interactive Contact Links (Email, Phone, Maps) -->
+                                <div class="space-y-1 pt-1">
+                                    <div class="flex items-center justify-center sm:justify-start gap-2">
+                                        <i class="fas fa-envelope text-emerald-600 w-4"></i> 
+                                        <a id="vol-link-email" href="mailto:siti.nurhaliza@email.com" class="hover:text-emerald-600 underline">siti.nurhaliza@email.com</a>
+                                    </div>
+                                    <div class="flex items-center justify-center sm:justify-start gap-2">
+                                        <i class="fab fa-whatsapp text-emerald-500 w-4"></i> 
+                                        <a id="vol-link-phone" href="https://wa.me/6281234567890" target="_blank" class="hover:text-emerald-600 underline">0812-3456-7890</a>
+                                    </div>
+                                    <div class="flex items-center justify-center sm:justify-start gap-2">
+                                        <i class="fas fa-map-marker-alt text-red-500 w-4"></i> 
+                                        <a id="vol-link-location" href="https://maps.google.com/?q=Jakarta,Indonesia" target="_blank" class="hover:text-red-500 underline">Jakarta, Indonesia (Maps)</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-5 bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-4">
+                            <h4 class="font-bold text-navy-900 text-base flex items-center justify-between">
+                                <span>Ringkasan Pencapaian</span>
+                                <i class="fas fa-award text-emerald-600"></i>
+                            </h4>
+                            <div class="grid grid-cols-3 gap-3 text-center">
+                                <div class="p-3 bg-slate-50 rounded-2xl border border-slate-100">
+                                    <div id="vol-profile-kegiatan-count" class="text-2xl font-extrabold text-emerald-600">12</div>
+                                    <div class="text-[10px] font-medium text-slate-500 mt-1">Kegiatan Diikuti</div>
+                                </div>
+                                <div class="p-3 bg-slate-50 rounded-2xl border border-slate-100">
+                                    <div id="vol-profile-jam-count" class="text-2xl font-extrabold text-blue-600">86</div>
+                                    <div class="text-[10px] font-medium text-slate-500 mt-1">Jam Kontribusi</div>
+                                </div>
+                                <div class="p-3 bg-slate-50 rounded-2xl border border-slate-100">
+                                    <div id="vol-profile-sertifikat-count" class="text-2xl font-extrabold text-purple-600">5</div>
+                                    <div class="text-[10px] font-medium text-slate-500 mt-1">Sertifikat Digital</div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Sub-tab Navigation Container -->
+                    <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+                        <div class="flex border-b border-slate-200 px-6 pt-4 gap-6 text-sm font-semibold text-slate-600">
+                            <button data-tab="tab-riwayat" class="relawan-sub-tab pb-3 text-emerald-600 border-b-2 border-emerald-600">Riwayat Kegiatan (12)</button>
+                            <button data-tab="tab-tugas" class="relawan-sub-tab pb-3 hover:text-emerald-600">Tugas Saya (2)</button>
+                            <button data-tab="tab-portofolio" class="relawan-sub-tab pb-3 hover:text-emerald-600">Portofolio & Galeri</button>
+                            <button data-tab="tab-sertifikat" class="relawan-sub-tab pb-3 hover:text-emerald-600">Sertifikat Digital (5)</button>
+                        </div>
+
+                        <div class="p-6 sm:p-8">
+                            
+                            <!-- Tab 1: Riwayat Kegiatan -->
+                            <div data-tab-content="tab-riwayat" class="relawan-sub-tab-content space-y-4">
+                                <div id="vol-profile-history-list" class="space-y-3">
+                                    <div class="p-4 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-10 h-10 rounded-lg bg-red-100 text-red-600 flex items-center justify-center"><i class="fas fa-tint"></i></div>
+                                            <div>
+                                                <div class="text-xs font-bold text-navy-900">Donor Darah untuk Kemanusiaan</div>
+                                                <div class="text-[10px] text-slate-400">25 Mei 2025 | Jakarta Selatan</div>
+                                            </div>
+                                        </div>
+                                        <span class="px-2.5 py-1 text-[10px] font-bold rounded-full bg-emerald-100 text-emerald-700">Selesai</span>
+                                    </div>
+                                    <div class="p-4 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-10 h-10 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center"><i class="fas fa-water"></i></div>
+                                            <div>
+                                                <div class="text-xs font-bold text-navy-900">Aksi Peduli Bencana Banjir</div>
+                                                <div class="text-[10px] text-slate-400">2 Juni 2025 | Bekasi, Jawa Barat</div>
+                                            </div>
+                                        </div>
+                                        <span class="px-2.5 py-1 text-[10px] font-bold rounded-full bg-emerald-100 text-emerald-700">Selesai</span>
+                                    </div>
+                                    <div class="p-4 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-10 h-10 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center"><i class="fas fa-heart"></i></div>
+                                            <div>
+                                                <div class="text-xs font-bold text-navy-900">Bakti Sosial untuk Anak Yatim</div>
+                                                <div class="text-[10px] text-slate-400">15 Juni 2025 | Depok, Jawa Barat</div>
+                                            </div>
+                                        </div>
+                                        <span class="px-2.5 py-1 text-[10px] font-bold rounded-full bg-emerald-100 text-emerald-700">Selesai</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Tab 2: Tugas Saya -->
+                            <div data-tab-content="tab-tugas" class="relawan-sub-tab-content hidden space-y-4">
+                                <h4 class="font-bold text-sm text-navy-900 mb-2">Tugas Aktif Lapangan</h4>
+                                <div class="space-y-3">
+                                    <div class="p-4 bg-emerald-50 rounded-xl border border-emerald-200 flex items-center justify-between">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-10 h-10 rounded-lg bg-emerald-600 text-white flex items-center justify-center"><i class="fas fa-tasks"></i></div>
+                                            <div>
+                                                <div class="text-xs font-bold text-navy-900">Pendaftaran & Triage Pasien Lansia</div>
+                                                <div class="text-[10px] text-slate-500">Pemeriksaan Kesehatan Lansia &bull; Penanggung Jawab Tim A</div>
+                                            </div>
+                                        </div>
+                                        <span class="px-2.5 py-1 text-[10px] font-bold rounded-full bg-blue-100 text-blue-700">Sedang Berjalan</span>
+                                    </div>
+                                    <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-10 h-10 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center"><i class="fas fa-box"></i></div>
+                                            <div>
+                                                <div class="text-xs font-bold text-navy-900">Penyusunan Paket Sembako Darurat</div>
+                                                <div class="text-[10px] text-slate-500">Posko Bencana Banjir Bekasi &bull; Divisi Logistik</div>
+                                            </div>
+                                        </div>
+                                        <span class="px-2.5 py-1 text-[10px] font-bold rounded-full bg-amber-100 text-amber-700">Persiapan Hari H</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Tab 3: Portofolio & Galeri Interaktif (Upload, Caption, Hapus) -->
+                            <div data-tab-content="tab-portofolio" class="relawan-sub-tab-content hidden space-y-6">
+                                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
+                                    <h5 class="font-bold text-xs text-navy-900 flex items-center gap-2">
+                                        <i class="fas fa-plus-circle text-emerald-600"></i> Tambah Foto Baru ke Portofolio
+                                    </h5>
+                                    <form id="form-add-portfolio" class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+                                        <div class="sm:col-span-6">
+                                            <input type="url" id="portfolio-img-url" placeholder="URL Foto (https://...)" required 
+                                                   class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-emerald-500">
+                                        </div>
+                                        <div class="sm:col-span-4">
+                                            <input type="text" id="portfolio-caption" placeholder="Keterangan / Caption foto..." required 
+                                                   class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-emerald-500">
+                                        </div>
+                                        <div class="sm:col-span-2">
+                                            <button type="submit" class="btn-primary-emerald w-full py-2 rounded-xl font-bold text-xs shadow-md">
+                                                Simpan Foto
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+
+                                <div id="portfolio-gallery-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                                    <!-- Dynamic Portfolio Items Rendered Here -->
+                                </div>
+                            </div>
+
+                            <!-- Tab 4: Sertifikat Digital (Matching Stats 5) -->
+                            <div data-tab-content="tab-sertifikat" class="relawan-sub-tab-content hidden space-y-4">
+                                <h4 class="font-bold text-sm text-navy-900 mb-2">Daftar Sertifikat Digital Resmi (5)</h4>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    
+                                    <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 flex items-center justify-between">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-12 h-12 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center text-xl">
+                                                <i class="fas fa-award"></i>
+                                            </div>
+                                            <div>
+                                                <div class="text-xs font-bold text-navy-900">Sertifikat Donor Darah 2025</div>
+                                                <div class="text-[10px] text-slate-400">ID: CERT-PMI-2025-089 &bull; Terverifikasi</div>
+                                            </div>
+                                        </div>
+                                        <button class="p-2 text-emerald-600 hover:text-emerald-700 font-bold text-xs flex items-center gap-1" onclick="showToast('Sertifikat berhasil diunduh.', 'success')">
+                                            <i class="fas fa-download"></i> Unduh
+                                        </button>
+                                    </div>
+
+                                    <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 flex items-center justify-between">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-12 h-12 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center text-xl">
+                                                <i class="fas fa-award"></i>
+                                            </div>
+                                            <div>
+                                                <div class="text-xs font-bold text-navy-900">Sertifikat Tanggap Bencana Banjir</div>
+                                                <div class="text-[10px] text-slate-400">ID: CERT-BNPB-2025-104 &bull; Terverifikasi</div>
+                                            </div>
+                                        </div>
+                                        <button class="p-2 text-emerald-600 hover:text-emerald-700 font-bold text-xs flex items-center gap-1" onclick="showToast('Sertifikat berhasil diunduh.', 'success')">
+                                            <i class="fas fa-download"></i> Unduh
+                                        </button>
+                                    </div>
+
+                                    <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 flex items-center justify-between">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-12 h-12 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center text-xl">
+                                                <i class="fas fa-award"></i>
+                                            </div>
+                                            <div>
+                                                <div class="text-xs font-bold text-navy-900">Sertifikat Bakti Sosial Anak Yatim</div>
+                                                <div class="text-[10px] text-slate-400">ID: CERT-BKS-2025-221 &bull; Terverifikasi</div>
+                                            </div>
+                                        </div>
+                                        <button class="p-2 text-emerald-600 hover:text-emerald-700 font-bold text-xs flex items-center gap-1" onclick="showToast('Sertifikat berhasil diunduh.', 'success')">
+                                            <i class="fas fa-download"></i> Unduh
+                                        </button>
+                                    </div>
+
+                                    <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 flex items-center justify-between">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-12 h-12 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center text-xl">
+                                                <i class="fas fa-award"></i>
+                                            </div>
+                                            <div>
+                                                <div class="text-xs font-bold text-navy-900">Sertifikat Penghijauan Hutan Bogor</div>
+                                                <div class="text-[10px] text-slate-400">ID: CERT-GRN-2025-305 &bull; Terverifikasi</div>
+                                            </div>
+                                        </div>
+                                        <button class="p-2 text-emerald-600 hover:text-emerald-700 font-bold text-xs flex items-center gap-1" onclick="showToast('Sertifikat berhasil diunduh.', 'success')">
+                                            <i class="fas fa-download"></i> Unduh
+                                        </button>
+                                    </div>
+
+                                    <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 flex items-center justify-between">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-12 h-12 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center text-xl">
+                                                <i class="fas fa-award"></i>
+                                            </div>
+                                            <div>
+                                                <div class="text-xs font-bold text-navy-900">Sertifikat Pengajar Edukasi Jalanan</div>
+                                                <div class="text-[10px] text-slate-400">ID: CERT-EDU-2025-512 &bull; Terverifikasi</div>
+                                            </div>
+                                        </div>
+                                        <button class="p-2 text-emerald-600 hover:text-emerald-700 font-bold text-xs flex items-center gap-1" onclick="showToast('Sertifikat berhasil diunduh.', 'success')">
+                                            <i class="fas fa-download"></i> Unduh
+                                        </button>
+                                    </div>
+
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </section>
+
+        <!-- -------------------------------------- -->
+        <!-- VIEW 5: DASHBOARD ADMIN                -->
+        <!-- -------------------------------------- -->
+        <section id="view-admin" class="app-view py-8 bg-slate-100">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    
+                    <div class="lg:col-span-3">
+                        <div class="bg-navy-900 text-white p-4 rounded-2xl shadow-md space-y-1">
+                            <div class="p-3 border-b border-slate-800 mb-2 flex items-center gap-2">
+                                <i class="fas fa-shield-alt text-blue-400"></i>
+                                <span class="font-bold text-sm">Dashboard Admin</span>
+                            </div>
+                            
+                            <div data-tab="admin-dash" class="admin-sidebar-tab sidebar-item sidebar-item-admin active bg-blue-600 text-white">
+                                <i class="fas fa-th-large w-5"></i> Dashboard Utama
+                            </div>
+                            <div data-tab="admin-users" class="admin-sidebar-tab sidebar-item text-slate-300 hover:bg-slate-800">
+                                <i class="fas fa-users-cog w-5"></i> Manajemen Pengguna
+                            </div>
+                            <div data-tab="admin-verif" class="admin-sidebar-tab sidebar-item text-slate-300 hover:bg-slate-800">
+                                <i class="fas fa-building-circle-check w-5"></i> Verifikasi Organisasi
+                            </div>
+                            <div data-tab="admin-monitoring" class="admin-sidebar-tab sidebar-item text-slate-300 hover:bg-slate-800">
+                                <i class="fas fa-chart-line w-5"></i> Monitoring Aktivitas
+                            </div>
+                            <div data-tab="admin-analitik" class="admin-sidebar-tab sidebar-item text-slate-300 hover:bg-slate-800">
+                                <i class="fas fa-pie-chart w-5"></i> Analitik Platform
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="lg:col-span-9 space-y-6">
+                        <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <span class="px-3 py-1 bg-blue-100 text-blue-700 font-bold text-xs rounded-full">Administrator</span>
+                                <h2 class="text-xl font-bold text-navy-900">Panel Kontrol Utama Admin</h2>
+                            </div>
+                        </div>
+
+                        <div data-tab-content="admin-dash" class="admin-tab-content space-y-6">
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
+                                    <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl"><i class="fas fa-users"></i></div>
+                                    <div><div class="text-2xl font-extrabold text-navy-900">1.250</div><div class="text-[10px] font-semibold text-slate-500">Total Pengguna</div></div>
+                                </div>
+                                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
+                                    <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl"><i class="fas fa-building"></i></div>
+                                    <div><div class="text-2xl font-extrabold text-navy-900">120</div><div class="text-[10px] font-semibold text-slate-500">Organisasi Terdaftar</div></div>
+                                </div>
+                                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
+                                    <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl"><i class="fas fa-heart"></i></div>
+                                    <div><div class="text-2xl font-extrabold text-navy-900">250</div><div class="text-[10px] font-semibold text-slate-500">Total Kegiatan</div></div>
+                                </div>
+                                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
+                                    <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl"><i class="fas fa-user-check"></i></div>
+                                    <div><div class="text-2xl font-extrabold text-navy-900">850+</div><div class="text-[10px] font-semibold text-slate-500">Relawan Aktif</div></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- -------------------------------------- -->
+        <!-- VIEW 6: PROFIL & INFORMASI             -->
+        <!-- -------------------------------------- -->
+        <section id="view-about" class="app-view py-12">
+            <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+                <h1 class="text-3xl font-extrabold text-navy-900 text-center">Tentang KoordinAksi</h1>
+                <div class="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+                    <p class="text-slate-600 text-sm leading-relaxed">
+                        KoordinAksi adalah platform digital yang dirancang untuk membantu organisasi dan relawan dalam mengelola kegiatan sosial secara lebih efektif, terstruktur, dan terdokumentasi.
+                    </p>
+                    <p class="text-slate-600 text-sm leading-relaxed">
+                        Kami percaya bahwa setiap aksi kecil jika dilakukan bersama, akan memberikan dampak besar bagi masyarakat dan lingkungan.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW 7: FAQ -->
+        <section id="view-faq" class="app-view py-12">
+            <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+                <div class="text-center">
+                    <h1 class="text-3xl font-extrabold text-navy-900">Pertanyaan Umum (FAQ)</h1>
+                    <p class="text-sm text-slate-500 mt-1">Temukan jawaban cepat atas pertanyaan yang sering diajukan seputar KoordinAksi.</p>
+                </div>
+                <div class="bg-white p-8 rounded-3xl border border-slate-200 space-y-4 shadow-sm">
+                    <details class="p-4 bg-slate-50 rounded-xl border border-slate-200" open>
+                        <summary class="font-bold text-navy-900 cursor-pointer">Bagaimana cara mendaftar sebagai relawan?</summary>
+                        <p class="text-xs text-slate-600 mt-2 leading-relaxed">Klik tombol "Daftar" di bagian navigasi atas, pilih peran sebagai Relawan, dan lengkapi data diri Anda.</p>
+                    </details>
+                    <details class="p-4 bg-slate-50 rounded-xl border border-slate-200">
+                        <summary class="font-bold text-navy-900 cursor-pointer">Apakah ada biaya penggunaan platform KoordinAksi?</summary>
+                        <p class="text-xs text-slate-600 mt-2 leading-relaxed">Platform KoordinAksi 100% gratis untuk relawan maupun organisasi sosial non-profit.</p>
+                    </details>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ========================================== -->
+    <!-- GLOBAL FOOTER                              -->
+    <!-- ========================================== -->
+    <footer id="main-footer" class="bg-navy-900 text-white border-t border-slate-800 py-10 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+                
+                <!-- Footer Logo: Official Colors Restored (No Grayscale / Brightness filter) -->
+                <div class="flex flex-col items-center md:items-start">
+                    <img src="images/koordinaksilogo.png" alt="KoordinAksi Logo" class="h-12 w-auto object-contain bg-white/90 p-1.5 rounded-xl mb-2">
+                    <p class="text-xs text-slate-300 max-w-sm text-center md:text-left font-medium">Platform sosial digital untuk mewujudkan gerakan aksi kemanusiaan yang terstruktur, efektif, dan berdampak.</p>
+                </div>
+
+                <!-- Footer Menu Links (Tentang Kami & FAQ Included Here) -->
+                <div class="flex flex-wrap items-center justify-center gap-6 text-xs text-slate-200 font-semibold">
+                    <a href="#about" data-target-view="view-about" class="nav-link-item hover:text-emerald-400 transition-colors">Tentang Kami</a>
+                    <a href="#faq" data-target-view="view-faq" class="nav-link-item hover:text-emerald-400 transition-colors">FAQ (Pertanyaan Umum)</a>
+                    <a href="#about" data-target-view="view-about" class="hover:text-emerald-400 transition-colors">Kebijakan Privasi</a>
+                    <a href="#about" data-target-view="view-about" class="hover:text-emerald-400 transition-colors">Syarat & Ketentuan</a>
+                </div>
+
+            </div>
+
+            <div class="border-t border-slate-800 pt-6 text-center text-xs text-slate-400 font-medium">
+                &copy; 2025 <strong class="text-white font-bold">KoordinAksi</strong>. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <!-- ========================================== -->
+    <!-- MODAL DIALOGS                              -->
+    <!-- ========================================== -->
+
+    <!-- MODAL DETAIL KEGIATAN -->
+    <div id="modal-detail-kegiatan" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div class="modal-backdrop-area absolute inset-0 modal-backdrop"></div>
+        <div class="relative bg-white rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl z-10 border border-slate-100 flex flex-col">
+            
+            <div class="relative h-64 w-full overflow-hidden bg-slate-900 flex-shrink-0">
+                <img id="detail-activity-image" src="" class="w-full h-full object-cover opacity-90">
+                <button class="btn-close-modal absolute top-4 right-4 w-9 h-9 rounded-full bg-black/60 text-white font-bold z-20 hover:bg-black">&times;</button>
+                <div class="absolute bottom-4 left-6">
+                    <span id="detail-activity-badge" class="px-3.5 py-1.5 rounded-full text-xs font-bold shadow-md">Kategori</span>
+                </div>
+            </div>
+
+            <div class="p-6 sm:p-8 space-y-6 flex-grow">
+                
+                <div class="space-y-2">
+                    <div id="detail-activity-org" class="text-xs font-bold text-emerald-600 uppercase tracking-wider flex items-center gap-2">
+                        <i class="fas fa-building"></i> <span>Penyelenggara: Yayasan Peduli Negeri</span>
+                    </div>
+                    <h2 id="detail-activity-title" class="text-2xl sm:text-3xl font-extrabold text-navy-900">Judul Kegiatan</h2>
+                    
+                    <div class="flex flex-wrap items-center gap-4 text-xs text-slate-500 pt-1">
+                        <span id="detail-activity-location"><i class="fas fa-map-marker-alt text-red-500 mr-1"></i> Lokasi</span>
+                        <span id="detail-activity-date"><i class="fas fa-calendar-alt text-blue-500 mr-1"></i> Tanggal</span>
+                        <!-- Biaya Ikut Kegiatan Info -->
+                        <span id="detail-activity-fee" class="px-2.5 py-1 rounded-full font-bold bg-amber-100 text-amber-800"><i class="fas fa-tag mr-1"></i> Biaya: Gratis</span>
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <h4 class="text-sm font-bold text-navy-900 flex items-center gap-2">
+                        <i class="fas fa-file-alt text-emerald-600"></i> Deskripsi Lengkap Kegiatan
+                    </h4>
+                    <p id="detail-activity-desc" class="text-sm text-slate-600 leading-relaxed"></p>
+                </div>
+
+                <div class="space-y-2 bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                    <h4 class="text-sm font-bold text-navy-900 flex items-center gap-2">
+                        <i class="fas fa-clipboard-check text-emerald-600"></i> Syarat & Kualifikasi Relawan
+                    </h4>
+                    <ul id="detail-activity-requirements" class="text-xs text-slate-600 space-y-1.5 pl-5 list-disc">
+                        <li>Pria / Wanita usia minimal 17 tahun.</li>
+                        <li>Sehat jasmani dan rohani.</li>
+                    </ul>
+                </div>
+
+                <div class="space-y-2">
+                    <h4 class="text-sm font-bold text-navy-900 flex items-center gap-2">
+                        <i class="fas fa-gift text-purple-600"></i> Fasilitas & Benefit Relawan
+                    </h4>
+                    <div id="detail-activity-facilities" class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs">
+                        <div class="p-2.5 bg-emerald-50 text-emerald-800 rounded-xl font-medium border border-emerald-100 flex items-center gap-2">
+                            <i class="fas fa-certificate text-emerald-600"></i> Sertifikat Digital Verifikasi
+                        </div>
+                        <div class="p-2.5 bg-blue-50 text-blue-800 rounded-xl font-medium border border-blue-100 flex items-center gap-2">
+                            <i class="fas fa-tshirt text-blue-600"></i> Kaos & Atribut Lapangan
+                        </div>
+                        <div class="p-2.5 bg-amber-50 text-amber-800 rounded-xl font-medium border border-amber-100 flex items-center gap-2">
+                            <i class="fas fa-utensils text-amber-600"></i> Konsumsi / Snack Box
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-4 bg-slate-900 text-white rounded-2xl flex items-center justify-between gap-4">
+                    <div class="space-y-0.5 text-xs">
+                        <div class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Contact Person Panitia</div>
+                        <div id="detail-activity-cp-name" class="font-bold text-sm">Bambang Setyawan (Koordinator Lapangan)</div>
+                        <div id="detail-activity-cp-phone" class="text-slate-300"><i class="fab fa-whatsapp text-emerald-400 mr-1"></i> 0812-9988-7766</div>
+                    </div>
+                    <a id="btn-cp-whatsapp" href="https://wa.me/6281299887766" target="_blank" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-md">
+                        Hubungi Panitia
+                    </a>
+                </div>
+
+                <div class="pt-4 border-t border-slate-200 flex items-center justify-between">
+                    <button id="btn-open-form-pendaftaran" class="btn-primary-emerald w-full py-3 rounded-xl font-bold text-sm shadow-lg">
+                        <i class="fas fa-user-plus mr-1"></i> Daftar Sebagai Relawan & Transfer Biaya
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL FORM PENDAFTARAN & UPLOAD BUKTI BIAYA -->
+    <div id="modal-form-pendaftaran" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div class="modal-backdrop-area absolute inset-0 modal-backdrop"></div>
+        <div class="relative bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl z-10 space-y-5 border border-slate-100 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between border-b pb-3">
+                <div>
+                    <h3 class="text-lg font-bold text-navy-900">Form Pendaftaran Kegiatan</h3>
+                    <p id="reg-form-activity-title" class="text-xs text-emerald-600 font-semibold">Judul Kegiatan</p>
+                </div>
+                <button class="btn-close-modal text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
+            </div>
+            
+            <form id="form-submit-registration" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Lengkap Relawan</label>
+                    <input type="text" id="reg-name" required value="Siti Nurhaliza" 
+                           class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Nomor WhatsApp Active</label>
+                    <input type="text" id="reg-phone" required value="0812-3456-7890" 
+                           class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500">
+                </div>
+
+                <!-- Info Nominal Biaya & Bank Transfer -->
+                <div class="p-4 bg-amber-50 border border-amber-200 rounded-2xl space-y-2 text-xs">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-amber-900">Biaya / Donasi Operasional:</span>
+                        <span id="reg-form-fee-amount" class="font-extrabold text-amber-700 text-sm">Gratis</span>
+                    </div>
+                    <div id="reg-form-bank-info" class="text-slate-600 pt-1 border-t border-amber-200">
+                        Transfer Bank Mandiri: <strong>123-000-9876543</strong> a.n <strong>Yayasan Peduli Negeri</strong>
+                    </div>
+                </div>
+
+                <!-- Upload Bukti Transfer Gambar -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Upload Bukti Transfer Pembayaran / Donasi</label>
+                    <input type="file" id="reg-payment-file" accept="image/*" 
+                           class="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-100 file:text-emerald-700 hover:file:bg-emerald-200 cursor-pointer">
+                    <p class="text-[10px] text-slate-400 mt-1">*Format gambar JPG/PNG maksimal 2MB (Boleh dikosongkan jika Gratis).</p>
+                </div>
+
+                <button type="submit" class="btn-primary-emerald w-full py-3 rounded-xl font-bold text-sm shadow-md">
+                    Kirim Pendaftaran & Bukti Transfer
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Login -->
+    <div id="modal-login" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div class="modal-backdrop-area absolute inset-0 modal-backdrop"></div>
+        <div class="relative bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl z-10 space-y-5 border border-slate-100">
+            <div class="flex items-center justify-between border-b pb-3">
+                <h3 class="text-xl font-bold text-navy-900">Masuk ke KoordinAksi</h3>
+                <button class="btn-close-modal text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
+            </div>
+            <form id="form-login" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Email</label>
+                    <input type="email" placeholder="nama@email.com" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Kata Sandi</label>
+                    <input type="password" placeholder="••••••••" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm">
+                </div>
+                <button type="submit" class="btn-primary-emerald w-full py-3 rounded-xl font-semibold text-sm shadow-md">Masuk</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Register -->
+    <div id="modal-register" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div class="modal-backdrop-area absolute inset-0 modal-backdrop"></div>
+        <div class="relative bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl z-10 space-y-5 border border-slate-100">
+            <div class="flex items-center justify-between border-b pb-3">
+                <h3 class="text-xl font-bold text-navy-900">Daftar Akun Baru</h3>
+                <button class="btn-close-modal text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
+            </div>
+            <form id="form-register" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Lengkap</label>
+                    <input type="text" placeholder="Masukkan nama" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Email</label>
+                    <input type="email" placeholder="nama@email.com" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Kata Sandi</label>
+                    <input type="password" placeholder="Buat kata sandi" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm">
+                </div>
+                <button type="submit" class="btn-primary-blue w-full py-3 rounded-xl font-semibold text-sm shadow-md">Buat Akun</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- INLINE INTERACTIVE JAVASCRIPT ENGINE       -->
+    <!-- ========================================== -->
+    <script>
+        // Global Auth State (Default: Logged Out false for testing, set true upon Login)
+        let isLoggedIn = true; // Defaulted to true so logged-in user profile is accessible, toggled by Auth actions
+        let currentActivityData = null;
+
+        // Portfolio Array
+        let userPortfolioItems = [
+            { id: 1, url: 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=600&q=80', caption: 'Penanaman bibit pohon mahoni di lereng Bogor' },
+            { id: 2, url: 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=600&q=80', caption: 'Berbagi santunan & kebahagiaan di panti asuhan' },
+            { id: 3, url: 'https://images.unsplash.com/photo-1615461066841-6116e61058f4?auto=format&fit=crop&w=600&q=80', caption: 'Aksi donor darah bersama PMI Jakarta' }
+        ];
+
+        const volunteersDatabase = {
+            'siti': {
+                name: 'Siti Nurhaliza',
+                role: 'Relawan Aktif - Tanggap Bencana & Kemanusiaan',
+                email: 'siti.nurhaliza@email.com',
+                phone: '0812-3456-7890',
+                location: 'Jakarta, Indonesia',
+                avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=300&q=80',
+                kegiatanCount: 12,
+                jamCount: 86,
+                sertifikatCount: 5
+            },
+            'ricky': {
+                name: 'Ricky Maulana',
+                role: 'Relawan Aktif - Penghijauan & Lingkungan',
+                email: 'ricky.maulana@email.com',
+                phone: '0813-9876-5432',
+                location: 'Bekasi, Jawa Barat',
+                avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80',
+                kegiatanCount: 10,
+                jamCount: 64,
+                sertifikatCount: 4
+            },
+            'dewi': {
+                name: 'Dewi Anjani',
+                role: 'Relawan Aktif - Pendidikan & Kesehatan',
+                email: 'dewi.anjani@email.com',
+                phone: '0815-1122-3344',
+                location: 'Bogor, Jawa Barat',
+                avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
+                kegiatanCount: 8,
+                jamCount: 52,
+                sertifikatCount: 3
+            },
+            'budi': {
+                name: 'Budi Santoso',
+                role: 'Relawan Senior - Logistik & Lapangan',
+                email: 'budi.santoso@email.com',
+                phone: '0811-2233-4455',
+                location: 'Depok, Jawa Barat',
+                avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80',
+                kegiatanCount: 15,
+                jamCount: 98,
+                sertifikatCount: 6
+            }
+        };
+
+        const activitiesDatabase = {
+            'donor-darah': {
+                title: 'Donor Darah untuk Kemanusiaan',
+                category: 'Donor Darah',
+                badgeClass: 'badge-donor',
+                org: 'PMI DKI Jakarta & Yayasan Peduli Negeri',
+                location: 'Gedung PMI Jakarta Selatan',
+                date: '25 Mei 2025',
+                fee: 'Gratis (Termasuk Lunch Box & Snack)',
+                image: 'https://images.unsplash.com/photo-1615461066841-6116e61058f4?auto=format&fit=crop&w=1200&q=80',
+                desc: 'Aksi donor darah serentak membantu persediaan darah PMI untuk rumah sakit di wilayah Jakarta Selatan.',
+                cpName: 'Bambang Setyawan (Koordinator PMI)',
+                cpPhone: '6281299887766'
+            },
+            'bencana-banjir': {
+                title: 'Aksi Peduli Bencana Banjir',
+                category: 'Bantuan Bencana',
+                badgeClass: 'badge-bencana',
+                org: 'Tim Tanggap Bencana KoordinAksi',
+                location: 'Bekasi, Jawa Barat',
+                date: '2 Juni 2025',
+                fee: 'Rp 50.000 (Donasi Paket Sembako)',
+                image: 'https://images.unsplash.com/photo-1547683905-f686c993aae5?auto=format&fit=crop&w=1200&q=80',
+                desc: 'Penyaluran logistik makanan, sembako, dan pembersihan fasilitas umum terdampak banjir di Bekasi.',
+                cpName: 'Rian Pratama (Ketua Posko)',
+                cpPhone: '6281311223344'
+            },
+            'bakti-sosial': {
+                title: 'Bakti Sosial untuk Anak Yatim',
+                category: 'Bakti Sosial',
+                badgeClass: 'badge-baksos',
+                org: 'Komunitas Kasih Nusantara',
+                location: 'Depok, Jawa Barat',
+                date: '15 Juni 2025',
+                fee: 'Rp 35.000 (Donasi Paket Alat Tulis)',
+                image: 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=1200&q=80',
+                desc: 'Berbagi santunan, perlengkapan sekolah, serta kelas motivasi keceriaan untuk panti asuhan.',
+                cpName: 'Sinta Dewi (Pengurus Yayasan)',
+                cpPhone: '6281555667788'
+            }
+        };
+
+        const orgDatabase = {
+            'ypn': {
+                name: 'Yayasan Peduli Negeri',
+                desc: 'Lembaga sosial nirlaba yang berfokus pada penanggulangan bencana, bantuan kemanusiaan, dan bakti sosial anak yatim piatu di Indonesia.',
+                relawanCount: 320,
+                img: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=300&q=80'
+            }
+        };
+
+        let isFollowingOrg = false;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initNavigation();
+            initInternalTabs();
+            initKegiatanFilter();
+            initClickListeners();
+            initFollowOrgButton();
+            initPortfolioEngine();
+            initRegistrationFormModal();
+            initModals();
+            initAuthEngine();
+            updateAuthUI();
+        });
+
+        function initNavigation() {
+            const navLinks = document.querySelectorAll('[data-target-view]');
+            navLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const targetViewId = link.getAttribute('data-target-view');
+                    switchView(targetViewId);
+                });
+            });
+
+            const btnMyProfile = document.getElementById('btn-my-profile');
+            if (btnMyProfile) {
+                btnMyProfile.addEventListener('click', () => {
+                    if (!isLoggedIn) {
+                        switchView('view-relawan-profile');
+                    } else {
+                        openVolunteerProfile('siti');
+                    }
+                });
+            }
+        }
+
+        function switchView(targetViewId) {
+            const allViews = document.querySelectorAll('.app-view');
+            const allNavLinks = document.querySelectorAll('.nav-link-item');
+            
+            allViews.forEach(view => view.classList.remove('active'));
+
+            const targetView = document.getElementById(targetViewId);
+            if (targetView) {
+                targetView.classList.add('active');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+
+            // Sync Nav Active Indicator accurately for all views
+            allNavLinks.forEach(link => {
+                const linkView = link.getAttribute('data-target-view');
+                let isActive = false;
+
+                if (linkView === targetViewId) isActive = true;
+                if ((targetViewId === 'view-organisasi-detail' || targetViewId === 'view-organisasi-public') && linkView === 'view-organisasi-public') isActive = true;
+                if ((targetViewId === 'view-relawan-profile' || targetViewId === 'view-relawan-public') && linkView === 'view-relawan-public') isActive = true;
+
+                if (isActive) {
+                    link.classList.add('active', 'text-emerald-700', 'border-b-2', 'border-emerald-600', 'font-bold');
+                    link.classList.remove('text-slate-600');
+                } else {
+                    link.classList.remove('active', 'text-emerald-700', 'border-b-2', 'border-emerald-600', 'font-bold');
+                    link.classList.add('text-slate-600');
+                }
+            });
+
+            // Handle Profile Logged Out State View
+            if (targetViewId === 'view-relawan-profile') {
+                const loggedInContainer = document.getElementById('profile-logged-in-container');
+                const loggedOutState = document.getElementById('profile-logged-out-state');
+                if (!isLoggedIn) {
+                    loggedInContainer?.classList.add('hidden');
+                    loggedOutState?.classList.remove('hidden');
+                } else {
+                    loggedInContainer?.classList.remove('hidden');
+                    loggedOutState?.classList.add('hidden');
+                }
+            }
+        }
+
+        function updateAuthUI() {
+            const loggedOutNav = document.getElementById('nav-auth-logged-out');
+            const loggedInNav = document.getElementById('nav-auth-logged-in');
+            
+            if (isLoggedIn) {
+                loggedOutNav?.classList.add('hidden');
+                loggedInNav?.classList.remove('hidden');
+            } else {
+                loggedOutNav?.classList.remove('hidden');
+                loggedInNav?.classList.add('hidden');
+            }
+        }
+
+        function initAuthEngine() {
+            document.getElementById('btn-logout')?.addEventListener('click', () => {
+                isLoggedIn = false;
+                updateAuthUI();
+                showToast('Anda telah keluar dari akun.', 'info');
+                switchView('view-home');
+            });
+
+            document.getElementById('form-login')?.addEventListener('submit', (e) => {
+                e.preventDefault();
+                isLoggedIn = true;
+                updateAuthUI();
+                showToast('Berhasil Masuk! Selamat datang kembali, Siti Nurhaliza.', 'success');
+                document.getElementById('modal-login')?.classList.add('hidden');
+                openVolunteerProfile('siti');
+            });
+
+            document.getElementById('form-register')?.addEventListener('submit', (e) => {
+                e.preventDefault();
+                isLoggedIn = true;
+                updateAuthUI();
+                showToast('Pendaftaran Akun Berhasil! Selamat datang di KoordinAksi.', 'success');
+                document.getElementById('modal-register')?.classList.add('hidden');
+                openVolunteerProfile('siti');
+            });
+        }
+
+        function initClickListeners() {
+            document.querySelectorAll('.org-card').forEach(card => {
+                card.addEventListener('click', () => openOrgDetail('ypn'));
+            });
+
+            document.querySelectorAll('.btn-volunteer-item, .relawan-card').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const volId = item.getAttribute('data-volunteer-id') || 'siti';
+                    openVolunteerProfile(volId);
+                });
+            });
+
+            document.querySelectorAll('.kegiatan-card').forEach(card => {
+                card.addEventListener('click', (e) => {
+                    const activityId = card.getAttribute('data-activity-id') || 'donor-darah';
+                    openActivityDetailModal(activityId);
+                });
+            });
+        }
+
+        function openVolunteerProfile(volunteerId) {
+            const data = volunteersDatabase[volunteerId] || volunteersDatabase['siti'];
+            
+            document.getElementById('vol-profile-avatar').src = data.avatar;
+            document.getElementById('vol-profile-name').textContent = data.name;
+            document.getElementById('vol-profile-role').textContent = data.role;
+            
+            // Dynamic Interactive Contact Links
+            const linkEmail = document.getElementById('vol-link-email');
+            linkEmail.textContent = data.email;
+            linkEmail.href = `mailto:${data.email}`;
+
+            const linkPhone = document.getElementById('vol-link-phone');
+            const cleanPhone = data.phone.replace(/[^0-9]/g, '');
+            linkPhone.textContent = data.phone;
+            linkPhone.href = `https://wa.me/62${cleanPhone.substring(1)}`;
+
+            const linkLoc = document.getElementById('vol-link-location');
+            linkLoc.textContent = `${data.location} (Maps)`;
+            linkLoc.href = `https://maps.google.com/?q=${encodeURIComponent(data.location)}`;
+            
+            document.getElementById('vol-profile-kegiatan-count').textContent = data.kegiatanCount;
+            document.getElementById('vol-profile-jam-count').textContent = data.jamCount;
+            document.getElementById('vol-profile-sertifikat-count').textContent = data.sertifikatCount;
+
+            switchView('view-relawan-profile');
+        }
+
+        function initFollowOrgButton() {
+            const btnFollowOrg = document.getElementById('btn-follow-org');
+            if (!btnFollowOrg) return;
+
+            btnFollowOrg.addEventListener('click', () => {
+                const statElem = document.getElementById('detail-org-stat-relawan');
+                const listContainer = document.getElementById('detail-org-volunteers-list');
+                let currentCount = parseInt(statElem.textContent) || 320;
+
+                if (!isFollowingOrg) {
+                    isFollowingOrg = true;
+                    currentCount++;
+                    statElem.textContent = currentCount;
+                    btnFollowOrg.innerHTML = '<i class="fas fa-check-circle mr-1.5"></i> Mengikuti';
+                    btnFollowOrg.className = 'px-6 py-2.5 rounded-xl text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-sm transition-all';
+                    showToast('Anda sekarang mengikuti Yayasan Peduli Negeri.', 'success');
+
+                    // Synchronize & Append User to Followers List
+                    if (listContainer) {
+                        const userItem = document.createElement('div');
+                        userItem.id = 'org-follower-siti-item';
+                        userItem.className = 'btn-volunteer-item p-3 bg-emerald-50 rounded-xl border border-emerald-200 flex items-center justify-between cursor-pointer';
+                        userItem.innerHTML = `
+                            <div class="flex items-center gap-3">
+                                <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80" class="w-10 h-10 rounded-full object-cover border border-emerald-500">
+                                <div>
+                                    <div class="text-xs font-bold text-navy-900">Siti Nurhaliza (Anda)</div>
+                                    <div class="text-[10px] text-emerald-700 font-semibold">Baru Saja Bergabung</div>
+                                </div>
+                            </div>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] bg-emerald-200 text-emerald-800 font-bold">Mengikuti</span>
+                        `;
+                        userItem.onclick = () => openVolunteerProfile('siti');
+                        listContainer.prepend(userItem);
+                    }
+                } else {
+                    isFollowingOrg = false;
+                    currentCount--;
+                    statElem.textContent = currentCount;
+                    btnFollowOrg.innerHTML = '<i class="fas fa-plus mr-1.5"></i> Ikuti Organisasi';
+                    btnFollowOrg.className = 'btn-primary-emerald px-6 py-2.5 rounded-xl text-xs font-bold shadow-md transition-all';
+                    showToast('Anda telah berhenti mengikuti organisasi ini.', 'info');
+
+                    document.getElementById('org-follower-siti-item')?.remove();
+                }
+            });
+        }
+
+        function openOrgDetail(orgId) {
+            const orgData = orgDatabase[orgId] || orgDatabase['ypn'];
+            document.getElementById('detail-org-name').textContent = orgData.name;
+            document.getElementById('detail-org-desc').textContent = orgData.desc;
+            document.getElementById('detail-org-image').src = orgData.img;
+            document.getElementById('detail-org-stat-relawan').textContent = orgData.relawanCount;
+            switchView('view-organisasi-detail');
+        }
+
+        function openActivityDetailModal(activityId) {
+            const data = activitiesDatabase[activityId] || activitiesDatabase['donor-darah'];
+            currentActivityData = data;
+            const modal = document.getElementById('modal-detail-kegiatan');
+            if (!modal) return;
+
+            document.getElementById('detail-activity-image').src = data.image;
+            document.getElementById('detail-activity-title').textContent = data.title;
+            document.getElementById('detail-activity-org').textContent = `Penyelenggara: ${data.org}`;
+            document.getElementById('detail-activity-location').innerHTML = `<i class="fas fa-map-marker-alt text-red-500 mr-1"></i> ${data.location}`;
+            document.getElementById('detail-activity-date').innerHTML = `<i class="fas fa-calendar-alt text-blue-500 mr-1"></i> ${data.date}`;
+            document.getElementById('detail-activity-desc').textContent = data.desc;
+            document.getElementById('detail-activity-fee').innerHTML = `<i class="fas fa-tag mr-1"></i> Biaya: ${data.fee}`;
+
+            if (data.cpName) document.getElementById('detail-activity-cp-name').textContent = data.cpName;
+            if (data.cpPhone) {
+                const btnCp = document.getElementById('btn-cp-whatsapp');
+                if (btnCp) btnCp.href = `https://wa.me/${data.cpPhone}`;
+            }
+
+            const badgeElem = document.getElementById('detail-activity-badge');
+            badgeElem.textContent = data.category;
+            badgeElem.className = `px-3.5 py-1.5 rounded-full text-xs font-bold shadow-md ${data.badgeClass}`;
+
+            document.getElementById('btn-open-form-pendaftaran').onclick = () => {
+                modal.classList.add('hidden');
+                openRegistrationFormModal(data);
+            };
+
+            modal.classList.remove('hidden');
+        }
+
+        function openRegistrationFormModal(activityData) {
+            const regModal = document.getElementById('modal-form-pendaftaran');
+            document.getElementById('reg-form-activity-title').textContent = activityData.title;
+            document.getElementById('reg-form-fee-amount').textContent = activityData.fee;
+            regModal.classList.remove('hidden');
+        }
+
+        function initRegistrationFormModal() {
+            document.getElementById('form-submit-registration')?.addEventListener('submit', (e) => {
+                e.preventDefault();
+                showToast(`Pendaftaran & Bukti Pembayaran untuk "${currentActivityData ? currentActivityData.title : 'Kegiatan'}" Berhasil Terkirim!`, 'success');
+                document.getElementById('modal-form-pendaftaran')?.classList.add('hidden');
+            });
+        }
+
+        /**
+         * Interactive Portfolio Engine (Add, Caption, Delete)
+         */
+        function initPortfolioEngine() {
+            const form = document.getElementById('form-add-portfolio');
+            if (form) {
+                form.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const urlInput = document.getElementById('portfolio-img-url');
+                    const captionInput = document.getElementById('portfolio-caption');
+
+                    const newItem = {
+                        id: Date.now(),
+                        url: urlInput.value,
+                        caption: captionInput.value
+                    };
+
+                    userPortfolioItems.unshift(newItem);
+                    renderPortfolioGallery();
+                    form.reset();
+                    showToast('Foto portofolio baru berhasil ditambahkan!', 'success');
+                });
+            }
+
+            renderPortfolioGallery();
+        }
+
+        function renderPortfolioGallery() {
+            const container = document.getElementById('portfolio-gallery-container');
+            if (!container) return;
+
+            container.innerHTML = userPortfolioItems.map(item => `
+                <div class="group relative bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-sm flex flex-col justify-between">
+                    <div class="relative h-40 overflow-hidden bg-slate-900">
+                        <img src="${item.url}" alt="${item.caption}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                        <button onclick="deletePortfolioItem(${item.id})" class="absolute top-2 right-2 w-8 h-8 rounded-full bg-red-600 text-white flex items-center justify-center text-xs font-bold shadow-md hover:bg-red-700 transition-colors" title="Hapus Foto">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                    <div class="p-3 bg-white">
+                        <p class="text-xs text-slate-700 font-medium line-clamp-2">${item.caption}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function deletePortfolioItem(id) {
+            userPortfolioItems = userPortfolioItems.filter(item => item.id !== id);
+            renderPortfolioGallery();
+            showToast('Foto portofolio telah dihapus.', 'info');
+        }
+
+        function initInternalTabs() {
+            const setupSubTabs = (tabSelector, contentSelector) => {
+                const tabs = document.querySelectorAll(tabSelector);
+                const contents = document.querySelectorAll(contentSelector);
+
+                tabs.forEach(tab => {
+                    tab.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const targetKey = tab.getAttribute('data-tab');
+                        
+                        tabs.forEach(t => t.classList.remove('active', 'bg-emerald-600', 'text-white', 'bg-blue-600'));
+                        tab.classList.add('active');
+
+                        if (tab.classList.contains('sidebar-item')) {
+                            if (tab.classList.contains('sidebar-item-admin')) {
+                                tab.classList.add('bg-blue-600', 'text-white');
+                            } else {
+                                tab.classList.add('bg-emerald-600', 'text-white');
+                            }
+                        }
+
+                        contents.forEach(c => {
+                            if (c.getAttribute('data-tab-content') === targetKey) {
+                                c.classList.remove('hidden');
+                            } else {
+                                c.classList.add('hidden');
+                            }
+                        });
+                    });
+                });
+            };
+
+            setupSubTabs('.relawan-sub-tab', '.relawan-sub-tab-content');
+            setupSubTabs('.admin-sidebar-tab', '.admin-tab-content');
+        }
+
+        function initKegiatanFilter() {
+            const searchInput = document.getElementById('search-kegiatan');
+            const categorySelect = document.getElementById('filter-kategori');
+            const locationSelect = document.getElementById('filter-lokasi');
+            const filterBtn = document.getElementById('btn-apply-filter');
+            const cards = document.querySelectorAll('.kegiatan-grid-item');
+
+            function applyFilter() {
+                const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
+                const selectedCat = categorySelect ? categorySelect.value.toLowerCase() : 'semua';
+                const selectedLoc = locationSelect ? locationSelect.value.toLowerCase() : 'semua';
+
+                cards.forEach(card => {
+                    const title = card.getAttribute('data-title')?.toLowerCase() || '';
+                    const category = card.getAttribute('data-category')?.toLowerCase() || '';
+                    const location = card.getAttribute('data-location')?.toLowerCase() || '';
+
+                    const matchesSearch = title.includes(searchTerm) || category.includes(searchTerm) || location.includes(searchTerm);
+                    const matchesCategory = selectedCat === 'semua' || category.includes(selectedCat);
+                    const matchesLocation = selectedLoc === 'semua' || location.includes(selectedLoc);
+
+                    if (matchesSearch && matchesCategory && matchesLocation) {
+                        card.classList.remove('hidden');
+                    } else {
+                        card.classList.add('hidden');
+                    }
+                });
+            }
+
+            if (filterBtn) filterBtn.addEventListener('click', applyFilter);
+            if (searchInput) searchInput.addEventListener('input', applyFilter);
+            if (categorySelect) categorySelect.addEventListener('change', applyFilter);
+            if (locationSelect) locationSelect.addEventListener('change', applyFilter);
+        }
+
+        function initModals() {
+            const modalLogin = document.getElementById('modal-login');
+            const modalRegister = document.getElementById('modal-register');
+            const modalDetail = document.getElementById('modal-detail-kegiatan');
+            const modalPendaftaran = document.getElementById('modal-form-pendaftaran');
+
+            document.querySelectorAll('.btn-open-login').forEach(btn => {
+                btn.addEventListener('click', () => modalLogin?.classList.remove('hidden'));
+            });
+
+            document.querySelectorAll('.btn-open-register').forEach(btn => {
+                btn.addEventListener('click', () => modalRegister?.classList.remove('hidden'));
+            });
+
+            document.querySelectorAll('.btn-close-modal').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    modalLogin?.classList.add('hidden');
+                    modalRegister?.classList.add('hidden');
+                    modalDetail?.classList.add('hidden');
+                    modalPendaftaran?.classList.add('hidden');
+                });
+            });
+
+            document.querySelectorAll('.modal-backdrop-area').forEach(backdrop => {
+                backdrop.addEventListener('click', (e) => {
+                    if (e.target === backdrop) {
+                        modalLogin?.classList.add('hidden');
+                        modalRegister?.classList.add('hidden');
+                        modalDetail?.classList.add('hidden');
+                        modalPendaftaran?.classList.add('hidden');
+                    }
+                });
+            });
+        }
+
+        function showToast(message, type = 'info') {
+            let container = document.getElementById('toast-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'toast-container';
+                container.className = 'fixed bottom-5 right-5 z-50 flex flex-col gap-3 max-w-sm w-full px-4';
+                document.body.appendChild(container);
+            }
+
+            const toast = document.createElement('div');
+            toast.className = `flex items-center gap-3 p-4 rounded-xl shadow-xl text-white transform transition-all duration-300 translate-y-4 opacity-0 ${
+                type === 'success' ? 'bg-emerald-700' : 'bg-blue-600'
+            }`;
+            
+            toast.innerHTML = `
+                <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-info-circle'} text-xl"></i>
+                <div class="flex-1 text-sm font-medium">${message}</div>
+                <button class="text-white opacity-70 hover:opacity-100">&times;</button>
+            `;
+
+            container.appendChild(toast);
+            setTimeout(() => toast.classList.remove('translate-y-4', 'opacity-0'), 10);
+
+            const removeToast = () => {
+                toast.classList.add('opacity-0', 'translate-y-4');
+                setTimeout(() => toast.remove(), 300);
+            };
+
+            toast.querySelector('button').addEventListener('click', removeToast);
+            setTimeout(removeToast, 4000);
+        }
+    </script>
+</body>
+</html>
