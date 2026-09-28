@@ -1,19 +1,21 @@
 /**
- * KoordinAksi - Single Page Application Router & Interactive UI Engine
- * Handles View Switching, Auth State Management, Dynamic Filtering, Activity Detail Modal, Portfolio Upload/Delete, Org Follow Toggle, Sub-Tabs, and Toast Notifications.
+ * KoordinAksi - Modular & Interactive Engine
+ * Handles Navigation, Auth State, Modal Windows, Dynamic Filters, Volunteer Database, Portfolio CRUD, and Certificate Previews.
  */
 
-// Global Auth State (Default: Logged Out false for testing, set true upon Login)
-let isLoggedIn = true;
+// LocalStorage Synced Auth State (Default: true)
+let isLoggedIn = localStorage.getItem('koordinaksi_isLoggedIn') !== 'false';
 let currentActivityData = null;
+let isFollowingOrg = localStorage.getItem('koordinaksi_following_ypn') === 'true';
 
-// Portfolio Array
-let userPortfolioItems = [
+// User Portfolio Items
+let userPortfolioItems = JSON.parse(localStorage.getItem('koordinaksi_portfolio')) || [
     { id: 1, url: 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=600&q=80', caption: 'Penanaman bibit pohon mahoni di lereng Bogor' },
     { id: 2, url: 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=600&q=80', caption: 'Berbagi santunan & kebahagiaan di panti asuhan' },
     { id: 3, url: 'https://images.unsplash.com/photo-1615461066841-6116e61058f4?auto=format&fit=crop&w=600&q=80', caption: 'Aksi donor darah bersama PMI Jakarta' }
 ];
 
+// Volunteer Database
 const volunteersDatabase = {
     'siti': {
         name: 'Siti Nurhaliza',
@@ -61,6 +63,7 @@ const volunteersDatabase = {
     }
 };
 
+// Activity Database
 const activitiesDatabase = {
     'donor-darah': {
         title: 'Donor Darah untuk Kemanusiaan',
@@ -100,9 +103,23 @@ const activitiesDatabase = {
         desc: 'Berbagi santunan, perlengkapan sekolah, serta kelas motivasi keceriaan untuk panti asuhan.',
         cpName: 'Sinta Dewi (Pengurus Yayasan)',
         cpPhone: '6281555667788'
+    },
+    'penghijauan-bogor': {
+        title: 'Penanaman 1.000 Pohon Mahoni',
+        category: 'Penghijauan',
+        badgeClass: 'badge-penghijauan',
+        org: 'Komunitas Hijau Lestari',
+        location: 'Bogor, Jawa Barat',
+        date: '20 Juli 2025',
+        fee: 'Gratis (Kaos Relawan & Konsumsi)',
+        image: 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=1200&q=80',
+        desc: 'Aksi penanaman bibit pohon mahoni di lereng bukit Bogor untuk mencegah erosi dan menambah daerah resapan air.',
+        cpName: 'Aris Setiawan (Ketua Komunitas)',
+        cpPhone: '6281233445566'
     }
 };
 
+// Organization Database
 const orgDatabase = {
     'ypn': {
         name: 'Yayasan Peduli Negeri',
@@ -112,10 +129,8 @@ const orgDatabase = {
     }
 };
 
-let isFollowingOrg = false;
-
 document.addEventListener('DOMContentLoaded', () => {
-    initNavigation();
+    syncActiveNavigation();
     initInternalTabs();
     initKegiatanFilter();
     initClickListeners();
@@ -127,129 +142,167 @@ document.addEventListener('DOMContentLoaded', () => {
     updateAuthUI();
 });
 
-function initNavigation() {
-    const navLinks = document.querySelectorAll('[data-target-view]');
+// Dynamic Navigation Active State
+function syncActiveNavigation() {
+    const currentPath = window.location.pathname.split('/').pop() || 'index.html';
+    const navLinks = document.querySelectorAll('.nav-link-item');
+
     navLinks.forEach(link => {
-        link.addEventListener('click', (e) => {
-            e.preventDefault();
-            const targetViewId = link.getAttribute('data-target-view');
-            switchView(targetViewId);
-        });
-    });
-
-    const btnMyProfile = document.getElementById('btn-my-profile');
-    if (btnMyProfile) {
-        btnMyProfile.addEventListener('click', () => {
-            if (!isLoggedIn) {
-                switchView('view-relawan-profile');
-            } else {
-                openVolunteerProfile('siti');
-            }
-        });
-    }
-}
-
-function switchView(targetViewId) {
-    const allViews = document.querySelectorAll('.app-view');
-    const allNavLinks = document.querySelectorAll('.nav-link-item');
-    
-    allViews.forEach(view => view.classList.remove('active'));
-
-    const targetView = document.getElementById(targetViewId);
-    if (targetView) {
-        targetView.classList.add('active');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    // Sync Nav Active Indicator accurately for all views
-    allNavLinks.forEach(link => {
-        const linkView = link.getAttribute('data-target-view');
+        const href = link.getAttribute('href');
+        const targetView = link.getAttribute('data-target-view');
+        
         let isActive = false;
-
-        if (linkView === targetViewId) isActive = true;
-        if ((targetViewId === 'view-organisasi-detail' || targetViewId === 'view-organisasi-public') && linkView === 'view-organisasi-public') isActive = true;
-        if ((targetViewId === 'view-relawan-profile' || targetViewId === 'view-relawan-public') && linkView === 'view-relawan-public') isActive = true;
+        if (href && href.includes(currentPath)) isActive = true;
+        if (currentPath === '' || currentPath === 'index.html') {
+            if (href === 'index.html' || targetView === 'view-home') isActive = true;
+        }
 
         if (isActive) {
             link.classList.add('active', 'text-emerald-700', 'border-b-2', 'border-emerald-600', 'font-bold');
             link.classList.remove('text-slate-600');
-        } else {
+        } else if (!link.classList.contains('logo-container')) {
             link.classList.remove('active', 'text-emerald-700', 'border-b-2', 'border-emerald-600', 'font-bold');
             link.classList.add('text-slate-600');
         }
     });
+}
 
-    // Handle Profile Logged Out State View
-    if (targetViewId === 'view-relawan-profile') {
-        const loggedInContainer = document.getElementById('profile-logged-in-container');
-        const loggedOutState = document.getElementById('profile-logged-out-state');
-        if (!isLoggedIn) {
-            loggedInContainer?.classList.add('hidden');
-            loggedOutState?.classList.remove('hidden');
-        } else {
-            loggedInContainer?.classList.remove('hidden');
-            loggedOutState?.classList.add('hidden');
-        }
+function switchView(targetViewId) {
+    const targetView = document.getElementById(targetViewId);
+    if (targetView) {
+        document.querySelectorAll('.app-view').forEach(view => view.classList.remove('active'));
+        targetView.classList.add('active');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+        // Multi-page fallback mapping
+        if (targetViewId === 'view-home') window.location.href = 'index.html';
+        else if (targetViewId === 'view-kegiatan') window.location.href = 'kegiatan.html';
+        else if (targetViewId === 'view-organisasi-public' || targetViewId === 'view-organisasi-detail') window.location.href = 'organisasi.html';
+        else if (targetViewId === 'view-relawan-public') window.location.href = 'relawan.html';
+        else if (targetViewId === 'view-relawan-profile') window.location.href = 'profil.html';
+        else if (targetViewId === 'view-admin') window.location.href = 'admin.html';
     }
 }
 
 function updateAuthUI() {
+    localStorage.setItem('koordinaksi_isLoggedIn', isLoggedIn ? 'true' : 'false');
     const loggedOutNav = document.getElementById('nav-auth-logged-out');
     const loggedInNav = document.getElementById('nav-auth-logged-in');
     
     if (isLoggedIn) {
-        loggedOutNav?.classList.add('hidden');
-        loggedInNav?.classList.remove('hidden');
+        if (loggedOutNav) loggedOutNav.classList.add('hidden');
+        if (loggedInNav) loggedInNav.classList.remove('hidden');
     } else {
-        loggedOutNav?.classList.remove('hidden');
-        loggedInNav?.classList.add('hidden');
+        if (loggedOutNav) loggedOutNav.classList.remove('hidden');
+        if (loggedInNav) loggedInNav.classList.add('hidden');
+    }
+
+    // Toggle profile views if on profil.html
+    const profileContainer = document.getElementById('profile-logged-in-container');
+    const profileLoggedOutState = document.getElementById('profile-logged-out-state');
+    if (profileContainer && profileLoggedOutState) {
+        if (isLoggedIn) {
+            profileContainer.classList.remove('hidden');
+            profileLoggedOutState.classList.add('hidden');
+        } else {
+            profileContainer.classList.add('hidden');
+            profileLoggedOutState.classList.remove('hidden');
+        }
     }
 }
 
 function initAuthEngine() {
-    document.getElementById('btn-logout')?.addEventListener('click', () => {
-        isLoggedIn = false;
-        updateAuthUI();
-        showToast('Anda telah keluar dari akun.', 'info');
-        switchView('view-home');
+    // Logout Handler
+    document.querySelectorAll('.btn-logout-trigger').forEach(btn => {
+        btn.addEventListener('click', () => {
+            isLoggedIn = false;
+            updateAuthUI();
+            showToast('Anda telah keluar dari akun KoordinAksi.', 'info');
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 600);
+        });
     });
 
+    // Login Form Handler
     document.getElementById('form-login')?.addEventListener('submit', (e) => {
         e.preventDefault();
         isLoggedIn = true;
         updateAuthUI();
         showToast('Berhasil Masuk! Selamat datang kembali, Siti Nurhaliza.', 'success');
         document.getElementById('modal-login')?.classList.add('hidden');
-        openVolunteerProfile('siti');
+        if (window.location.pathname.includes('profil.html')) {
+            updateAuthUI();
+        } else {
+            window.location.href = 'profil.html';
+        }
     });
 
+    // Register Form Handler
     document.getElementById('form-register')?.addEventListener('submit', (e) => {
         e.preventDefault();
         isLoggedIn = true;
         updateAuthUI();
         showToast('Pendaftaran Akun Berhasil! Selamat datang di KoordinAksi.', 'success');
         document.getElementById('modal-register')?.classList.add('hidden');
-        openVolunteerProfile('siti');
+        if (window.location.pathname.includes('profil.html')) {
+            updateAuthUI();
+        } else {
+            window.location.href = 'profil.html';
+        }
     });
 }
 
+function checkAuthRequirement(actionCallback) {
+    if (!isLoggedIn) {
+        const modalAuthReq = document.getElementById('modal-auth-required');
+        if (modalAuthReq) {
+            modalAuthReq.classList.remove('hidden');
+        } else {
+            const modalLogin = document.getElementById('modal-login');
+            if (modalLogin) modalLogin.classList.remove('hidden');
+        }
+        showToast('Silakan masuk atau mendaftar terlebih dahulu.', 'info');
+        return false;
+    }
+    if (typeof actionCallback === 'function') actionCallback();
+    return true;
+}
+
 function initClickListeners() {
+    // Org card click
     document.querySelectorAll('.org-card').forEach(card => {
-        card.addEventListener('click', () => openOrgDetail('ypn'));
+        card.addEventListener('click', () => {
+            openOrgDetail('ypn');
+        });
     });
 
+    // Volunteer item click with Auth Guard
     document.querySelectorAll('.btn-volunteer-item, .relawan-card').forEach(item => {
         item.addEventListener('click', (e) => {
             e.stopPropagation();
             const volId = item.getAttribute('data-volunteer-id') || 'siti';
-            openVolunteerProfile(volId);
+            checkAuthRequirement(() => {
+                openVolunteerProfile(volId);
+            });
         });
     });
 
+    // Activity card click
     document.querySelectorAll('.kegiatan-card').forEach(card => {
         card.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
             const activityId = card.getAttribute('data-activity-id') || 'donor-darah';
             openActivityDetailModal(activityId);
+        });
+    });
+
+    // Profile Button in Header with Auth Guard
+    document.getElementById('btn-my-profile')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        checkAuthRequirement(() => {
+            window.location.href = 'profil.html';
         });
     });
 }
@@ -257,11 +310,15 @@ function initClickListeners() {
 function openVolunteerProfile(volunteerId) {
     const data = volunteersDatabase[volunteerId] || volunteersDatabase['siti'];
     
-    document.getElementById('vol-profile-avatar').src = data.avatar;
-    document.getElementById('vol-profile-name').textContent = data.name;
-    document.getElementById('vol-profile-role').textContent = data.role;
+    const elemAvatar = document.getElementById('vol-profile-avatar');
+    if (elemAvatar) elemAvatar.src = data.avatar;
     
-    // Dynamic Interactive Contact Links
+    const elemName = document.getElementById('vol-profile-name');
+    if (elemName) elemName.textContent = data.name;
+
+    const elemRole = document.getElementById('vol-profile-role');
+    if (elemRole) elemRole.textContent = data.role;
+
     const linkEmail = document.getElementById('vol-link-email');
     if (linkEmail) {
         linkEmail.textContent = data.email;
@@ -281,67 +338,95 @@ function openVolunteerProfile(volunteerId) {
         linkLoc.href = `https://maps.google.com/?q=${encodeURIComponent(data.location)}`;
     }
     
-    document.getElementById('vol-profile-kegiatan-count').textContent = data.kegiatanCount;
-    document.getElementById('vol-profile-jam-count').textContent = data.jamCount;
-    document.getElementById('vol-profile-sertifikat-count').textContent = data.sertifikatCount;
+    const elemKegiatan = document.getElementById('vol-profile-kegiatan-count');
+    if (elemKegiatan) elemKegiatan.textContent = data.kegiatanCount;
 
-    switchView('view-relawan-profile');
+    const elemJam = document.getElementById('vol-profile-jam-count');
+    if (elemJam) elemJam.textContent = data.jamCount;
+
+    const elemCert = document.getElementById('vol-profile-sertifikat-count');
+    if (elemCert) elemCert.textContent = data.sertifikatCount;
+
+    if (!window.location.pathname.includes('profil.html')) {
+        window.location.href = 'profil.html';
+    }
 }
 
 function initFollowOrgButton() {
     const btnFollowOrg = document.getElementById('btn-follow-org');
     if (!btnFollowOrg) return;
 
+    // Update Initial Button UI state based on localStorage
+    if (isFollowingOrg) {
+        btnFollowOrg.innerHTML = '<i class="fas fa-check-circle mr-1.5"></i> Mengikuti';
+        btnFollowOrg.className = 'px-6 py-2.5 rounded-xl text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-sm transition-all';
+    }
+
     btnFollowOrg.addEventListener('click', () => {
-        const statElem = document.getElementById('detail-org-stat-relawan');
-        const listContainer = document.getElementById('detail-org-volunteers-list');
-        let currentCount = parseInt(statElem.textContent) || 320;
+        checkAuthRequirement(() => {
+            const statElem = document.getElementById('detail-org-stat-relawan');
+            const listContainer = document.getElementById('detail-org-volunteers-list');
+            let currentCount = parseInt(statElem?.textContent || '320');
 
-        if (!isFollowingOrg) {
-            isFollowingOrg = true;
-            currentCount++;
-            statElem.textContent = currentCount;
-            btnFollowOrg.innerHTML = '<i class="fas fa-check-circle mr-1.5"></i> Mengikuti';
-            btnFollowOrg.className = 'px-6 py-2.5 rounded-xl text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-sm transition-all';
-            showToast('Anda sekarang mengikuti Yayasan Peduli Negeri.', 'success');
+            if (!isFollowingOrg) {
+                isFollowingOrg = true;
+                localStorage.setItem('koordinaksi_following_ypn', 'true');
+                currentCount++;
+                if (statElem) statElem.textContent = currentCount;
+                btnFollowOrg.innerHTML = '<i class="fas fa-check-circle mr-1.5"></i> Mengikuti';
+                btnFollowOrg.className = 'px-6 py-2.5 rounded-xl text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-sm transition-all';
+                showToast('Anda sekarang mengikuti Yayasan Peduli Negeri.', 'success');
 
-            if (listContainer) {
-                const userItem = document.createElement('div');
-                userItem.id = 'org-follower-siti-item';
-                userItem.className = 'btn-volunteer-item p-3 bg-emerald-50 rounded-xl border border-emerald-200 flex items-center justify-between cursor-pointer';
-                userItem.innerHTML = `
-                    <div class="flex items-center gap-3">
-                        <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80" class="w-10 h-10 rounded-full object-cover border border-emerald-500">
-                        <div>
-                            <div class="text-xs font-bold text-navy-900">Siti Nurhaliza (Anda)</div>
-                            <div class="text-[10px] text-emerald-700 font-semibold">Baru Saja Bergabung</div>
+                if (listContainer && !document.getElementById('org-follower-siti-item')) {
+                    const userItem = document.createElement('div');
+                    userItem.id = 'org-follower-siti-item';
+                    userItem.className = 'btn-volunteer-item p-3 bg-emerald-50 rounded-xl border border-emerald-200 flex items-center justify-between cursor-pointer';
+                    userItem.innerHTML = `
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-sm shadow">
+                                <i class="fas fa-user-check"></i>
+                            </div>
+                            <div>
+                                <div class="text-xs font-bold text-navy-900">Siti Nurhaliza (Anda)</div>
+                                <div class="text-[10px] text-emerald-700 font-semibold">Baru Saja Bergabung</div>
+                            </div>
                         </div>
-                    </div>
-                    <span class="px-2 py-0.5 rounded-full text-[10px] bg-emerald-200 text-emerald-800 font-bold">Mengikuti</span>
-                `;
-                userItem.onclick = () => openVolunteerProfile('siti');
-                listContainer.prepend(userItem);
-            }
-        } else {
-            isFollowingOrg = false;
-            currentCount--;
-            statElem.textContent = currentCount;
-            btnFollowOrg.innerHTML = '<i class="fas fa-plus mr-1.5"></i> Ikuti Organisasi';
-            btnFollowOrg.className = 'btn-primary-emerald px-6 py-2.5 rounded-xl text-xs font-bold shadow-md transition-all';
-            showToast('Anda telah berhenti mengikuti organisasi ini.', 'info');
+                        <span class="px-2 py-0.5 rounded-full text-[10px] bg-emerald-200 text-emerald-800 font-bold">Mengikuti</span>
+                    `;
+                    userItem.onclick = () => openVolunteerProfile('siti');
+                    listContainer.prepend(userItem);
+                }
+            } else {
+                isFollowingOrg = false;
+                localStorage.setItem('koordinaksi_following_ypn', 'false');
+                currentCount--;
+                if (statElem) statElem.textContent = currentCount;
+                btnFollowOrg.innerHTML = '<i class="fas fa-plus mr-1.5"></i> Ikuti Organisasi';
+                btnFollowOrg.className = 'btn-primary-emerald px-6 py-2.5 rounded-xl text-xs font-bold shadow-md transition-all';
+                showToast('Anda telah berhenti mengikuti organisasi ini.', 'info');
 
-            document.getElementById('org-follower-siti-item')?.remove();
-        }
+                document.getElementById('org-follower-siti-item')?.remove();
+            }
+        });
     });
 }
 
 function openOrgDetail(orgId) {
     const orgData = orgDatabase[orgId] || orgDatabase['ypn'];
-    document.getElementById('detail-org-name').textContent = orgData.name;
-    document.getElementById('detail-org-desc').textContent = orgData.desc;
-    document.getElementById('detail-org-image').src = orgData.img;
-    document.getElementById('detail-org-stat-relawan').textContent = orgData.relawanCount;
-    switchView('view-organisasi-detail');
+    const nameElem = document.getElementById('detail-org-name');
+    const descElem = document.getElementById('detail-org-desc');
+    const imgElem = document.getElementById('detail-org-image');
+    const statElem = document.getElementById('detail-org-stat-relawan');
+
+    if (nameElem && descElem && imgElem && statElem) {
+        nameElem.textContent = orgData.name;
+        descElem.textContent = orgData.desc;
+        imgElem.src = orgData.img;
+        statElem.textContent = orgData.relawanCount;
+        switchView('view-organisasi-detail');
+    } else {
+        window.location.href = 'organisasi.html';
+    }
 }
 
 function openActivityDetailModal(activityId) {
@@ -358,28 +443,40 @@ function openActivityDetailModal(activityId) {
     document.getElementById('detail-activity-desc').textContent = data.desc;
     document.getElementById('detail-activity-fee').innerHTML = `<i class="fas fa-tag mr-1"></i> Biaya: ${data.fee}`;
 
-    if (data.cpName) document.getElementById('detail-activity-cp-name').textContent = data.cpName;
+    if (data.cpName && document.getElementById('detail-activity-cp-name')) {
+        document.getElementById('detail-activity-cp-name').textContent = data.cpName;
+    }
     if (data.cpPhone) {
         const btnCp = document.getElementById('btn-cp-whatsapp');
         if (btnCp) btnCp.href = `https://wa.me/${data.cpPhone}`;
     }
 
     const badgeElem = document.getElementById('detail-activity-badge');
-    badgeElem.textContent = data.category;
-    badgeElem.className = `px-3.5 py-1.5 rounded-full text-xs font-bold shadow-md ${data.badgeClass}`;
+    if (badgeElem) {
+        badgeElem.textContent = data.category;
+        badgeElem.className = `px-3.5 py-1.5 rounded-full text-xs font-bold shadow-md ${data.badgeClass}`;
+    }
 
-    document.getElementById('btn-open-form-pendaftaran').onclick = () => {
-        modal.classList.add('hidden');
-        openRegistrationFormModal(data);
-    };
+    const btnOpenForm = document.getElementById('btn-open-form-pendaftaran');
+    if (btnOpenForm) {
+        btnOpenForm.onclick = () => {
+            modal.classList.add('hidden');
+            checkAuthRequirement(() => {
+                openRegistrationFormModal(data);
+            });
+        };
+    }
 
     modal.classList.remove('hidden');
 }
 
 function openRegistrationFormModal(activityData) {
     const regModal = document.getElementById('modal-form-pendaftaran');
-    document.getElementById('reg-form-activity-title').textContent = activityData.title;
-    document.getElementById('reg-form-fee-amount').textContent = activityData.fee;
+    if (!regModal) return;
+    const titleElem = document.getElementById('reg-form-activity-title');
+    const feeElem = document.getElementById('reg-form-fee-amount');
+    if (titleElem) titleElem.textContent = activityData.title;
+    if (feeElem) feeElem.textContent = activityData.fee;
     regModal.classList.remove('hidden');
 }
 
@@ -399,13 +496,19 @@ function initPortfolioEngine() {
             const urlInput = document.getElementById('portfolio-img-url');
             const captionInput = document.getElementById('portfolio-caption');
 
+            if (!urlInput.value) {
+                showToast('Harap masukkan URL Gambar.', 'info');
+                return;
+            }
+
             const newItem = {
                 id: Date.now(),
                 url: urlInput.value,
-                caption: captionInput.value
+                caption: captionInput.value || 'Dokumentasi Aksi Sosial Relawan'
             };
 
             userPortfolioItems.unshift(newItem);
+            localStorage.setItem('koordinaksi_portfolio', JSON.stringify(userPortfolioItems));
             renderPortfolioGallery();
             form.reset();
             showToast('Foto portofolio baru berhasil ditambahkan!', 'success');
@@ -419,15 +522,25 @@ function renderPortfolioGallery() {
     const container = document.getElementById('portfolio-gallery-container');
     if (!container) return;
 
+    if (userPortfolioItems.length === 0) {
+        container.innerHTML = `
+            <div class="col-span-full py-12 text-center text-slate-400">
+                <i class="fas fa-images text-4xl mb-3"></i>
+                <p class="text-sm">Belum ada dokumentasi portofolio. Tambahkan sekarang di atas!</p>
+            </div>
+        `;
+        return;
+    }
+
     container.innerHTML = userPortfolioItems.map(item => `
         <div class="group relative bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-sm flex flex-col justify-between">
-            <div class="relative h-40 overflow-hidden bg-slate-900">
-                <img src="${item.url}" alt="${item.caption}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+            <div class="relative h-44 overflow-hidden bg-slate-900">
+                <img src="${item.url}" alt="${item.caption}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" onerror="this.src='https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=600&q=80';">
                 <button onclick="deletePortfolioItem(${item.id})" class="absolute top-2 right-2 w-8 h-8 rounded-full bg-red-600 text-white flex items-center justify-center text-xs font-bold shadow-md hover:bg-red-700 transition-colors" title="Hapus Foto">
                     <i class="fas fa-trash"></i>
                 </button>
             </div>
-            <div class="p-3 bg-white">
+            <div class="p-3.5 bg-white">
                 <p class="text-xs text-slate-700 font-medium line-clamp-2">${item.caption}</p>
             </div>
         </div>
@@ -436,6 +549,7 @@ function renderPortfolioGallery() {
 
 function deletePortfolioItem(id) {
     userPortfolioItems = userPortfolioItems.filter(item => item.id !== id);
+    localStorage.setItem('koordinaksi_portfolio', JSON.stringify(userPortfolioItems));
     renderPortfolioGallery();
     showToast('Foto portofolio telah dihapus.', 'info');
 }
@@ -516,13 +630,20 @@ function initModals() {
     const modalRegister = document.getElementById('modal-register');
     const modalDetail = document.getElementById('modal-detail-kegiatan');
     const modalPendaftaran = document.getElementById('modal-form-pendaftaran');
+    const modalAuthReq = document.getElementById('modal-auth-required');
 
     document.querySelectorAll('.btn-open-login').forEach(btn => {
-        btn.addEventListener('click', () => modalLogin?.classList.remove('hidden'));
+        btn.addEventListener('click', () => {
+            modalAuthReq?.classList.add('hidden');
+            modalLogin?.classList.remove('hidden');
+        });
     });
 
     document.querySelectorAll('.btn-open-register').forEach(btn => {
-        btn.addEventListener('click', () => modalRegister?.classList.remove('hidden'));
+        btn.addEventListener('click', () => {
+            modalAuthReq?.classList.add('hidden');
+            modalRegister?.classList.remove('hidden');
+        });
     });
 
     document.querySelectorAll('.btn-close-modal').forEach(btn => {
@@ -531,6 +652,7 @@ function initModals() {
             modalRegister?.classList.add('hidden');
             modalDetail?.classList.add('hidden');
             modalPendaftaran?.classList.add('hidden');
+            modalAuthReq?.classList.add('hidden');
         });
     });
 
@@ -541,6 +663,7 @@ function initModals() {
                 modalRegister?.classList.add('hidden');
                 modalDetail?.classList.add('hidden');
                 modalPendaftaran?.classList.add('hidden');
+                modalAuthReq?.classList.add('hidden');
             }
         });
     });

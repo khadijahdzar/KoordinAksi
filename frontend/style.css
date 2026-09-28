@@ -30,6 +30,36 @@ h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-heading);
 }
 
+/* Keyframes & UI Animation Effects */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in {
+    animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.app-view {
+    display: none;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.app-view.active {
+    display: block;
+    opacity: 1;
+    transform: translateY(0);
+    animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
     width: 8px;
@@ -46,7 +76,7 @@ h1, h2, h3, h4, h5, h6 {
     background: #94a3b8;
 }
 
-/* Buttons */
+/* Buttons System */
 .btn-primary-emerald {
     background-color: var(--color-primary);
     color: #ffffff;
@@ -78,20 +108,6 @@ h1, h2, h3, h4, h5, h6 {
 .btn-outline-emerald:hover {
     background-color: var(--color-primary-light);
     transform: translateY(-1px);
-}
-
-/* Dynamic View Switcher Transitions */
-.app-view {
-    display: none;
-    opacity: 0;
-    transform: translateY(6px);
-    transition: opacity 0.3s ease, transform 0.3s ease;
-}
-
-.app-view.active {
-    display: block;
-    opacity: 1;
-    transform: translateY(0);
 }
 
 /* Badge Color Variations */
@@ -126,24 +142,24 @@ h1, h2, h3, h4, h5, h6 {
     border: 1px solid #FECDD3;
 }
 
-/* Card Hover Effects */
+/* Card Hover Animations & Shadows */
 .kegiatan-card, .org-card, .relawan-card {
-    transition: all 0.25s ease;
+    transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
     cursor: pointer;
 }
 .kegiatan-card:hover, .org-card:hover, .relawan-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 24px -6px rgba(0, 0, 0, 0.08), 0 4px 8px -4px rgba(0, 0, 0, 0.04);
+    transform: translateY(-5px);
+    box-shadow: 0 16px 32px -8px rgba(10, 124, 89, 0.14), 0 4px 12px -4px rgba(0, 0, 0, 0.05);
 }
 
-/* Active Nav Link Styling */
+/* Dynamic Active Nav Link Indicator */
 .nav-link-item.active {
-    color: var(--color-primary);
-    font-weight: 700;
-    border-bottom: 2.5px solid var(--color-primary);
+    color: var(--color-primary) !important;
+    font-weight: 700 !important;
+    border-bottom: 2.5px solid var(--color-primary) !important;
 }
 
-/* Sidebar Item Styling */
+/* Sidebar Styling */
 .sidebar-item {
     display: flex;
     align-items: center;
@@ -168,28 +184,33 @@ h1, h2, h3, h4, h5, h6 {
     color: #ffffff;
 }
 
-/* Centered Alignment Utilities */
-.text-center-title {
-    text-align: center;
-    margin-left: auto;
-    margin-right: auto;
-}
-
-.flex-center-content {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-/* Logo Presentation */
-.logo-container {
+/* Footer Logo Transparent Styling */
+.footer-logo-transparent {
+    background: transparent !important;
+    mix-blend-mode: multiply;
     border: none !important;
-    text-decoration: none !important;
     box-shadow: none !important;
+}
+
+/* Certificate Digital Card Styling */
+.certificate-card {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    border: 2px solid #e2e8f0;
+    position: relative;
+    overflow: hidden;
+}
+.certificate-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 6px;
+    height: 100%;
+    background: linear-gradient(to bottom, #0A7C59, #2563EB);
 }
 
 /* Modal Backdrop */
 .modal-backdrop {
-    background-color: rgba(15, 23, 42, 0.65);
-    backdrop-filter: blur(5px);
+    background-color: rgba(15, 23, 42, 0.68);
+    backdrop-filter: blur(6px);
 }

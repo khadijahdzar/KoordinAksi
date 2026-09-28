@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daftar Kegiatan Sosial - KoordinAksi</title>
+    
+    <meta name="description" content="Temukan dan ikuti kegiatan sosial terverifikasi di KoordinAksi. Donor darah, bantuan bencana, bakti sosial, dan penanaman pohon.">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        emerald: { 50: '#E6F4EF', 100: '#CCE9DF', 500: '#0A7C59', 600: '#086548', 700: '#064E38', 800: '#043828' },
+                        navy: { 800: '#1E293B', 900: '#0F172A' }
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased flex flex-col min-h-screen">
+
+    <!-- TOP NAVIGATION BAR -->
+    <header id="main-navbar" class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
+                <a href="index.html" class="logo-container nav-link-item flex items-center gap-3 cursor-pointer group py-1">
+                    <img src="images/koordinaksilogo.png" alt="KoordinAksi Logo" class="h-12 w-auto object-contain transition-transform group-hover:scale-105 border-0 outline-none">
+                </a>
+                <nav class="hidden md:flex items-center space-x-1 lg:space-x-3">
+                    <a href="index.html" class="nav-link-item px-3 py-2 text-sm font-medium text-slate-600 hover:text-emerald-600 transition-all">Beranda</a>
+                    <a href="kegiatan.html" class="nav-link-item active px-3 py-2 text-sm font-semibold transition-all">Kegiatan</a>
+                    <a href="organisasi.html" class="nav-link-item px-3 py-2 text-sm font-medium text-slate-600 hover:text-emerald-600 transition-all">Organisasi</a>
+                    <a href="relawan.html" class="nav-link-item px-3 py-2 text-sm font-medium text-slate-600 hover:text-emerald-600 transition-all">Relawan</a>
+                    <a href="admin.html" class="nav-link-item px-3 py-2 text-sm font-medium text-blue-600 hover:text-blue-700 bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-200 transition-all">
+                        <i class="fas fa-user-shield mr-1"></i> Dashboard Admin
+                    </a>
+                </nav>
+                <div class="flex items-center space-x-3">
+                    <button id="btn-my-profile" class="nav-link-item flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-emerald-50 text-xs font-semibold text-slate-700 hover:text-emerald-700 transition-colors border border-slate-200">
+                        <div class="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs">
+                            <i class="fas fa-user-circle"></i>
+                        </div>
+                        <span id="nav-user-name">Profil Saya</span>
+                    </button>
+                    <div id="nav-auth-logged-out" class="flex items-center space-x-2">
+                        <button class="btn-open-login px-4 py-2 text-xs font-semibold text-slate-700 hover:text-emerald-600 transition-colors">Masuk</button>
+                        <button class="btn-open-register btn-primary-blue px-5 py-2 rounded-lg text-xs font-semibold shadow-md">Daftar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN KEGIATAN CATALOG CONTENT -->
+    <main class="flex-grow py-10 animate-fade-in">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+            
+            <!-- Page Header -->
+            <div class="text-center max-w-2xl mx-auto space-y-2">
+                <span class="px-3.5 py-1.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
+                    <i class="fas fa-hands-helping"></i> Aksi Sosial Terverifikasi
+                </span>
+                <h1 class="text-3xl sm:text-4xl font-extrabold text-navy-900">Jelajahi & Ikuti Kegiatan Sosial</h1>
+                <p class="text-slate-600 text-sm">Pilih aksi sosial yang sesuai dengan minat dan lokasi terdekatmu.</p>
+            </div>
+
+            <!-- Search & Filter Controls -->
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="md:col-span-2 relative">
+                    <i class="fas fa-search absolute left-4 top-3.5 text-slate-400"></i>
+                    <input type="text" id="search-kegiatan" placeholder="Cari judul kegiatan, kata kunci, atau kota..." class="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                </div>
+                <div>
+                    <select id="filter-kategori" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-white">
+                        <option value="semua">Semua Kategori</option>
+                        <option value="donor darah">Donor Darah</option>
+                        <option value="bantuan bencana">Bantuan Bencana</option>
+                        <option value="bakti sosial">Bakti Sosial</option>
+                        <option value="penghijauan">Penghijauan</option>
+                    </select>
+                </div>
+                <div>
+                    <button id="btn-apply-filter" class="w-full btn-primary-emerald py-3 rounded-xl font-bold text-sm shadow-md flex items-center justify-center gap-2">
+                        <i class="fas fa-filter"></i> Terapkan Filter
+                    </button>
+                </div>
+            </div>
+
+            <!-- Activities Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                
+                <!-- Activity 1 -->
+                <div class="kegiatan-card kegiatan-grid-item bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm flex flex-col justify-between" 
+                     data-activity-id="donor-darah" data-title="Donor Darah untuk Kemanusiaan" data-category="donor darah" data-location="jakarta">
+                    <div>
+                        <div class="relative h-48 overflow-hidden bg-slate-100">
+                            <img src="https://images.unsplash.com/photo-1615461066841-6116e61058f4?auto=format&fit=crop&w=800&q=80" alt="Donor Darah" class="w-full h-full object-cover">
+                            <span class="absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-bold shadow-sm badge-donor">Donor Darah</span>
+                        </div>
+                        <div class="p-6 space-y-3">
+                            <div class="text-xs text-emerald-700 font-semibold">PMI DKI Jakarta & Yayasan Peduli Negeri</div>
+                            <h3 class="text-lg font-bold text-navy-900 leading-snug">Donor Darah untuk Kemanusiaan</h3>
+                            <p class="text-xs text-slate-600 line-clamp-2">Aksi donor darah serentak membantu persediaan darah PMI untuk rumah sakit Jakarta Selatan.</p>
+                            <div class="space-y-1.5 text-xs text-slate-600 pt-2 border-t border-slate-100">
+                                <div><i class="fas fa-map-marker-alt text-red-500 w-4"></i> Gedung PMI Jakarta Selatan</div>
+                                <div><i class="fas fa-calendar-alt text-blue-500 w-4"></i> 25 Mei 2025</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+                        <span class="text-xs font-semibold text-slate-600">Biaya: Gratis</span>
+                        <span class="text-xs font-bold text-emerald-700">Lihat Detail & Rundown &rarr;</span>
+                    </div>
+                </div>
+
+                <!-- Activity 2 -->
+                <div class="kegiatan-card kegiatan-grid-item bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm flex flex-col justify-between" 
+                     data-activity-id="bencana-banjir" data-title="Aksi Peduli Bencana Banjir" data-category="bantuan bencana" data-location="bekasi">
+                    <div>
+                        <div class="relative h-48 overflow-hidden bg-slate-100">
+                            <img src="https://images.unsplash.com/photo-1547683905-f686c993aae5?auto=format&fit=crop&w=800&q=80" alt="Bantuan Bencana" class="w-full h-full object-cover">
+                            <span class="absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-bold shadow-sm badge-bencana">Bantuan Bencana</span>
+                        </div>
+                        <div class="p-6 space-y-3">
+                            <div class="text-xs text-emerald-700 font-semibold">Tim Tanggap Bencana KoordinAksi</div>
+                            <h3 class="text-lg font-bold text-navy-900 leading-snug">Aksi Peduli Bencana Banjir</h3>
+                            <p class="text-xs text-slate-600 line-clamp-2">Penyaluran logistik makanan, sembako, dan pembersihan fasilitas umum terdampak banjir.</p>
+                            <div class="space-y-1.5 text-xs text-slate-600 pt-2 border-t border-slate-100">
+                                <div><i class="fas fa-map-marker-alt text-red-500 w-4"></i> Bekasi, Jawa Barat</div>
+                                <div><i class="fas fa-calendar-alt text-blue-500 w-4"></i> 2 Juni 2025</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+                        <span class="text-xs font-semibold text-slate-600">Donasi: Rp 50.000</span>
+                        <span class="text-xs font-bold text-emerald-700">Lihat Detail & Rundown &rarr;</span>
+                    </div>
+                </div>
+
+                <!-- Activity 3 -->
+                <div class="kegiatan-card kegiatan-grid-item bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm flex flex-col justify-between" 
+                     data-activity-id="bakti-sosial" data-title="Bakti Sosial untuk Anak Yatim" data-category="bakti sosial" data-location="depok">
+                    <div>
+                        <div class="relative h-48 overflow-hidden bg-slate-100">
+                            <img src="https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=800&q=80" alt="Bakti Sosial" class="w-full h-full object-cover">
+                            <span class="absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-bold shadow-sm badge-baksos">Bakti Sosial</span>
+                        </div>
+                        <div class="p-6 space-y-3">
+                            <div class="text-xs text-emerald-700 font-semibold">Komunitas Kasih Nusantara</div>
+                            <h3 class="text-lg font-bold text-navy-900 leading-snug">Bakti Sosial untuk Anak Yatim</h3>
+                            <p class="text-xs text-slate-600 line-clamp-2">Berbagi santunan, perlengkapan sekolah, serta kelas motivasi keceriaan untuk anak yatim.</p>
+                            <div class="space-y-1.5 text-xs text-slate-600 pt-2 border-t border-slate-100">
+                                <div><i class="fas fa-map-marker-alt text-red-500 w-4"></i> Depok, Jawa Barat</div>
+                                <div><i class="fas fa-calendar-alt text-blue-500 w-4"></i> 15 Juni 2025</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+                        <span class="text-xs font-semibold text-slate-600">Donasi: Rp 35.000</span>
+                        <span class="text-xs font-bold text-emerald-700">Lihat Detail & Rundown &rarr;</span>
+                    </div>
+                </div>
+
+                <!-- Activity 4 -->
+                <div class="kegiatan-card kegiatan-grid-item bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm flex flex-col justify-between" 
+                     data-activity-id="penghijauan-bogor" data-title="Penanaman 1.000 Pohon Mahoni" data-category="penghijauan" data-location="bogor">
+                    <div>
+                        <div class="relative h-48 overflow-hidden bg-slate-100">
+                            <img src="https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=800&q=80" alt="Penanaman Pohon" class="w-full h-full object-cover">
+                            <span class="absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-bold shadow-sm badge-penghijauan">Penghijauan</span>
+                        </div>
+                        <div class="p-6 space-y-3">
+                            <div class="text-xs text-emerald-700 font-semibold">Komunitas Hijau Lestari</div>
+                            <h3 class="text-lg font-bold text-navy-900 leading-snug">Penanaman 1.000 Pohon Mahoni</h3>
+                            <p class="text-xs text-slate-600 line-clamp-2">Penanaman bibit pohon di lereng Bogor untuk mencegah erosi dan menjaga resapan air.</p>
+                            <div class="space-y-1.5 text-xs text-slate-600 pt-2 border-t border-slate-100">
+                                <div><i class="fas fa-map-marker-alt text-red-500 w-4"></i> Bogor, Jawa Barat</div>
+                                <div><i class="fas fa-calendar-alt text-blue-500 w-4"></i> 20 Juli 2025</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+                        <span class="text-xs font-semibold text-slate-600">Biaya: Gratis</span>
+                        <span class="text-xs font-bold text-emerald-700">Lihat Detail & Rundown &rarr;</span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-navy-900 text-white pt-16 pb-12 border-t border-slate-800 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 pb-12 border-b border-slate-800">
+                <div class="lg:col-span-2 space-y-4">
+                    <a href="index.html" class="inline-block bg-transparent p-0 m-0 border-0 outline-none">
+                        <img src="images/koordinaksilogo.png" alt="KoordinAksi Logo Footer" class="h-12 w-auto object-contain footer-logo-transparent">
+                    </a>
+                    <p class="text-sm text-slate-400 max-w-sm leading-relaxed">
+                        KoordinAksi menghubungkan organisasi sosial dan relawan untuk aksi sosial yang terstruktur dan berdampak.
+                    </p>
+                    <div class="flex items-center space-x-3 text-slate-400 pt-2">
+                        <a href="https://instagram.com/koordinaksi" target="_blank" rel="noopener noreferrer" title="Instagram Resmi KoordinAksi" class="w-9 h-9 rounded-full bg-slate-800 hover:bg-emerald-600 hover:text-white flex items-center justify-center transition-colors">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                        <a href="https://wa.me/6281234567890" target="_blank" rel="noopener noreferrer" title="WhatsApp Resmi KoordinAksi" class="w-9 h-9 rounded-full bg-slate-800 hover:bg-emerald-600 hover:text-white flex items-center justify-center transition-colors">
+                            <i class="fab fa-whatsapp"></i>
+                        </a>
+                        <a href="https://linkedin.com/company/koordinaksi" target="_blank" rel="noopener noreferrer" title="LinkedIn Resmi KoordinAksi" class="w-9 h-9 rounded-full bg-slate-800 hover:bg-emerald-600 hover:text-white flex items-center justify-center transition-colors">
+                            <i class="fab fa-linkedin-in"></i>
+                        </a>
+                    </div>
+                </div>
+                <div>
+                    <h4 class="text-sm font-bold text-white uppercase tracking-wider mb-4">Navigasi</h4>
+                    <ul class="space-y-2.5 text-sm text-slate-400">
+                        <li><a href="index.html">Beranda</a></li>
+                        <li><a href="kegiatan.html">Kegiatan Sosial</a></li>
+                        <li><a href="organisasi.html">Organisasi Mitra</a></li>
+                        <li><a href="relawan.html">Direktori Relawan</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-sm font-bold text-white uppercase tracking-wider mb-4">Informasi</h4>
+                    <ul class="space-y-2.5 text-sm text-slate-400">
+                        <li><a href="#">Tentang Kami</a></li>
+                        <li><a href="#">FAQ</a></li>
+                        <li><a href="#">Syarat & Ketentuan</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-sm font-bold text-white uppercase tracking-wider mb-4">Kontak</h4>
+                    <p class="text-xs text-slate-400 leading-relaxed">kontak@koordinaksi.or.id<br>+62 812-3456-7890</p>
+                </div>
+            </div>
+            <div class="pt-8 text-center text-xs text-slate-500">
+                &copy; 2026 KoordinAksi. Hak Cipta Dilindungi.
+            </div>
+        </div>
+    </footer>
+
+    <!-- MODALS -->
+    <!-- Modal Detail Kegiatan + Rundown Complete -->
+    <div id="modal-detail-kegiatan" class="fixed inset-0 z-50 flex items-center justify-center hidden p-4">
+        <div class="modal-backdrop-area fixed inset-0 modal-backdrop"></div>
+        <div class="relative bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 sm:p-8 shadow-2xl z-10 animate-fade-in border border-slate-100">
+            <button class="btn-close-modal absolute top-5 right-5 text-slate-400 hover:text-slate-600 text-2xl font-bold z-20">&times;</button>
+            
+            <div class="space-y-6">
+                <div class="relative h-60 rounded-2xl overflow-hidden bg-slate-900">
+                    <img id="detail-activity-image" src="" alt="Detail Activity" class="w-full h-full object-cover">
+                    <span id="detail-activity-badge" class="absolute top-4 left-4 px-3.5 py-1.5 rounded-full text-xs font-bold shadow-md bg-emerald-600 text-white">Donor Darah</span>
+                </div>
+
+                <div>
+                    <div id="detail-activity-org" class="text-xs font-bold text-emerald-700 uppercase tracking-wider">Penyelenggara: PMI DKI Jakarta</div>
+                    <h2 id="detail-activity-title" class="text-2xl sm:text-3xl font-extrabold text-navy-900 mt-1">Donor Darah untuk Kemanusiaan</h2>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4 p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-700">
+                        <div id="detail-activity-location"><i class="fas fa-map-marker-alt text-red-500 mr-1.5"></i> Gedung PMI Jakarta Selatan</div>
+                        <div id="detail-activity-date"><i class="fas fa-calendar-alt text-blue-500 mr-1.5"></i> 25 Mei 2025</div>
+                        <div id="detail-activity-fee" class="font-bold text-emerald-800"><i class="fas fa-tag mr-1.5"></i> Biaya: Gratis</div>
+                        <div><i class="fas fa-clock text-amber-500 mr-1.5"></i> Waktu: 08.00 - 13.00 WIB</div>
+                    </div>
+                </div>
+
+                <!-- Deskripsi Kegiatan -->
+                <div>
+                    <h4 class="text-sm font-bold text-navy-900 mb-2">Deskripsi Aksi Sosial:</h4>
+                    <p id="detail-activity-desc" class="text-xs text-slate-600 leading-relaxed">
+                        Aksi donor darah serentak membantu persediaan darah PMI untuk rumah sakit di wilayah Jakarta Selatan.
+                    </p>
+                </div>
+
+                <!-- Rundown Acara Terperinci (Detailed Timeline) -->
+                <div class="p-5 rounded-2xl bg-emerald-50/60 border border-emerald-200/80 space-y-3">
+                    <div class="flex items-center gap-2 text-emerald-800 font-extrabold text-sm">
+                        <i class="fas fa-list-ol"></i> Rundown & Schedule Kegiatan Terperinci:
+                    </div>
+                    <div class="space-y-2 text-xs text-slate-700">
+                        <div class="flex items-start gap-3 p-2 rounded-lg bg-white border border-emerald-100">
+                            <span class="px-2 py-0.5 rounded bg-emerald-200 text-emerald-900 font-bold shrink-0">07.30 - 08.00</span>
+                            <div>
+                                <div class="font-bold text-navy-900">Registrasi Relawan & Uji Kesehatan Awal</div>
+                                <div class="text-[11px] text-slate-500">Pemeriksaan tensi darah, hb, dan verifikasi profil peserta.</div>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3 p-2 rounded-lg bg-white border border-emerald-100">
+                            <span class="px-2 py-0.5 rounded bg-emerald-200 text-emerald-900 font-bold shrink-0">08.00 - 08.30</span>
+                            <div>
+                                <div class="font-bold text-navy-900">Briefing Pembagian Tugas & Pengarahan Lapangan</div>
+                                <div class="text-[11px] text-slate-500">Pengarahan teknis oleh koordinator PMI & koordinasi posko.</div>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3 p-2 rounded-lg bg-white border border-emerald-100">
+                            <span class="px-2 py-0.5 rounded bg-emerald-200 text-emerald-900 font-bold shrink-0">08.30 - 12.00</span>
+                            <div>
+                                <div class="font-bold text-navy-900">Pelaksanaan Utama Aksi Sosial</div>
+                                <div class="text-[11px] text-slate-500">Pengambilan donor darah / distribusi sembako & pendataan relawan.</div>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3 p-2 rounded-lg bg-white border border-emerald-100">
+                            <span class="px-2 py-0.5 rounded bg-emerald-200 text-emerald-900 font-bold shrink-0">12.00 - 13.00</span>
+                            <div>
+                                <div class="font-bold text-navy-900">Istirahat, Makan Siang & Penutupan Event</div>
+                                <div class="text-[11px] text-slate-500">Pembagian sertifikat kehadiran digital & foto bersama.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact Person & Action Buttons -->
+                <div class="pt-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div class="text-xs text-slate-600">
+                        <span class="font-bold text-navy-900">Kontak Person:</span> <span id="detail-activity-cp-name">Bambang Setyawan</span>
+                        <a id="btn-cp-whatsapp" href="https://wa.me/6281299887766" target="_blank" class="ml-2 text-emerald-700 font-bold hover:underline inline-flex items-center gap-1">
+                            <i class="fab fa-whatsapp text-emerald-600"></i> Hubungi WA
+                        </a>
+                    </div>
+                    <button id="btn-open-form-pendaftaran" class="btn-primary-emerald px-6 py-3 rounded-xl font-bold text-xs shadow-lg w-full sm:w-auto">
+                        Daftar Kegiatan Sekarang &rarr;
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Form Pendaftaran & Upload Bukti Pembayaran -->
+    <div id="modal-form-pendaftaran" class="fixed inset-0 z-50 flex items-center justify-center hidden p-4">
+        <div class="modal-backdrop-area fixed inset-0 modal-backdrop"></div>
+        <div class="relative bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl z-10 animate-fade-in border border-slate-100">
+            <button class="btn-close-modal absolute top-5 right-5 text-slate-400 hover:text-slate-600 text-2xl font-bold">&times;</button>
+            <div class="mb-6">
+                <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-100 px-2.5 py-1 rounded-full">Form Pendaftaran</span>
+                <h3 id="reg-form-activity-title" class="text-xl font-extrabold text-navy-900 mt-2">Pendaftaran Kegiatan</h3>
+                <p class="text-xs text-slate-500 mt-1">Lengkapi data diri dan unggah konfirmasi kehadiran/donasi.</p>
+            </div>
+            
+            <form id="form-submit-registration" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Nama Lengkap Relawan</label>
+                    <input type="text" required value="Siti Nurhaliza" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Nomor WhatsApp / HP</label>
+                    <input type="tel" required value="081234567890" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Informasi Biaya / Donasi</label>
+                    <div id="reg-form-fee-amount" class="w-full px-4 py-2.5 rounded-xl bg-slate-100 border border-slate-200 text-xs font-bold text-emerald-800">
+                        Gratis
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Upload Bukti Pembayaran / Identitas (Opsional)</label>
+                    <input type="file" class="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer">
+                </div>
+                <button type="submit" class="w-full btn-primary-emerald py-3 rounded-xl font-bold text-sm shadow-md mt-2">
+                    Kirim Pendaftaran &rarr;
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modals Auth System -->
+    <div id="modal-login" class="fixed inset-0 z-50 flex items-center justify-center hidden">
+        <div class="modal-backdrop-area fixed inset-0 modal-backdrop"></div>
+        <div class="relative bg-white rounded-3xl max-w-md w-full p-8 shadow-2xl z-10 animate-fade-in">
+            <button class="btn-close-modal absolute top-5 right-5 text-slate-400 text-xl font-bold">&times;</button>
+            <h3 class="text-xl font-extrabold text-navy-900 text-center mb-4">Masuk Akun</h3>
+            <form id="form-login" class="space-y-4">
+                <input type="email" required placeholder="Email" class="w-full px-4 py-2.5 rounded-xl border text-sm">
+                <input type="password" required placeholder="Password" class="w-full px-4 py-2.5 rounded-xl border text-sm">
+                <button type="submit" class="w-full btn-primary-emerald py-3 rounded-xl font-bold text-sm">Masuk</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-register" class="fixed inset-0 z-50 flex items-center justify-center hidden">
+        <div class="modal-backdrop-area fixed inset-0 modal-backdrop"></div>
+        <div class="relative bg-white rounded-3xl max-w-md w-full p-8 shadow-2xl z-10 animate-fade-in">
+            <button class="btn-close-modal absolute top-5 right-5 text-slate-400 text-xl font-bold">&times;</button>
+            <h3 class="text-xl font-extrabold text-navy-900 text-center mb-4">Daftar Akun Baru</h3>
+            <form id="form-register" class="space-y-4">
+                <input type="text" required placeholder="Nama Lengkap" class="w-full px-4 py-2.5 rounded-xl border text-sm">
+                <input type="email" required placeholder="Email" class="w-full px-4 py-2.5 rounded-xl border text-sm">
+                <input type="password" required placeholder="Password" class="w-full px-4 py-2.5 rounded-xl border text-sm">
+                <button type="submit" class="w-full btn-primary-blue py-3 rounded-xl font-bold text-sm">Daftar</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-auth-required" class="fixed inset-0 z-50 flex items-center justify-center hidden">
+        <div class="modal-backdrop-area fixed inset-0 modal-backdrop"></div>
+        <div class="relative bg-white rounded-3xl max-w-sm w-full p-6 text-center shadow-2xl z-10 animate-fade-in">
+            <button class="btn-close-modal absolute top-4 right-4 text-slate-400 text-xl font-bold">&times;</button>
+            <div class="w-16 h-16 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center text-3xl mx-auto mb-4"><i class="fas fa-lock"></i></div>
+            <h3 class="text-lg font-extrabold text-navy-900 mb-2">Akses Terbatas</h3>
+            <p class="text-xs text-slate-600 mb-6">Silakan mendaftar atau masuk ke akun KoordinAksi terlebih dahulu.</p>
+            <div class="space-y-2">
+                <button class="btn-open-login w-full btn-primary-emerald py-2.5 rounded-xl font-bold text-xs">Masuk</button>
+                <button class="btn-open-register w-full btn-outline-emerald py-2.5 rounded-xl font-bold text-xs">Daftar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
