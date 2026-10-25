@@ -77,3 +77,10 @@ desktop.ini
 # ----------------------------------------------------------
 Homestead.json
 Homestead.yaml
+
+# MERN application
+/server/.env
+/client/.env
+/client/dist/
+/coverage/
+npm-debug.log*

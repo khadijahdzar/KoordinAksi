@@ -1,1 +1,124 @@
-# KoordinAksi
+# KoordinAksi — Smart Volunteer Management System
+
+KoordinAksi menghubungkan relawan dengan organisasi dan kegiatan sosial. Aplikasi MERN baru berada di `client/` dan `server/`; folder `backend/` dan `frontend/` yang sudah ada merupakan versi Laravel/HTML lama dan tidak digunakan oleh perintah MERN di root.
+
+## Teknologi
+
+- MongoDB + Mongoose
+- Node.js + Express
+- React 18 + Vite + React Router
+- Axios, Context API, JWT, bcrypt
+
+## Persyaratan
+
+- Node.js 20 atau lebih baru dan npm
+- MongoDB lokal atau MongoDB Atlas
+
+## Instalasi dan menjalankan
+
+1. Salin konfigurasi backend:
+
+   ```powershell
+   Copy-Item server\.env.example server\.env
+   ```
+
+2. Edit `server/.env`:
+
+   ```dotenv
+   PORT=5000
+   MONGO_URI=mongodb://127.0.0.1:27017/koordinaksi
+   JWT_SECRET=ganti-dengan-secret-acak-yang-panjang
+   JWT_EXPIRES_IN=7d
+   CLIENT_URL=http://localhost:5173
+   NODE_ENV=development
+   ```
+
+   Pastikan MongoDB berjalan atau ubah `MONGO_URI` ke koneksi Atlas. Jangan menggunakan contoh `JWT_SECRET` pada production.
+
+3. Dari direktori root project, install semua workspace dan jalankan frontend serta backend:
+
+   ```powershell
+   npm install
+   npm run dev
+   ```
+
+   Frontend tersedia di `http://localhost:5173`, API di `http://localhost:5000/api`, dan health check di `http://localhost:5000/api/health`.
+
+Perintah lain:
+
+```powershell
+npm run dev:server
+npm run dev:client
+npm run build
+npm start
+```
+
+Untuk menjalankan frontend terpisah, opsional buat `client/.env` dan isi `VITE_API_URL=http://localhost:5000/api`.
+
+## Fitur dan peran
+
+- Relawan dapat membuat akun, mencari kegiatan berdasarkan kata kunci/kategori/lokasi, mendaftar, dan melihat status/riwayat.
+- Organisasi dapat mendaftar, membuat/mengubah/membatalkan kegiatan, melihat pendaftar, serta menerima atau menolak pendaftaran.
+- Admin dapat memverifikasi organisasi melalui endpoint khusus.
+- Kegiatan mendukung status `draft`, `published`, dan `cancelled`. Status pendaftaran: `pending`, `approved`, `rejected`, `attended`, dan `cancelled`.
+- Registrasi publik hanya mengizinkan peran relawan atau organisasi; akun admin tidak dapat dibuat melalui form.
+
+### Membuat akun admin
+
+Admin awal harus dibuat secara manual dan hanya untuk operator tepercaya. Setelah dependency terpasang, jalankan:
+
+```powershell
+node --env-file=server/.env --input-type=module -e "import mongoose from 'mongoose'; import User from './server/src/models/User.js'; await mongoose.connect(process.env.MONGO_URI); const user = await User.create({ name: 'Administrator', email: 'admin@example.com', password: 'ganti-password-aman', role: 'admin' }); console.log('Admin dibuat:', user.email); await mongoose.disconnect();"
+```
+
+Jalankan perintah dari root dengan konfigurasi environment tersedia di `server/.env`. Password disimpan menggunakan bcrypt. Jangan membagikan akun admin atau kredensial tersebut.
+
+## REST API
+
+Semua endpoint berawalan `/api`.
+
+| Method | Endpoint | Akses | Keterangan |
+| --- | --- | --- | --- |
+| `POST` | `/auth/register` | Publik | Daftar relawan/organisasi (`name`, `email`, `password`, opsional `phone`; organisasi memerlukan `organizationName`) |
+| `POST` | `/auth/login` | Publik | Login dan memperoleh JWT |
+| `GET` | `/auth/me` | Login | Profil pengguna aktif |
+| `GET` | `/activities` | Publik | Daftar kegiatan; query `search`, `category`, `location`, `page`, `limit` |
+| `GET` | `/activities/stats` | Publik | Statistik homepage |
+| `GET` | `/activities/meta` | Publik | Daftar kategori |
+| `GET` | `/activities/:id` | Publik | Detail kegiatan |
+| `GET` | `/activities/mine` | Organisasi/admin | Kegiatan yang dikelola |
+| `POST` | `/activities` | Organisasi/admin | Buat kegiatan |
+| `PATCH` | `/activities/:id` | Pemilik/admin | Ubah kegiatan |
+| `DELETE` | `/activities/:id` | Pemilik/admin | Batalkan kegiatan secara soft delete |
+| `POST` | `/registrations` | Relawan | Daftar (`activityId`, opsional `note`) |
+| `GET` | `/registrations/mine` | Relawan | Riwayat pendaftaran |
+| `GET` | `/registrations/activity/:activityId` | Pemilik/admin | Daftar peserta kegiatan |
+| `PATCH` | `/registrations/:id/status` | Pemilik/admin | Ubah status pendaftaran |
+| `GET` | `/organizations` | Publik | Daftar organisasi terverifikasi |
+| `GET` | `/organizations/pending` | Admin | Organisasi menunggu verifikasi |
+| `PATCH` | `/organizations/:id/verify` | Admin | Verifikasi (`{ "verified": true }`) |
+
+Endpoint terlindungi menerima `Authorization: Bearer <token>`. API mengembalikan status `401` untuk sesi tidak valid dan `403` untuk role yang tidak berwenang. Respons error berbentuk JSON dengan properti `message`.
+
+## Struktur MERN
+
+```text
+koordinaksi/
+├── client/
+│   ├── index.html
+│   └── src/                # React pages, Auth Context, API client, styles
+├── server/
+│   ├── src/
+│   │   ├── config/         # Koneksi MongoDB
+│   │   ├── middleware/     # JWT auth, role authorization, errors
+│   │   ├── models/         # User, Organization, Activity, Registration
+│   │   └── routes/         # REST API
+│   └── .env.example
+├── .env.example
+├── package.json            # npm workspaces dan perintah root
+└── README.md
+```
+
+## Catatan production
+
+Gunakan secret JWT acak yang panjang, HTTPS, MongoDB dengan autentikasi, dan konfigurasi CORS yang hanya mengizinkan domain frontend production. UI menyimpan JWT di `localStorage`; untuk threat model yang lebih ketat, pertimbangkan migrasi ke cookie `httpOnly` dengan perlindungan CSRF.
