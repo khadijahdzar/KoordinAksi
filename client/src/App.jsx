@@ -3,6 +3,15 @@ import { Link, NavLink, Navigate, Outlet, Route, Routes, useNavigate, useParams,
 import api, { getErrorMessage } from "./api";
 import { getDashboardPath, useAuth } from "@/AuthContext";
 import AdminDashboard, { AdminLayout } from "./AdminDashboard";
+import AdminOrganizations from "./AdminOrganizations";
+import AdminSystem from "./AdminSystem";
+import VolunteerLayout from "./volunteer/VolunteerLayout";
+import VolunteerDashboard from "./volunteer/VolunteerDashboard";
+import RegistrationHistory from "./volunteer/RegistrationHistory";
+import VolunteerProfile from "./volunteer/VolunteerProfile";
+import OrganizationLayout from "./organization/OrganizationLayout";
+import OrganizationDashboard from "./organization/OrganizationDashboard";
+import ActivityParticipants from "./organization/ActivityParticipants";
 
 const categories = ["Donor Darah", "Bantuan Bencana", "Bakti Sosial", "Penghijauan", "Pendidikan", "Kesehatan", "Lainnya"];
 const formatDate = (date) => new Intl.DateTimeFormat("id-ID", { dateStyle: "long" }).format(new Date(date));
@@ -36,10 +45,6 @@ function PublicLayout() {
   return <><Header /><SessionRecoveryNotice /><main className="main-content"><Outlet /></main><Footer /></>;
 }
 
-function OrganizationLayout() {
-  return <><Header /><SessionRecoveryNotice /><main className="main-content"><Outlet /></main><Footer /></>;
-}
-
 function SessionRecoveryNotice() {
   const { sessionError, refreshSession } = useAuth();
   if (!sessionError) return null;
@@ -52,7 +57,7 @@ function SessionRecoveryNotice() {
 function ProtectedRoute({ roles }) {
   const { user, loading, sessionError } = useAuth();
   if (loading) return <div className="container page-space"><p>Memuat sesi...</p></div>;
-  if (sessionError && !user) return roles.includes("volunteer") ? null : <SessionRecoveryNotice />;
+  if (sessionError && !user) return <SessionRecoveryNotice />;
   if (!user) return <Navigate to="/login" replace />;
   if (!roles.includes(user.role)) return <Navigate to={getDashboardPath(user.role)} replace />;
   return <Outlet />;
@@ -75,19 +80,26 @@ function AppRoutes() {
       <Route path="/kegiatan/:id" element={<ActivityDetail />} />
       <Route path="/login" element={<AuthPage mode="login" />} />
       <Route path="/register" element={<AuthPage mode="register" />} />
-      <Route element={<ProtectedRoute roles={["volunteer"]} />}>
-        <Route path="/dashboard/relawan" element={<VolunteerDashboard />} />
+    </Route>
+    <Route element={<ProtectedRoute roles={["volunteer"]} />}>
+      <Route path="/dashboard/relawan" element={<VolunteerLayout />}>
+        <Route index element={<VolunteerDashboard />} />
+        <Route path="history" element={<RegistrationHistory />} />
+        <Route path="profile" element={<VolunteerProfile />} />
       </Route>
     </Route>
     <Route element={<ProtectedRoute roles={["organization"]} />}>
       <Route path="/dashboard/organisasi" element={<OrganizationLayout />}>
         <Route index element={<OrganizationDashboard />} />
+        <Route path="activities/:id/participants" element={<ActivityParticipants />} />
       </Route>
     </Route>
     <Route path="/admin" element={<ProtectedAdminRoute />}>
       <Route element={<AdminLayout />}>
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<AdminDashboard />} />
+        <Route path="organizations/pending" element={<AdminOrganizations />} />
+        <Route path="system" element={<AdminSystem />} />
         <Route path="*" element={<NotFound />} />
       </Route>
     </Route>
@@ -238,81 +250,6 @@ function AuthPage({ mode }) {
       <label>Email<input required type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="nama@email.com" /></label><label>Password<input required minLength="8" type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="Minimal 8 karakter" /></label><button className="button full-width" disabled={busy}>{busy ? "Memproses..." : isRegister ? "Buat akun" : "Masuk"} <span>→</span></button>
       <small className="auth-switch">{isRegister ? "Sudah punya akun?" : "Belum punya akun?"} <Link to={isRegister ? "/login" : "/register"}>{isRegister ? "Masuk" : "Daftar sekarang"}</Link></small>
     </form></div></section>;
-}
-
-function VolunteerDashboard() {
-  const { user } = useAuth();
-  const [registrations, setRegistrations] = useState([]);
-  const [error, setError] = useState("");
-  useEffect(() => { api.get("/registrations/mine").then(({ data }) => setRegistrations(data.registrations)).catch((err) => setError(getErrorMessage(err))); }, []);
-  return <section className="container page-space"><div className="dashboard-heading"><div><span className="eyebrow">Ruang relawan</span><h1>Halo, {user.name.split(" ")[0]}.</h1><p>Perjalanan kecilmu berarti. Berikut aktivitas relawanmu.</p></div><Link className="button" to="/kegiatan">Cari kegiatan <span>→</span></Link></div>{error && <Notice message={error} />}<h2 className="dashboard-section-title">Riwayat pendaftaran <span>{registrations.length}</span></h2><div className="registration-list">{registrations.map((item) => <article className="registration-row" key={item._id}><div className="registration-date">{item.activity ? new Date(item.activity.date).toLocaleDateString("id-ID", { day: "2-digit", month: "short" }) : "—"}</div><div className="registration-info"><strong>{item.activity?.title || "Kegiatan telah dihapus"}</strong><span>{item.activity?.organization?.name || "Organisasi"} · {item.activity?.location}</span></div><StatusBadge status={item.status} />{item.activity && <Link className="row-arrow" to={`/kegiatan/${item.activity._id}`}>↗</Link>}</article>)}{!registrations.length && !error && <div className="empty-box"><span>♡</span><h3>Belum ada pendaftaran</h3><p>Temukan kegiatan pertama yang ingin kamu ikuti.</p><Link className="text-link" to="/kegiatan">Jelajahi kegiatan →</Link></div>}</div></section>;
-}
-
-function OrganizationDashboard() {
-  const { user } = useAuth();
-  const [activities, setActivities] = useState([]);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-  const [showForm, setShowForm] = useState(false);
-  const [creating, setCreating] = useState(false);
-  const [registrations, setRegistrations] = useState({});
-  const [form, setForm] = useState({ title: "", description: "", category: categories[0], location: "", date: "", capacity: 10 });
-  const canCreateActivity = user.role === "organization" && user.organization?.verified === true;
-  async function loadActivities() {
-    try {
-      const { data } = await api.get("/activities/mine");
-      setActivities(data.activities);
-      const results = await Promise.all(data.activities.map(async (activity) => {
-        const result = await api.get(`/registrations/activity/${activity._id}`);
-        return [activity._id, result.data.registrations];
-      }));
-      setRegistrations(Object.fromEntries(results));
-      setError("");
-    } catch (err) { setError(getErrorMessage(err)); }
-  }
-  useEffect(() => { loadActivities(); }, []);
-  async function createActivity(event) {
-    event.preventDefault();
-    setCreating(true);
-    setError("");
-    setSuccess("");
-    try {
-      await api.post("/activities", { ...form, date: new Date(form.date).toISOString(), capacity: Number(form.capacity) });
-      setSuccess("Kegiatan berhasil dipublikasikan.");
-      setError("");
-      setShowForm(false);
-      setForm({ title: "", description: "", category: categories[0], location: "", date: "", capacity: 10 });
-      await loadActivities();
-    } catch (err) { setError(getErrorMessage(err)); }
-    finally { setCreating(false); }
-  }
-  async function updateStatus(id, status) {
-    try {
-      await api.patch(`/registrations/${id}/status`, { status });
-      await loadActivities();
-      setSuccess("Status pendaftaran berhasil diperbarui.");
-    } catch (err) { setError(getErrorMessage(err)); }
-  }
-  async function cancelActivity(id) {
-    try {
-      await api.delete(`/activities/${id}`);
-      await loadActivities();
-      setSuccess("Kegiatan berhasil dibatalkan.");
-    } catch (err) { setError(getErrorMessage(err)); }
-  }
-  return <section className="container page-space"><div className="dashboard-heading"><div><span className="eyebrow">Ruang organisasi</span><h1>Kelola aksi sosialmu.</h1><p>Publikasikan kegiatan dan koordinasikan para relawan.</p></div>{canCreateActivity && <button className="button" onClick={() => setShowForm(!showForm)}>{showForm ? "Tutup form" : "+ Buat kegiatan"}</button>}</div>
-    {!canCreateActivity && user.role === "organization" && <Notice message="Fitur publikasi kegiatan tersedia setelah organisasi terverifikasi oleh admin." />}
-    {success && <Notice success message={success} />}{error && <Notice message={error} />}
-    {showForm && canCreateActivity && <form className="activity-form" onSubmit={createActivity}><span className="eyebrow">Kegiatan baru</span><h2>Bagikan kesempatan berbuat baik.</h2><div className="form-grid"><label>Nama kegiatan<input required maxLength="160" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></label><label>Kategori<select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>{categories.map((category) => <option key={category}>{category}</option>)}</select></label><label>Lokasi<input required value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} placeholder="Kota atau alamat" /></label><label>Tanggal dan waktu<input required type="datetime-local" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} /></label><label>Kuota relawan<input required type="number" min="1" value={form.capacity} onChange={(e) => setForm({ ...form, capacity: e.target.value })} /></label><label className="wide-field">Deskripsi<textarea required rows="4" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></label></div><button className="button" disabled={creating}>{creating ? "Menerbitkan..." : "Publikasikan kegiatan"} {!creating && <span>→</span>}</button></form>}
-    <h2 className="dashboard-section-title">Kegiatan yang dikelola <span>{activities.length}</span></h2>
-    {activities.map((activity) => <article className="managed-activity" key={activity._id}><div className="managed-heading"><div><span className="category-label">{activity.category}</span><h3>{activity.title}</h3><p>{formatDate(activity.date)} · {activity.location} · Kuota {activity.capacity}</p></div><button className="button button-ghost button-small" onClick={() => cancelActivity(activity._id)}>Batalkan</button></div><div className="applicant-list">{(registrations[activity._id] || []).map((registration) => <div className="applicant-row" key={registration._id}><span className="org-avatar">{registration.volunteer?.name?.charAt(0) || "R"}</span><div><strong>{registration.volunteer?.name}</strong><small>{registration.volunteer?.email}</small></div><StatusBadge status={registration.status} />{registration.status === "pending" && <><button className="approve-button" onClick={() => updateStatus(registration._id, "approved")}>Terima</button><button className="reject-button" onClick={() => updateStatus(registration._id, "rejected")}>Tolak</button></>}</div>)}{!registrations[activity._id]?.length && <p className="muted">Belum ada relawan yang mendaftar.</p>}</div></article>)}
-    {!activities.length && !error && <div className="empty-box"><h3>Belum ada kegiatan</h3><p>Buat kegiatan pertama untuk mulai mengajak relawan.</p></div>}
-  </section>;
-}
-
-function StatusBadge({ status }) {
-  const labels = { pending: "Menunggu", approved: "Diterima", rejected: "Ditolak", attended: "Hadir", cancelled: "Dibatalkan" };
-  return <span className={`status-badge status-${status}`}>{labels[status] || status}</span>;
 }
 
 function Notice({ message, success = false }) {

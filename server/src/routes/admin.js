@@ -1,10 +1,36 @@
 import { Router } from "express";
+import Activity from "../models/Activity.js";
 import AuditLog from "../models/AuditLog.js";
+import Organization from "../models/Organization.js";
+import Registration from "../models/Registration.js";
+import User from "../models/User.js";
 import { authorize, protect } from "../middleware/auth.js";
 
 const router = Router();
 
 router.use(protect, authorize("admin"));
+
+router.get("/stats", async (req, res, next) => {
+  try {
+    const [users, verifiedOrganizations, unverifiedOrganizations, activeActivities, registrations] = await Promise.all([
+      User.countDocuments(),
+      Organization.countDocuments({ verified: true }),
+      Organization.countDocuments({ verified: false }),
+      Activity.countDocuments({ status: "published" }),
+      Registration.countDocuments()
+    ]);
+
+    return res.json({
+      users,
+      verifiedOrganizations,
+      unverifiedOrganizations,
+      activeActivities,
+      registrations
+    });
+  } catch (error) {
+    return next(error);
+  }
+});
 
 router.get("/audit-logs", async (req, res, next) => {
   try {

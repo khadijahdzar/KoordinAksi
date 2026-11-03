@@ -195,6 +195,38 @@ test("a volunteer cannot register for the same activity twice", async () => {
   assert.equal(activity.activeRegistrations, 3);
 });
 
+test("a volunteer can cancel their own pending registration and release its slot", async () => {
+  const volunteer = await createUser("volunteer", "withdrawal");
+  const volunteerToken = createToken(volunteer);
+  const registration = await Registration.create({
+    activity: activityId,
+    volunteer: volunteer._id
+  });
+  await Activity.updateOne({ _id: activityId }, { $inc: { activeRegistrations: 1 } });
+
+  const otherVolunteerAttempt = await request(`/registrations/${registration._id}/cancel`, {
+    method: "PATCH",
+    token: existingVolunteerToken
+  });
+  assert.equal(otherVolunteerAttempt.response.status, 403);
+
+  const cancelled = await request(`/registrations/${registration._id}/cancel`, {
+    method: "PATCH",
+    token: volunteerToken
+  });
+  assert.equal(cancelled.response.status, 200);
+  assert.equal(cancelled.data.registration.status, "cancelled");
+
+  const activity = await Activity.findById(activityId).select("activeRegistrations");
+  assert.equal(activity.activeRegistrations, 3);
+
+  const repeatedCancellation = await request(`/registrations/${registration._id}/cancel`, {
+    method: "PATCH",
+    token: volunteerToken
+  });
+  assert.equal(repeatedCancellation.response.status, 409);
+});
+
 test("registration lifecycle rejects terminal transitions and keeps capacity accurate", async () => {
   const approved = await request(`/registrations/${registrationId}/status`, {
     method: "PATCH",
@@ -269,6 +301,10 @@ test("admin verification changes are atomically recorded and audit logs are admi
     "organization.rejected",
     "organization.rejected"
   ]);
+  assert.equal(logs[0].actorId.toString(), adminId.toString());
+  assert.equal(logs[0].targetId.toString(), unverifiedOrganizationId.toString());
+  assert.equal(logs[0].details.organizationName, "Unverified Integration Organization");
+  assert.equal(logs[0].details.verified, true);
   const organization = await Organization.findById(unverifiedOrganizationId);
   assert.equal(organization.verificationStatus, "rejected");
 

@@ -85,6 +85,56 @@ router.get("/mine", protect, authorize("volunteer"), async (req, res, next) => {
   }
 });
 
+router.patch("/:id/cancel", protect, authorize("volunteer"), async (req, res, next) => {
+  let session;
+  try {
+    session = await mongoose.startSession();
+    let registration;
+    await session.withTransaction(async () => {
+      const current = await Registration.findById(req.params.id).session(session);
+      if (!current) throw createHttpError(404, "Pendaftaran tidak ditemukan.");
+      if (String(current.volunteer) !== String(req.user.id)) {
+        throw createHttpError(403, "Anda tidak dapat membatalkan pendaftaran ini.");
+      }
+      if (!["pending", "approved"].includes(current.status)) {
+        throw createHttpError(409, `Pendaftaran berstatus "${current.status}" tidak dapat dibatalkan.`);
+      }
+
+      registration = await Registration.findOneAndUpdate({
+        _id: current._id,
+        volunteer: req.user.id,
+        status: { $in: ["pending", "approved"] }
+      }, {
+        $set: { status: "cancelled" }
+      }, {
+        new: true,
+        session
+      });
+
+      if (!registration) {
+        throw createHttpError(409, "Status pendaftaran berubah. Muat ulang lalu coba lagi.");
+      }
+
+      const release = await Activity.updateOne({
+        _id: current.activity,
+        activeRegistrations: { $gt: 0 }
+      }, {
+        $inc: { activeRegistrations: -1 }
+      }, { session });
+
+      if (release.modifiedCount !== 1) {
+        throw new Error(`Kapasitas kegiatan ${current.activity} tidak konsisten dengan pendaftar aktif.`);
+      }
+    });
+
+    return res.json({ registration });
+  } catch (error) {
+    return next(error);
+  } finally {
+    if (session) await session.endSession();
+  }
+});
+
 router.get("/activity/:activityId", protect, authorize("organization", "admin"), async (req, res, next) => {
   try {
     const activity = await Activity.findById(req.params.activityId);
