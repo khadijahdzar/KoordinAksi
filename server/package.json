@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "nodemon src/index.js",
-    "start": "node src/index.js"
+    "start": "node src/index.js",
+    "migrate:registration-counts": "node --env-file=.env src/scripts/backfillRegistrationCounts.js",
+    "verify:replica-set": "node --env-file=.env src/scripts/verifyReplicaSet.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
@@ -14,6 +16,7 @@
     "express": "^4.21.2",
     "express-rate-limit": "^7.5.0",
     "helmet": "^8.0.0",
+    "joi": "^18.3.1",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.9.5"
   },

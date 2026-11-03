@@ -3,6 +3,8 @@ import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import Organization from "../models/Organization.js";
 import { protect } from "../middleware/auth.js";
+import { validate } from "../middleware/validate.js";
+import { loginSchema, registerSchema } from "../validation/requestSchemas.js";
 
 const router = Router();
 
@@ -12,7 +14,7 @@ function createToken(user) {
   });
 }
 
-router.post("/register", async (req, res, next) => {
+router.post("/register", validate(registerSchema), async (req, res, next) => {
   try {
     const { name, email, password, role = "volunteer", phone, organizationName } = req.body;
     if (!name || !email || !password) {
@@ -45,7 +47,7 @@ router.post("/register", async (req, res, next) => {
   }
 });
 
-router.post("/login", async (req, res, next) => {
+router.post("/login", validate(loginSchema), async (req, res, next) => {
   try {
     const { email, password } = req.body;
     const user = await User.findOne({ email: String(email || "").toLowerCase() }).select("+password").populate("organization");

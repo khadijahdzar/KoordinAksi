@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, NavLink, Navigate, Route, Routes, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import api, { getErrorMessage } from "./api";
-import { useAuth } from "./AuthContext";
+import { useAuth } from "@/AuthContext";
 
 const categories = ["Donor Darah", "Bantuan Bencana", "Bakti Sosial", "Penghijauan", "Pendidikan", "Kesehatan", "Lainnya"];
 const formatDate = (date) => new Intl.DateTimeFormat("id-ID", { dateStyle: "long" }).format(new Date(date));
@@ -134,6 +134,7 @@ function ActivityDetail() {
   const [note, setNote] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [registering, setRegistering] = useState(false);
   useEffect(() => {
     api.get(`/activities/${id}`).then(({ data }) => setActivity(data.activity))
       .catch((err) => setError(getErrorMessage(err)));
@@ -141,19 +142,23 @@ function ActivityDetail() {
   async function register(event) {
     event.preventDefault();
     if (!user) return navigate("/login");
+    setRegistering(true);
+    setError("");
+    setMessage("");
     try {
       await api.post("/registrations", { activityId: id, note });
       setMessage("Pendaftaran berhasil dikirim. Organisasi akan meninjau permohonanmu.");
-      setError("");
     } catch (err) {
       setError(getErrorMessage(err));
+    } finally {
+      setRegistering(false);
     }
   }
   if (error && !activity) return <div className="container page-space"><Notice message={error} /></div>;
   if (!activity) return <div className="container page-space"><p>Memuat kegiatan...</p></div>;
   return <section className="container page-space detail-layout"><div><Link className="back-link" to="/kegiatan">← Kembali ke kegiatan</Link><div className="detail-visual"><span>{activity.category}</span><strong>Jadilah bagian<br />dari perubahan.</strong></div><span className="eyebrow">{activity.category}</span><h1 className="detail-title">{activity.title}</h1><div className="detail-meta"><span>◷ {formatDate(activity.date)}</span><span>⌖ {activity.location}</span><span>◉ {activity.capacity} relawan</span></div><h2>Tentang kegiatan</h2><p className="long-copy">{activity.description}</p><div className="organization-note"><span className="org-avatar">{activity.organization?.name?.charAt(0) || "O"}</span><div><small>Diselenggarakan oleh</small><strong>{activity.organization?.name}</strong></div>{activity.organization?.verified && <span className="verified">✓ Terverifikasi</span>}</div></div>
     <aside className="register-panel"><span className="eyebrow">Ambil bagian</span><h2>Waktumu berarti.</h2><p>Daftar sebagai relawan dan tunggu konfirmasi dari penyelenggara.</p>{message && <Notice success message={message} />}{error && <Notice message={error} />}
-      {user?.role === "volunteer" ? <form onSubmit={register}><label>Pesan untuk penyelenggara <textarea value={note} onChange={(e) => setNote(e.target.value)} rows="4" placeholder="Ceritakan sedikit tentang motivasimu (opsional)" /></label><button className="button full-width">Daftar sebagai relawan <span>→</span></button></form>
+      {user?.role === "volunteer" ? <form onSubmit={register}><label>Pesan untuk penyelenggara <textarea value={note} onChange={(e) => setNote(e.target.value)} rows="4" placeholder="Ceritakan sedikit tentang motivasimu (opsional)" /></label><button className="button full-width" disabled={registering}>{registering ? "Mengirim..." : "Daftar sebagai relawan"} {!registering && <span>→</span>}</button></form>
         : <Link className="button full-width" to={user ? "/dashboard/organisasi" : "/login"}>{user ? "Masuk ke dashboard" : "Masuk untuk mendaftar"} <span>→</span></Link>}
     </aside></section>;
 }
@@ -197,12 +202,15 @@ function VolunteerDashboard() {
 }
 
 function OrganizationDashboard() {
+  const { user } = useAuth();
   const [activities, setActivities] = useState([]);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [showForm, setShowForm] = useState(false);
+  const [creating, setCreating] = useState(false);
   const [registrations, setRegistrations] = useState({});
   const [form, setForm] = useState({ title: "", description: "", category: categories[0], location: "", date: "", capacity: 10 });
+  const canCreateActivity = user.role === "organization" && user.organization?.verified === true;
   async function loadActivities() {
     try {
       const { data } = await api.get("/activities/mine");
@@ -218,6 +226,9 @@ function OrganizationDashboard() {
   useEffect(() => { loadActivities(); }, []);
   async function createActivity(event) {
     event.preventDefault();
+    setCreating(true);
+    setError("");
+    setSuccess("");
     try {
       await api.post("/activities", { ...form, date: new Date(form.date).toISOString(), capacity: Number(form.capacity) });
       setSuccess("Kegiatan berhasil dipublikasikan.");
@@ -226,6 +237,7 @@ function OrganizationDashboard() {
       setForm({ title: "", description: "", category: categories[0], location: "", date: "", capacity: 10 });
       await loadActivities();
     } catch (err) { setError(getErrorMessage(err)); }
+    finally { setCreating(false); }
   }
   async function updateStatus(id, status) {
     try {
@@ -241,9 +253,10 @@ function OrganizationDashboard() {
       setSuccess("Kegiatan berhasil dibatalkan.");
     } catch (err) { setError(getErrorMessage(err)); }
   }
-  return <section className="container page-space"><div className="dashboard-heading"><div><span className="eyebrow">Ruang organisasi</span><h1>Kelola aksi sosialmu.</h1><p>Publikasikan kegiatan dan koordinasikan para relawan.</p></div><button className="button" onClick={() => setShowForm(!showForm)}>{showForm ? "Tutup form" : "+ Buat kegiatan"}</button></div>
+  return <section className="container page-space"><div className="dashboard-heading"><div><span className="eyebrow">Ruang organisasi</span><h1>Kelola aksi sosialmu.</h1><p>Publikasikan kegiatan dan koordinasikan para relawan.</p></div>{canCreateActivity && <button className="button" onClick={() => setShowForm(!showForm)}>{showForm ? "Tutup form" : "+ Buat kegiatan"}</button>}</div>
+    {!canCreateActivity && user.role === "organization" && <Notice message="Fitur publikasi kegiatan tersedia setelah organisasi terverifikasi oleh admin." />}
     {success && <Notice success message={success} />}{error && <Notice message={error} />}
-    {showForm && <form className="activity-form" onSubmit={createActivity}><span className="eyebrow">Kegiatan baru</span><h2>Bagikan kesempatan berbuat baik.</h2><div className="form-grid"><label>Nama kegiatan<input required maxLength="160" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></label><label>Kategori<select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>{categories.map((category) => <option key={category}>{category}</option>)}</select></label><label>Lokasi<input required value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} placeholder="Kota atau alamat" /></label><label>Tanggal dan waktu<input required type="datetime-local" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} /></label><label>Kuota relawan<input required type="number" min="1" value={form.capacity} onChange={(e) => setForm({ ...form, capacity: e.target.value })} /></label><label className="wide-field">Deskripsi<textarea required rows="4" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></label></div><button className="button">Publikasikan kegiatan <span>→</span></button></form>}
+    {showForm && canCreateActivity && <form className="activity-form" onSubmit={createActivity}><span className="eyebrow">Kegiatan baru</span><h2>Bagikan kesempatan berbuat baik.</h2><div className="form-grid"><label>Nama kegiatan<input required maxLength="160" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></label><label>Kategori<select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>{categories.map((category) => <option key={category}>{category}</option>)}</select></label><label>Lokasi<input required value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} placeholder="Kota atau alamat" /></label><label>Tanggal dan waktu<input required type="datetime-local" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} /></label><label>Kuota relawan<input required type="number" min="1" value={form.capacity} onChange={(e) => setForm({ ...form, capacity: e.target.value })} /></label><label className="wide-field">Deskripsi<textarea required rows="4" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></label></div><button className="button" disabled={creating}>{creating ? "Menerbitkan..." : "Publikasikan kegiatan"} {!creating && <span>→</span>}</button></form>}
     <h2 className="dashboard-section-title">Kegiatan yang dikelola <span>{activities.length}</span></h2>
     {activities.map((activity) => <article className="managed-activity" key={activity._id}><div className="managed-heading"><div><span className="category-label">{activity.category}</span><h3>{activity.title}</h3><p>{formatDate(activity.date)} · {activity.location} · Kuota {activity.capacity}</p></div><button className="button button-ghost button-small" onClick={() => cancelActivity(activity._id)}>Batalkan</button></div><div className="applicant-list">{(registrations[activity._id] || []).map((registration) => <div className="applicant-row" key={registration._id}><span className="org-avatar">{registration.volunteer?.name?.charAt(0) || "R"}</span><div><strong>{registration.volunteer?.name}</strong><small>{registration.volunteer?.email}</small></div><StatusBadge status={registration.status} />{registration.status === "pending" && <><button className="approve-button" onClick={() => updateStatus(registration._id, "approved")}>Terima</button><button className="reject-button" onClick={() => updateStatus(registration._id, "rejected")}>Tolak</button></>}</div>)}{!registrations[activity._id]?.length && <p className="muted">Belum ada relawan yang mendaftar.</p>}</div></article>)}
     {!activities.length && !error && <div className="empty-box"><h3>Belum ada kegiatan</h3><p>Buat kegiatan pertama untuk mulai mengajak relawan.</p></div>}

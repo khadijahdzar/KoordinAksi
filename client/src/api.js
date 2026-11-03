@@ -12,7 +12,24 @@ api.interceptors.request.use((config) => {
 });
 
 export function getErrorMessage(error) {
-  return error.response?.data?.message || "Permintaan gagal. Periksa koneksi dan coba lagi.";
+  const { response } = error;
+  if (!response) return "Tidak dapat terhubung ke server. Periksa koneksi lalu coba lagi.";
+
+  const validationErrors = response.data?.errors;
+  if (response.status === 400 && Array.isArray(validationErrors) && validationErrors.length) {
+    return validationErrors
+      .map(({ field, message }) => `${field}: ${message}`)
+      .join(" ");
+  }
+
+  if (response.status === 401) {
+    return response.data?.message || "Sesi tidak valid. Silakan masuk kembali.";
+  }
+  if (response.status === 409) {
+    return response.data?.message || "Permintaan bertentangan dengan data saat ini. Muat ulang lalu coba lagi.";
+  }
+
+  return response.data?.message || "Permintaan gagal. Periksa data dan coba lagi.";
 }
 
 export default api;

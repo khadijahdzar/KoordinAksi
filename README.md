@@ -16,11 +16,13 @@ KoordinAksi menghubungkan relawan dengan organisasi dan kegiatan sosial. Aplikas
 
 ## Instalasi dan menjalankan
 
-1. Salin konfigurasi backend:
+1. Buat file konfigurasi backend dari template root:
 
    ```powershell
-   Copy-Item server\.env.example server\.env
+   Copy-Item .env.example server\.env
    ```
+
+   `.env.example` hanya template dan tidak dibaca otomatis. Server membaca `server/.env`. File `server/.env.example` berisi template yang sama jika ingin menyalinnya dari folder server.
 
 2. Edit `server/.env`:
 
@@ -54,6 +56,32 @@ npm start
 ```
 
 Untuk menjalankan frontend terpisah, opsional buat `client/.env` dan isi `VITE_API_URL=http://localhost:5000/api`.
+
+### Transaksi dan kapasitas pendaftaran
+
+Pendaftaran relawan menggunakan transaksi MongoDB dan penghitung `activeRegistrations` pada setiap kegiatan. Transaksi memerlukan MongoDB Atlas atau MongoDB lokal yang dikonfigurasi sebagai replica set; server standalone tidak mendukung transaksi. Untuk database yang sudah berisi kegiatan/pendaftaran, hentikan backend lalu jalankan migrasi satu kali sebelum menyalakannya kembali:
+
+```powershell
+npm run migrate:registration-counts --workspace=server
+```
+
+Jalankan migrasi ulang setelah impor data lama yang mengubah pendaftaran aktif. Jangan jalankan migrasi bersamaan dengan penulisan pendaftaran.
+
+Verifikasi koneksi replica set sekaligus dukungan transaksi dengan probe sementara yang dibersihkan setelah tes:
+
+```powershell
+npm run verify:replica-set --workspace=server
+```
+
+### Uji E2E kapasitas (database lokal khusus tes)
+
+Skrip ini membuat satu organisasi, satu kegiatan, dan tiga relawan; data tidak dihapus otomatis. Pastikan API backend tersambung ke **database lokal khusus tes**, bukan database berisi data penting, lalu jalankan dari root:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\server\scripts\e2e-capacity.ps1
+```
+
+Skrip meminta kredensial admin secara tersembunyi, menguji bahwa organisasi belum terverifikasi tidak dapat menerbitkan kegiatan, memverifikasi organisasi, membuat kegiatan berkuota dua, lalu mengirim tiga pendaftaran secara paralel. Hasil yang diharapkan: dua `201`, satu `409`, dan `activeRegistrations` sama dengan dua.
 
 ## Fitur dan peran
 

@@ -4,6 +4,17 @@ export function notFound(req, res) {
 
 export function errorHandler(error, req, res, next) {
   if (res.headersSent) return next(error);
+  if (error instanceof SyntaxError && error.status === 400 && "body" in error) {
+    return res.status(400).json({ message: "Format JSON request tidak valid." });
+  }
+  if (error.code === 20 && /Transaction numbers are only allowed/.test(error.message)) {
+    return res.status(503).json({
+      message: "Operasi ini membutuhkan MongoDB replica set. Konfigurasikan replica set lokal atau gunakan MongoDB Atlas."
+    });
+  }
+  if (error.statusCode) {
+    return res.status(error.statusCode).json({ message: error.message });
+  }
   if (error.name === "ValidationError") {
     return res.status(400).json({ message: error.message });
   }

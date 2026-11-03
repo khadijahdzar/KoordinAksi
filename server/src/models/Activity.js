@@ -18,6 +18,7 @@ const activitySchema = new mongoose.Schema({
   date: { type: Date, required: true },
   endDate: Date,
   capacity: { type: Number, required: true, min: 1 },
+  activeRegistrations: { type: Number, required: true, min: 0, default: 0 },
   imageUrl: { type: String, trim: true },
   status: { type: String, enum: ["draft", "published", "cancelled"], default: "published" },
   organization: { type: mongoose.Schema.Types.ObjectId, ref: "Organization", required: true }
