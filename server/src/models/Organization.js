@@ -8,6 +8,7 @@ const organizationSchema = new mongoose.Schema({
   address: { type: String, trim: true },
   owner: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, unique: true },
   verified: { type: Boolean, default: false },
+  verificationStatus: { type: String, enum: ["pending", "verified", "rejected"], default: "pending" },
   verifiedAt: Date
 }, { timestamps: true });
 

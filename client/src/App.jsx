@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { Link, NavLink, Navigate, Route, Routes, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { Link, NavLink, Navigate, Outlet, Route, Routes, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import api, { getErrorMessage } from "./api";
-import { useAuth } from "@/AuthContext";
+import { getDashboardPath, useAuth } from "@/AuthContext";
+import AdminDashboard, { AdminLayout } from "./AdminDashboard";
 
 const categories = ["Donor Darah", "Bantuan Bencana", "Bakti Sosial", "Penghijauan", "Pendidikan", "Kesehatan", "Lainnya"];
 const formatDate = (date) => new Intl.DateTimeFormat("id-ID", { dateStyle: "long" }).format(new Date(date));
@@ -9,13 +10,14 @@ const formatDate = (date) => new Intl.DateTimeFormat("id-ID", { dateStyle: "long
 function Header() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const homePath = user ? getDashboardPath(user.role) : "/";
   return <header className="site-header">
     <div className="container nav-wrap">
-      <Link className="brand" to="/"><span className="brand-mark">K</span> Koordin<span>Aksi</span></Link>
+      <Link className="brand" to={homePath}><span className="brand-mark">K</span> Koordin<span>Aksi</span></Link>
       <nav>
         <NavLink to="/kegiatan">Kegiatan</NavLink>
         <a href="/#tentang">Tentang</a>
-        {user && <NavLink to={user.role === "organization" ? "/dashboard/organisasi" : "/dashboard/relawan"}>Dashboard</NavLink>}
+        {user && <NavLink to={homePath}>Dashboard</NavLink>}
       </nav>
       <div className="nav-actions">
         {user ? <><span className="user-greeting">Hai, {user.name.split(" ")[0]}</span><button className="button button-small button-ghost" onClick={() => { logout(); navigate("/"); }}>Keluar</button></>
@@ -26,28 +28,73 @@ function Header() {
 }
 
 function Footer() {
-  return <footer className="footer"><div className="container footer-row"><Link className="brand" to="/"><span className="brand-mark">K</span> Koordin<span>Aksi</span></Link><p>Ruang bertemu untuk setiap niat baik.</p><small>© {new Date().getFullYear()} KoordinAksi</small></div></footer>;
+  const { user } = useAuth();
+  return <footer className="footer"><div className="container footer-row"><Link className="brand" to={user ? getDashboardPath(user.role) : "/"}><span className="brand-mark">K</span> Koordin<span>Aksi</span></Link><p>Ruang bertemu untuk setiap niat baik.</p><small>© {new Date().getFullYear()} KoordinAksi</small></div></footer>;
 }
 
-function Layout() {
-  return <><Header /><main className="main-content"><Routes>
-    <Route path="/" element={<Home />} />
-    <Route path="/kegiatan" element={<ActivityList />} />
-    <Route path="/kegiatan/:id" element={<ActivityDetail />} />
-    <Route path="/login" element={<AuthPage mode="login" />} />
-    <Route path="/register" element={<AuthPage mode="register" />} />
-    <Route path="/dashboard/relawan" element={<Protected roles={["volunteer"]}><VolunteerDashboard /></Protected>} />
-    <Route path="/dashboard/organisasi" element={<Protected roles={["organization", "admin"]}><OrganizationDashboard /></Protected>} />
-    <Route path="*" element={<NotFound />} />
-  </Routes></main><Footer /></>;
+function PublicLayout() {
+  return <><Header /><SessionRecoveryNotice /><main className="main-content"><Outlet /></main><Footer /></>;
 }
 
-function Protected({ roles, children }) {
-  const { user, loading } = useAuth();
+function OrganizationLayout() {
+  return <><Header /><SessionRecoveryNotice /><main className="main-content"><Outlet /></main><Footer /></>;
+}
+
+function SessionRecoveryNotice() {
+  const { sessionError, refreshSession } = useAuth();
+  if (!sessionError) return null;
+  return <div className="container session-recovery" role="status">
+    <span>{sessionError}</span>
+    <button className="button button-small button-ghost" onClick={refreshSession}>Coba lagi</button>
+  </div>;
+}
+
+function ProtectedRoute({ roles }) {
+  const { user, loading, sessionError } = useAuth();
   if (loading) return <div className="container page-space"><p>Memuat sesi...</p></div>;
+  if (sessionError && !user) return roles.includes("volunteer") ? null : <SessionRecoveryNotice />;
   if (!user) return <Navigate to="/login" replace />;
-  if (!roles.includes(user.role)) return <Navigate to={user.role === "organization" ? "/dashboard/organisasi" : "/dashboard/relawan"} replace />;
-  return children;
+  if (!roles.includes(user.role)) return <Navigate to={getDashboardPath(user.role)} replace />;
+  return <Outlet />;
+}
+
+function ProtectedAdminRoute() {
+  const { user, loading, sessionError } = useAuth();
+  if (loading) return <div className="container page-space"><p>Memuat sesi...</p></div>;
+  if (sessionError && !user) return <SessionRecoveryNotice />;
+  if (!user) return <Navigate to="/login" replace />;
+  if (user.role !== "admin") return <Navigate to={getDashboardPath(user.role)} replace />;
+  return <Outlet />;
+}
+
+function AppRoutes() {
+  return <Routes>
+    <Route element={<PublicLayout />}>
+      <Route path="/" element={<Home />} />
+      <Route path="/kegiatan" element={<ActivityList />} />
+      <Route path="/kegiatan/:id" element={<ActivityDetail />} />
+      <Route path="/login" element={<AuthPage mode="login" />} />
+      <Route path="/register" element={<AuthPage mode="register" />} />
+      <Route element={<ProtectedRoute roles={["volunteer"]} />}>
+        <Route path="/dashboard/relawan" element={<VolunteerDashboard />} />
+      </Route>
+    </Route>
+    <Route element={<ProtectedRoute roles={["organization"]} />}>
+      <Route path="/dashboard/organisasi" element={<OrganizationLayout />}>
+        <Route index element={<OrganizationDashboard />} />
+      </Route>
+    </Route>
+    <Route path="/admin" element={<ProtectedAdminRoute />}>
+      <Route element={<AdminLayout />}>
+        <Route index element={<Navigate to="dashboard" replace />} />
+        <Route path="dashboard" element={<AdminDashboard />} />
+        <Route path="*" element={<NotFound />} />
+      </Route>
+    </Route>
+    <Route path="*" element={<PublicLayout />}>
+      <Route index element={<NotFound />} />
+    </Route>
+  </Routes>;
 }
 
 function Home() {
@@ -159,7 +206,7 @@ function ActivityDetail() {
   return <section className="container page-space detail-layout"><div><Link className="back-link" to="/kegiatan">← Kembali ke kegiatan</Link><div className="detail-visual"><span>{activity.category}</span><strong>Jadilah bagian<br />dari perubahan.</strong></div><span className="eyebrow">{activity.category}</span><h1 className="detail-title">{activity.title}</h1><div className="detail-meta"><span>◷ {formatDate(activity.date)}</span><span>⌖ {activity.location}</span><span>◉ {activity.capacity} relawan</span></div><h2>Tentang kegiatan</h2><p className="long-copy">{activity.description}</p><div className="organization-note"><span className="org-avatar">{activity.organization?.name?.charAt(0) || "O"}</span><div><small>Diselenggarakan oleh</small><strong>{activity.organization?.name}</strong></div>{activity.organization?.verified && <span className="verified">✓ Terverifikasi</span>}</div></div>
     <aside className="register-panel"><span className="eyebrow">Ambil bagian</span><h2>Waktumu berarti.</h2><p>Daftar sebagai relawan dan tunggu konfirmasi dari penyelenggara.</p>{message && <Notice success message={message} />}{error && <Notice message={error} />}
       {user?.role === "volunteer" ? <form onSubmit={register}><label>Pesan untuk penyelenggara <textarea value={note} onChange={(e) => setNote(e.target.value)} rows="4" placeholder="Ceritakan sedikit tentang motivasimu (opsional)" /></label><button className="button full-width" disabled={registering}>{registering ? "Mengirim..." : "Daftar sebagai relawan"} {!registering && <span>→</span>}</button></form>
-        : <Link className="button full-width" to={user ? "/dashboard/organisasi" : "/login"}>{user ? "Masuk ke dashboard" : "Masuk untuk mendaftar"} <span>→</span></Link>}
+        : <Link className="button full-width" to={user ? getDashboardPath(user.role) : "/login"}>{user ? "Masuk ke dashboard" : "Masuk untuk mendaftar"} <span>→</span></Link>}
     </aside></section>;
 }
 
@@ -178,7 +225,7 @@ function AuthPage({ mode }) {
       const user = isRegister
         ? await register(form)
         : await login({ email: form.email, password: form.password });
-      navigate(user.role === "organization" || user.role === "admin" ? "/dashboard/organisasi" : "/dashboard/relawan");
+      navigate(getDashboardPath(user.role));
     } catch (err) {
       setError(getErrorMessage(err));
     } finally {
@@ -277,5 +324,5 @@ function NotFound() {
 }
 
 export default function App() {
-  return <Layout />;
+  return <AppRoutes />;
 }

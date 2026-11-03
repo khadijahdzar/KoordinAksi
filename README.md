@@ -81,13 +81,26 @@ Skrip ini membuat satu organisasi, satu kegiatan, dan tiga relawan; data tidak d
 powershell -ExecutionPolicy Bypass -File .\server\scripts\e2e-capacity.ps1
 ```
 
-Skrip meminta kredensial admin secara tersembunyi, menguji bahwa organisasi belum terverifikasi tidak dapat menerbitkan kegiatan, memverifikasi organisasi, membuat kegiatan berkuota dua, lalu mengirim tiga pendaftaran secara paralel. Hasil yang diharapkan: dua `201`, satu `409`, dan `activeRegistrations` sama dengan dua.
+Skrip meminta kredensial admin secara tersembunyi, menguji bahwa organisasi belum terverifikasi tidak dapat membuat kegiatan, memverifikasi organisasi, membuat kegiatan berkuota dua, lalu mengirim tiga pendaftaran secara paralel. Hasil yang diharapkan: dua `201`, satu `409`, dan `activeRegistrations` sama dengan dua.
+
+### Tes integrasi route backend
+
+Tes otomatis memakai Node.js built-in test runner dan database MongoDB khusus berakhiran `test`. Tes menolak database yang namanya tidak mengandung `test`, membuat fixture unik, lalu membersihkan fixture tersebut. Karena pendaftaran dan audit verifikasi menggunakan transaksi, MongoDB harus berjalan sebagai replica set.
+
+Buat `server/.env.test` dari `server/.env.example`, lalu gunakan database terpisah (contoh: `koordinaksi_test`) dan secret khusus tes. Jalankan dari root:
+
+```powershell
+npm run test:integration --workspace=server
+```
+
+Tes mencakup larangan membuat kegiatan oleh organisasi belum diverifikasi, invariant pengurangan kapasitas, pendaftaran ganda, transisi status, dan audit verifikasi admin.
 
 ## Fitur dan peran
 
 - Relawan dapat membuat akun, mencari kegiatan berdasarkan kata kunci/kategori/lokasi, mendaftar, dan melihat status/riwayat.
 - Organisasi dapat mendaftar, membuat/mengubah/membatalkan kegiatan, melihat pendaftar, serta menerima atau menolak pendaftaran.
-- Admin dapat memverifikasi organisasi melalui endpoint khusus.
+- Admin dapat memverifikasi/menolak organisasi melalui endpoint khusus; status organisasi (`pending`, `verified`, `rejected`) dan setiap tindakan dicatat; audit log hanya dapat dibaca admin.
+- Status pendaftaran mengikuti transisi `pending` → `approved`/`rejected`/`cancelled` dan `approved` → `attended`/`cancelled`; status akhir tidak dapat diaktifkan kembali.
 - Kegiatan mendukung status `draft`, `published`, dan `cancelled`. Status pendaftaran: `pending`, `approved`, `rejected`, `attended`, dan `cancelled`.
 - Registrasi publik hanya mengizinkan peran relawan atau organisasi; akun admin tidak dapat dibuat melalui form.
 
@@ -125,6 +138,7 @@ Semua endpoint berawalan `/api`.
 | `GET` | `/organizations` | Publik | Daftar organisasi terverifikasi |
 | `GET` | `/organizations/pending` | Admin | Organisasi menunggu verifikasi |
 | `PATCH` | `/organizations/:id/verify` | Admin | Verifikasi (`{ "verified": true }`) |
+| `GET` | `/admin/audit-logs` | Admin | Audit log verifikasi organisasi; mendukung `page` dan `limit` |
 
 Endpoint terlindungi menerima `Authorization: Bearer <token>`. API mengembalikan status `401` untuk sesi tidak valid dan `403` untuk role yang tidak berwenang. Respons error berbentuk JSON dengan properti `message`.
 

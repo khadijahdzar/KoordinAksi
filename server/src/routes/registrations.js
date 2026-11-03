@@ -8,6 +8,13 @@ import { registrationCreateSchema, registrationStatusSchema } from "../validatio
 
 const router = Router();
 const capacityStatuses = ["pending", "approved", "attended"];
+const allowedTransitions = {
+  pending: ["approved", "rejected", "cancelled"],
+  approved: ["attended", "cancelled"],
+  rejected: [],
+  attended: [],
+  cancelled: []
+};
 
 function createHttpError(statusCode, message) {
   const error = new Error(message);
@@ -110,6 +117,12 @@ router.patch("/:id/status", validate(registrationStatusSchema), protect, authori
       }
       if (req.user.role !== "admin" && String(activity.organization) !== String(req.user.organization)) {
         throw createHttpError(403, "Anda tidak dapat mengubah pendaftaran ini.");
+      }
+      if (!allowedTransitions[registration.status].includes(req.body.status)) {
+        throw createHttpError(
+          409,
+          `Transisi status dari "${registration.status}" ke "${req.body.status}" tidak diizinkan.`
+        );
       }
 
       const wasCounted = capacityStatuses.includes(registration.status);

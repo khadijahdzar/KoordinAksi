@@ -15,35 +15,49 @@ function createToken(user) {
 }
 
 router.post("/register", validate(registerSchema), async (req, res, next) => {
+  let session;
   try {
     const { name, email, password, role = "volunteer", phone, organizationName } = req.body;
-    if (!name || !email || !password) {
-      return res.status(400).json({ message: "Nama, email, dan password wajib diisi." });
-    }
-    if (password.length < 8) {
-      return res.status(400).json({ message: "Password minimal 8 karakter." });
-    }
-    if (!["volunteer", "organization"].includes(role)) {
-      return res.status(400).json({ message: "Role pendaftaran tidak valid." });
-    }
-    if (role === "organization" && !organizationName?.trim()) {
-      return res.status(400).json({ message: "Nama organisasi wajib diisi." });
-    }
-    const user = await User.create({ name, email, password, role, phone });
-    if (role === "organization") {
-      const organization = await Organization.create({
-        name: organizationName,
+
+    session = await User.startSession();
+    let userId;
+
+    await session.withTransaction(async () => {
+      const [user] = await User.create([{
+        name,
         email,
-        phone,
-        owner: user._id
-      });
-      user.organization = organization._id;
-      await user.save();
+        password,
+        role,
+        phone
+      }], { session });
+
+      if (role === "organization") {
+        const [organization] = await Organization.create([{
+          name: organizationName,
+          email,
+          phone,
+          owner: user._id
+        }], { session });
+
+        user.organization = organization._id;
+        await user.save({ session });
+      }
+
+      userId = user._id;
+    });
+
+    const safeUser = await User.findById(userId)
+      .select("-password")
+      .populate("organization");
+    if (!safeUser) {
+      throw new Error("User registration completed but the account could not be loaded.");
     }
-    const safeUser = await User.findById(user._id).select("-password").populate("organization");
-    return res.status(201).json({ token: createToken(user), user: safeUser });
+
+    return res.status(201).json({ token: createToken(safeUser), user: safeUser });
   } catch (error) {
     return next(error);
+  } finally {
+    if (session) await session.endSession();
   }
 });
 

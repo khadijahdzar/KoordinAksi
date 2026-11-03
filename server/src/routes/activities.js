@@ -101,8 +101,8 @@ router.post("/", validate(activityCreateSchema), protect, authorize("organizatio
     if (!organization) {
       return res.status(400).json({ message: "Profil organisasi akun ini tidak ditemukan." });
     }
-    if (req.body.status === "published" && !organization.verified) {
-      return res.status(403).json({ message: "Organisasi harus terverifikasi untuk mempublikasikan kegiatan." });
+    if (!organization.verified) {
+      return res.status(403).json({ message: "Organisasi Anda belum diverifikasi oleh Admin." });
     }
     const activity = await Activity.create({ ...req.body, organization: organization._id });
     return res.status(201).json({ activity });
@@ -122,9 +122,28 @@ router.patch("/:id", validate(activityUpdateSchema), protect, authorize("organiz
       }
     }
     const allowed = ["title", "description", "category", "location", "date", "endDate", "capacity", "imageUrl", "status"];
-    for (const key of allowed) if (req.body[key] !== undefined) activity[key] = req.body[key];
-    await activity.save();
-    return res.json({ activity });
+    const updates = Object.fromEntries(
+      allowed.filter((key) => req.body[key] !== undefined).map((key) => [key, req.body[key]])
+    );
+    const filter = { _id: activity._id };
+    if (req.body.capacity !== undefined) {
+      filter.$expr = { $lte: ["$activeRegistrations", req.body.capacity] };
+    }
+
+    const updatedActivity = await Activity.findOneAndUpdate(filter, { $set: updates }, {
+      new: true,
+      runValidators: true
+    });
+    if (updatedActivity) return res.json({ activity: updatedActivity });
+
+    const currentActivity = await Activity.findById(activity._id).select("activeRegistrations");
+    if (!currentActivity) return res.status(404).json({ message: "Kegiatan tidak ditemukan." });
+    if (req.body.capacity !== undefined && req.body.capacity < currentActivity.activeRegistrations) {
+      return res.status(409).json({
+        message: `Kapasitas baru (${req.body.capacity}) tidak boleh lebih kecil dari jumlah pendaftar aktif saat ini (${currentActivity.activeRegistrations}).`
+      });
+    }
+    return next(new Error("Kegiatan gagal diperbarui karena data berubah selama proses."));
   } catch (error) {
     return next(error);
   }
