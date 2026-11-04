@@ -3,8 +3,11 @@ import mongoose from "mongoose";
 const organizationSchema = new mongoose.Schema({
   name: { type: String, required: true, trim: true, maxlength: 150 },
   description: { type: String, trim: true, maxlength: 2000 },
+  focusCategory: { type: String, trim: true, maxlength: 100 },
+  legalNumber: { type: String, trim: true, maxlength: 100 },
   email: { type: String, trim: true, lowercase: true },
   phone: { type: String, trim: true },
+  picTitle: { type: String, trim: true, maxlength: 100 },
   address: { type: String, trim: true },
   owner: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, unique: true },
   verified: { type: Boolean, default: false },

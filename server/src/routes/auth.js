@@ -17,7 +17,10 @@ function createToken(user) {
 router.post("/register", validate(registerSchema), async (req, res, next) => {
   let session;
   try {
-    const { name, email, password, role = "volunteer", phone, organizationName } = req.body;
+    const {
+      name, email, password, role = "volunteer", phone, city, interests,
+      acceptedTerms, organizationName, focusCategory, legalNumber, picTitle
+    } = req.body;
 
     session = await User.startSession();
     let userId;
@@ -28,7 +31,10 @@ router.post("/register", validate(registerSchema), async (req, res, next) => {
         email,
         password,
         role,
-        phone
+        phone,
+        city,
+        interests,
+        acceptedTerms
       }], { session });
 
       if (role === "organization") {
@@ -36,6 +42,9 @@ router.post("/register", validate(registerSchema), async (req, res, next) => {
           name: organizationName,
           email,
           phone,
+          focusCategory,
+          legalNumber,
+          picTitle,
           owner: user._id
         }], { session });
 

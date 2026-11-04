@@ -3,18 +3,48 @@ import { ACTIVITY_CATEGORIES } from "../models/Activity.js";
 
 const email = Joi.string().trim().lowercase().email().max(254).required();
 const password = Joi.string().min(8).max(128).required();
+const volunteerInterests = [
+  "Lingkungan & Konservasi",
+  "Pendidikan & Literasi",
+  "Medis & PKS",
+  "Tanggap Bencana",
+  "Logistik",
+  "Dokumen & Media"
+];
 
 export const registerSchema = Joi.object({
   name: Joi.string().trim().min(1).max(100).required(),
   email,
   password,
   role: Joi.string().valid("volunteer", "organization").default("volunteer"),
-  phone: Joi.string().trim().max(30).allow(""),
+  phone: Joi.when("role", {
+    is: "volunteer",
+    then: Joi.string().trim().min(8).max(30).required(),
+    otherwise: Joi.string().trim().max(30).allow("")
+  }),
+  city: Joi.when("role", {
+    is: "volunteer",
+    then: Joi.string().trim().min(1).max(100).required(),
+    otherwise: Joi.string().trim().max(100).allow("")
+  }),
+  interests: Joi.when("role", {
+    is: "volunteer",
+    then: Joi.array().items(Joi.string().valid(...volunteerInterests)).min(1).max(volunteerInterests.length).unique().required(),
+    otherwise: Joi.array().items(Joi.string().valid(...volunteerInterests)).max(volunteerInterests.length).unique()
+  }),
+  acceptedTerms: Joi.when("role", {
+    is: "volunteer",
+    then: Joi.boolean().valid(true).required(),
+    otherwise: Joi.boolean()
+  }),
   organizationName: Joi.when("role", {
     is: "organization",
     then: Joi.string().trim().min(1).max(150).required(),
     otherwise: Joi.string().trim().max(150).allow("")
-  })
+  }),
+  focusCategory: Joi.string().trim().max(100).allow(""),
+  legalNumber: Joi.string().trim().max(100).allow(""),
+  picTitle: Joi.string().trim().max(100).allow("")
 }).unknown(false);
 
 export const loginSchema = Joi.object({

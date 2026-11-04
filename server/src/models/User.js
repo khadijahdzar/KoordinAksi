@@ -7,6 +7,9 @@ const userSchema = new mongoose.Schema({
   password: { type: String, required: true, minlength: 8, select: false },
   role: { type: String, enum: ["volunteer", "organization", "admin"], default: "volunteer" },
   phone: { type: String, trim: true, maxlength: 30 },
+  city: { type: String, trim: true, maxlength: 100 },
+  interests: { type: [String], default: [] },
+  acceptedTerms: { type: Boolean, default: false },
   organization: { type: mongoose.Schema.Types.ObjectId, ref: "Organization" }
 }, { timestamps: true });
 
