@@ -12,6 +12,7 @@ export default function AdminOrganizations() {
   const [error, setError] = useState("");
   const [toast, setToast] = useState(null);
   const [reviewingId, setReviewingId] = useState("");
+  const [selectedForRejection, setSelectedForRejection] = useState(null);
   const dismissToast = useCallback(() => setToast(null), []);
 
   const loadOrganizations = useCallback(async () => {
@@ -40,6 +41,24 @@ export default function AdminOrganizations() {
       await api.patch(`/organizations/${organization._id}/verify`, { verified: true });
       setOrganizations((current) => current.filter((item) => item._id !== organization._id));
       setToast({ type: "success", message: `${organization.name} berhasil diverifikasi.` });
+    } catch (requestError) {
+      setToast({ type: "error", message: getErrorMessage(requestError) });
+    } finally {
+      setReviewingId("");
+    }
+  }
+
+  async function rejectOrganization() {
+    if (!selectedForRejection || reviewingId) return;
+    const organization = selectedForRejection;
+    setReviewingId(organization._id);
+    setError("");
+    setToast(null);
+    try {
+      await api.patch(`/organizations/${organization._id}/verify`, { verified: false });
+      setOrganizations((current) => current.filter((item) => item._id !== organization._id));
+      setSelectedForRejection(null);
+      setToast({ type: "success", message: `Pengajuan ${organization.name} berhasil ditolak.` });
     } catch (requestError) {
       setToast({ type: "error", message: getErrorMessage(requestError) });
     } finally {
@@ -84,12 +103,16 @@ export default function AdminOrganizations() {
                     : <span className="admin-organization-no-description">Deskripsi belum tersedia</span>}
                   {organization.address && <small className="admin-organization-address">{organization.address}</small>}
                 </td>
-                <td data-label="Tindakan"><button type="button" className="button button-small"
-                  disabled={Boolean(reviewingId)} onClick={() => approveOrganization(organization)}>
-                  {reviewingId === organization._id
-                    ? <><span className="admin-spinner" aria-hidden="true" /> Memverifikasi…</>
-                    : "Verifikasi / Setujui"}
-                </button></td>
+                <td data-label="Tindakan"><div className="admin-review-actions">
+                  <button type="button" className="button button-small"
+                    disabled={Boolean(reviewingId)} onClick={() => approveOrganization(organization)}>
+                    {reviewingId === organization._id
+                      ? <><span className="admin-spinner" aria-hidden="true" /> Memproses…</>
+                      : "Setujui"}
+                  </button>
+                  <button type="button" className="button button-small admin-takedown-button"
+                    disabled={Boolean(reviewingId)} onClick={() => setSelectedForRejection(organization)}>Tolak</button>
+                </div></td>
               </tr>)}</tbody>
             </table>
           </div>
@@ -99,5 +122,19 @@ export default function AdminOrganizations() {
           </div>}
       <p className="admin-document-note">Informasi yang tersedia berasal dari profil organisasi dan akun pemilik. Dokumen pendukung belum disediakan oleh API saat ini.</p>
     </section>
+    {selectedForRejection && <div className="admin-confirm-backdrop" onMouseDown={(event) => {
+      if (event.target === event.currentTarget && !reviewingId) setSelectedForRejection(null);
+    }}>
+      <section className="admin-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="organization-reject-title">
+        <span className="eyebrow">Konfirmasi verifikasi</span>
+        <h2 id="organization-reject-title">Tolak organisasi ini?</h2>
+        <p>Pengajuan <strong>{selectedForRejection.name}</strong> akan ditolak dan tidak dapat menerbitkan kegiatan.</p>
+        <div><button type="button" className="button button-ghost" disabled={Boolean(reviewingId)}
+          onClick={() => setSelectedForRejection(null)}>Kembali</button>
+          <button type="button" className="button admin-danger-button" disabled={Boolean(reviewingId)} onClick={rejectOrganization}>
+            {reviewingId ? "Memproses…" : "Ya, tolak pengajuan"}
+          </button></div>
+      </section>
+    </div>}
   </section>;
 }

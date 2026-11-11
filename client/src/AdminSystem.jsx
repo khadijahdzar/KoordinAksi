@@ -8,6 +8,17 @@ function formatTimestamp(timestamp) {
   }).format(new Date(timestamp));
 }
 
+function auditMessage(action) {
+  const messages = {
+    "organization.verified": "Organisasi diverifikasi",
+    "organization.rejected": "Verifikasi organisasi ditolak",
+    "organization.approved": "Organisasi disetujui",
+    "activity.approved": "Kegiatan disetujui",
+    "activity.rejected": "Kegiatan diturunkan"
+  };
+  return messages[action] || action;
+}
+
 export default function AdminSystem() {
   const [auditLogs, setAuditLogs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -48,11 +59,11 @@ export default function AdminSystem() {
         ? <div className="admin-table-state" role="status">Memuat audit log…</div>
         : auditLogs.length
           ? <div className="admin-audit-list">{auditLogs.map((log) => <article className="admin-audit-row" key={log._id}>
-            <span className={`admin-audit-icon${log.action === "organization.verified" ? " is-success" : ""}`} aria-hidden="true">
-              {log.action === "organization.verified" ? "✓" : "!"}
+            <span className={`admin-audit-icon${log.action.endsWith(".approved") || log.action.endsWith(".verified") ? " is-success" : ""}`} aria-hidden="true">
+              {log.action.endsWith(".approved") || log.action.endsWith(".verified") ? "✓" : "!"}
             </span>
-            <div><strong>{log.action === "organization.verified" ? "Organisasi diverifikasi" : log.action === "organization.rejected" ? "Verifikasi organisasi ditolak" : log.action}</strong>
-              <span>{log.details?.organizationName || log.targetId} · {log.actorId?.name || "Admin tidak tersedia"}</span></div>
+            <div><strong>{auditMessage(log.action)}</strong>
+              <span>{log.details?.name || log.details?.organizationName || log.targetId} · {log.actorId?.name || "Admin tidak tersedia"}</span></div>
             <time dateTime={new Date(log.timestamp).toISOString()}>{formatTimestamp(log.timestamp)}</time>
           </article>)}</div>
           : !error && <div className="admin-table-state">Belum ada aktivitas admin yang tercatat.</div>}

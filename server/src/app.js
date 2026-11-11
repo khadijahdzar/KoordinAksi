@@ -6,7 +6,9 @@ import authRoutes from "./routes/auth.js";
 import activityRoutes from "./routes/activities.js";
 import registrationRoutes from "./routes/registrations.js";
 import organizationRoutes from "./routes/organizations.js";
-import adminRoutes from "./routes/admin.js";
+import adminRoutes from "./routes/adminRoutes.js";
+import volunteerRoutes from "./routes/volunteerRoutes.js";
+import orgRoutes from "./routes/orgRoutes.js";
 import { errorHandler, notFound } from "./middleware/errors.js";
 
 const app = express();
@@ -21,6 +23,9 @@ app.use("/api/activities", activityRoutes);
 app.use("/api/registrations", registrationRoutes);
 app.use("/api/organizations", organizationRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/v1/admin", adminRoutes);
+app.use("/api/v1/volunteers", volunteerRoutes);
+app.use("/api/v1/organizations", orgRoutes);
 app.use(notFound);
 app.use(errorHandler);
 

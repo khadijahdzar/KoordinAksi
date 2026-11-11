@@ -61,6 +61,7 @@ export default function VolunteerLayout() {
         <nav className="volunteer-sidebar-nav">
           <NavLink end to="/dashboard/relawan"><span aria-hidden="true">⌕</span> Jelajahi kegiatan</NavLink>
           <NavLink to="/dashboard/relawan/history"><span aria-hidden="true">▤</span> Pendaftaran saya</NavLink>
+          <NavLink to="/dashboard/relawan/feed"><span aria-hidden="true">♡</span> Kabar Aksi</NavLink>
           <NavLink to="/dashboard/relawan/profile"><span aria-hidden="true">◉</span> Profil</NavLink>
         </nav>
         <div className="volunteer-sidebar-note">

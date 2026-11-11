@@ -30,7 +30,8 @@ router.post("/", validate(registrationCreateSchema), protect, authorize("volunte
     await session.withTransaction(async () => {
       const activity = await Activity.findOne({
         _id: req.body.activityId,
-        status: "published"
+        status: "published",
+        verificationStatus: { $nin: ["pending", "rejected"] }
       }).session(session);
 
       if (!activity) {
@@ -43,6 +44,7 @@ router.post("/", validate(registrationCreateSchema), protect, authorize("volunte
       const reservedActivity = await Activity.findOneAndUpdate({
         _id: activity._id,
         status: "published",
+        verificationStatus: { $nin: ["pending", "rejected"] },
         date: { $gt: new Date() },
         $expr: { $lt: ["$activeRegistrations", "$capacity"] }
       }, {

@@ -21,6 +21,8 @@ const activitySchema = new mongoose.Schema({
   activeRegistrations: { type: Number, required: true, min: 0, default: 0 },
   imageUrl: { type: String, trim: true },
   status: { type: String, enum: ["draft", "published", "cancelled"], default: "published" },
+  isVerified: { type: Boolean, default: true },
+  verificationStatus: { type: String, enum: ["pending", "approved", "rejected"], default: "approved" },
   organization: { type: mongoose.Schema.Types.ObjectId, ref: "Organization", required: true }
 }, { timestamps: true });
 

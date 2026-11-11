@@ -1,17 +1,24 @@
 import React, { useEffect, useState } from "react";
-import { Link, NavLink, Navigate, Outlet, Route, Routes, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { Link, NavLink, Navigate, Outlet, Route, Routes, useNavigate, useParams } from "react-router-dom";
 import api, { getErrorMessage } from "./api";
 import { getDashboardPath, useAuth } from "@/AuthContext";
-import AdminDashboard, { AdminLayout } from "./AdminDashboard";
+import ActivityList from "./public/ActivityList";
+import { AdminLayout } from "./AdminDashboard";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminActivityList from "./pages/admin/AdminActivityList";
+import AdminVolunteerDatabase from "./pages/admin/AdminVolunteerDatabase";
 import AdminOrganizations from "./AdminOrganizations";
 import AdminSystem from "./AdminSystem";
 import VolunteerLayout from "./volunteer/VolunteerLayout";
 import VolunteerDashboard from "./volunteer/VolunteerDashboard";
 import RegistrationHistory from "./volunteer/RegistrationHistory";
 import VolunteerProfile from "./volunteer/VolunteerProfile";
+import VolunteerFeed from "./volunteer/VolunteerFeed";
 import OrganizationLayout from "./organization/OrganizationLayout";
 import OrganizationDashboard from "./organization/OrganizationDashboard";
 import ActivityParticipants from "./organization/ActivityParticipants";
+import VolunteerVerification from "./organization/VolunteerVerification";
+import OrganizationImpactReport from "./organization/OrganizationImpactReport";
 
 const categories = ["Donor Darah", "Bantuan Bencana", "Bakti Sosial", "Penghijauan", "Pendidikan", "Kesehatan", "Lainnya"];
 const volunteerInterests = ["Lingkungan & Konservasi", "Pendidikan & Literasi", "Medis & PKS", "Tanggap Bencana", "Logistik", "Dokumen & Media"];
@@ -31,12 +38,13 @@ function Header() {
     <div className="container nav-wrap">
       <Link className="brand" to={homePath}><span className="brand-mark">K</span> Koordin<span>Aksi</span></Link>
       <nav>
-        <NavLink to="/kegiatan">Kegiatan</NavLink>
-        <a href="/#tentang">Tentang</a>
+        <NavLink to="/kegiatan">Jelajah</NavLink>
+        <Link to="/register/organization">Organisasi</Link>
+        <Link to="/#kegiatan-unggulan">Kabar Aksi</Link>
         {user && <NavLink to={homePath}>Dashboard</NavLink>}
       </nav>
       <div className="nav-actions">
-        {user ? <><span className="user-greeting">Hai, {user.name.split(" ")[0]}</span><button className="button button-small button-ghost" onClick={() => { logout(); navigate("/"); }}>Keluar</button></>
+        {user ? <>{user.role === "volunteer" && <Link className="registered-actions-link" to="/dashboard/relawan/history">Aksi Terdaftar</Link>}<Link className="header-avatar" to={homePath} aria-label={`Profil ${user.name}`}>{user.name.charAt(0).toUpperCase()}</Link><button className="button button-small button-ghost" onClick={() => { logout(); navigate("/"); }}>Keluar</button></>
           : <><Link className="login-link" to="/login">Masuk</Link><Link className="button button-small" to="/register">Mulai Bergabung</Link></>}
       </div>
     </div>
@@ -95,18 +103,23 @@ function AppRoutes() {
         <Route index element={<VolunteerDashboard />} />
         <Route path="history" element={<RegistrationHistory />} />
         <Route path="profile" element={<VolunteerProfile />} />
+        <Route path="feed" element={<VolunteerFeed />} />
       </Route>
     </Route>
     <Route element={<ProtectedRoute roles={["organization"]} />}>
       <Route path="/dashboard/organisasi" element={<OrganizationLayout />}>
         <Route index element={<OrganizationDashboard />} />
         <Route path="activities/:id/participants" element={<ActivityParticipants />} />
+        <Route path="volunteers" element={<VolunteerVerification />} />
+        <Route path="impact" element={<OrganizationImpactReport />} />
       </Route>
     </Route>
     <Route path="/admin" element={<ProtectedAdminRoute />}>
       <Route element={<AdminLayout />}>
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<AdminDashboard />} />
+        <Route path="activities" element={<AdminActivityList />} />
+        <Route path="volunteers" element={<AdminVolunteerDatabase />} />
         <Route path="organizations/pending" element={<AdminOrganizations />} />
         <Route path="system" element={<AdminSystem />} />
         <Route path="*" element={<NotFound />} />
@@ -146,7 +159,7 @@ function Home() {
     <section className="section container"><div className="section-heading"><div><span className="eyebrow">Pilih cara berkontribusi</span><h2>Satu kepedulian,<br />banyak kemungkinan.</h2></div><Link to="/kegiatan" className="text-link">Lihat semua kegiatan <span>→</span></Link></div>
       <div className="category-grid">{categories.slice(0, 6).map((category, index) => <Link className={`category-tile tile-${index}`} key={category} to={`/kegiatan?category=${encodeURIComponent(category)}`}><span>{["♡", "⌂", "✳", "♧", "▤", "＋"][index]}</span><strong>{category}</strong><small>Jadi bagian dari perubahan</small><b>↗</b></Link>)}</div>
     </section>
-    <section className="section featured-section"><div className="container"><div className="section-heading"><div><span className="eyebrow">Kesempatan untuk berbuat baik</span><h2>Kegiatan pilihan</h2></div><Link to="/kegiatan" className="text-link">Jelajahi semua <span>→</span></Link></div>
+    <section id="kegiatan-unggulan" className="section featured-section"><div className="container"><div className="section-heading"><div><span className="eyebrow">Kesempatan untuk berbuat baik</span><h2>Kegiatan pilihan</h2></div><Link to="/kegiatan" className="text-link">Jelajahi semua <span>→</span></Link></div>
       {error && <Notice message={error} />}
       <div className="activity-grid">{activities.map((activity) => <ActivityCard key={activity._id} activity={activity} />)}</div>
       {!activities.length && !error && <p className="empty-state">Belum ada kegiatan tersedia. Coba kembali nanti.</p>}
@@ -163,35 +176,6 @@ function ActivityCard({ activity }) {
   return <article className="activity-card"><div className="activity-visual"><span className="category-label">{activity.category}</span><span className="visual-symbol">{activity.category === "Penghijauan" ? "♧" : activity.category === "Donor Darah" ? "♡" : "✳"}</span><span className="visual-index">AKSI SOSIAL&nbsp; / &nbsp;{String(activity._id).slice(-4).toUpperCase()}</span></div>
     <div className="activity-card-body"><div className="card-meta"><span>◷ {formatDate(activity.date)}</span><span>⌖ {activity.location}</span></div><h3><Link to={`/kegiatan/${activity._id}`}>{activity.title}</Link></h3><div className="card-bottom"><span>{activity.organization?.name || "Organisasi"}</span><Link aria-label={`Lihat ${activity.title}`} to={`/kegiatan/${activity._id}`}>↗</Link></div></div>
   </article>;
-}
-
-function ActivityList() {
-  const [params, setParams] = useSearchParams();
-  const [activities, setActivities] = useState([]);
-  const [search, setSearch] = useState(params.get("search") || "");
-  const [category, setCategory] = useState(params.get("category") || "");
-  const [location, setLocation] = useState(params.get("location") || "");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(true);
-  useEffect(() => {
-    setLoading(true);
-    const query = new URLSearchParams();
-    if (search.trim()) query.set("search", search.trim());
-    if (category) query.set("category", category);
-    if (location.trim()) query.set("location", location.trim());
-    setParams(query, { replace: true });
-    api.get(`/activities?${query}`).then(({ data }) => {
-      setActivities(data.activities);
-      setError("");
-    }).catch((err) => setError(getErrorMessage(err))).finally(() => setLoading(false));
-  }, [search, category, location, setParams]);
-  return <section className="container page-space"><div className="page-intro"><span className="eyebrow">Temukan kegiatan</span><h1>Mulai dari langkah<br /><em>yang berarti.</em></h1><p>Temukan ruang untuk menyumbangkan waktu, tenaga, dan perhatianmu.</p></div>
-    <div className="filter-panel"><label className="search-field"><span>⌕</span><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Cari kegiatan atau kata kunci" /></label><label><span>Kategori</span><select value={category} onChange={(e) => setCategory(e.target.value)}><option value="">Semua kategori</option>{categories.map((item) => <option key={item}>{item}</option>)}</select></label><label><span>Lokasi</span><input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Contoh: Bandung" /></label></div>
-    {error && <Notice message={error} />}
-    <div className="results-heading"><h2>{loading ? "Memuat kegiatan..." : `${activities.length} kegiatan ditemukan`}</h2></div>
-    <div className="activity-grid">{activities.map((activity) => <ActivityCard key={activity._id} activity={activity} />)}</div>
-    {!loading && activities.length === 0 && !error && <p className="empty-state">Belum ada kegiatan yang cocok dengan filter ini.</p>}
-  </section>;
 }
 
 function ActivityDetail() {

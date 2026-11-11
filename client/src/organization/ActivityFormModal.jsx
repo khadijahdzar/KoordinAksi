@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import api, { getErrorMessage } from "../api";
+import { createOrganizationAction } from "./orgApi";
 
 function toLocalDateTime(value) {
   const date = value ? new Date(value) : new Date(Date.now() + 60 * 60 * 1000);
@@ -78,7 +79,7 @@ export default function ActivityFormModal({ activity, categories, canPublish, on
     };
     try {
       if (editing) await api.patch(`/activities/${activity._id}`, payload);
-      else await api.post("/activities", payload);
+      else await createOrganizationAction(payload);
       await onSaved();
     } catch (requestError) {
       setError(getErrorMessage(requestError));

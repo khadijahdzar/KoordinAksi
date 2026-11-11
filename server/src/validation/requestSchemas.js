@@ -84,3 +84,22 @@ export const registrationCreateSchema = Joi.object({
 export const registrationStatusSchema = Joi.object({
   status: Joi.string().valid("approved", "rejected", "attended", "cancelled").required()
 }).unknown(false);
+
+export const volunteerProfileUpdateSchema = Joi.object({
+  name: Joi.string().trim().min(1).max(100),
+  username: Joi.string().trim().lowercase().pattern(/^[a-z0-9_]{3,30}$/),
+  bio: Joi.string().trim().max(500).allow(""),
+  avatarUrl: Joi.string().trim().uri().max(500).allow("")
+}).min(1).unknown(false);
+
+export const volunteerPostSchema = Joi.object({
+  content: Joi.string().trim().min(1).max(2000).required(),
+  imageUrl: Joi.string().trim().uri().max(500).allow(""),
+  actionTitle: Joi.string().trim().max(160).allow("")
+}).unknown(false);
+
+export const attendanceLogSchema = Joi.object({
+  volunteerId: Joi.string().hex().length(24).required(),
+  attendanceStatus: Joi.string().valid("Hadir", "Alpha").required(),
+  hoursLogged: Joi.number().min(0).max(24).default(0)
+}).unknown(false);

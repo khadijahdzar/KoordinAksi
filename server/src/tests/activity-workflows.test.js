@@ -4,11 +4,13 @@ import { after, before, test } from "node:test";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import app from "../app.js";
+import AdminLog from "../models/AdminLog.js";
 import Activity from "../models/Activity.js";
 import AuditLog from "../models/AuditLog.js";
 import Organization from "../models/Organization.js";
 import Registration from "../models/Registration.js";
 import User from "../models/User.js";
+import VolunteerLog from "../models/VolunteerLog.js";
 
 const createdUserIds = [];
 const createdOrganizationIds = [];
@@ -132,6 +134,8 @@ after(async () => {
     await AuditLog.deleteMany({ targetId: { $in: createdOrganizationIds } });
   }
   if (activityId) {
+    await AdminLog.deleteMany({ targetId: activityId });
+    await VolunteerLog.deleteMany({ actionId: activityId });
     await Registration.deleteMany({ activity: activityId });
     await Activity.deleteOne({ _id: activityId });
   }
@@ -273,6 +277,43 @@ test("registration lifecycle rejects terminal transitions and keeps capacity acc
   assert.equal(activity.activeRegistrations, 2);
 });
 
+test("attendance corrections and volunteer profile totals use recorded log values", async () => {
+  const volunteer = await createUser("volunteer", "attendance-report");
+  const registration = await Registration.create({
+    activity: activityId,
+    volunteer: volunteer._id,
+    status: "approved"
+  });
+  await Activity.updateOne({ _id: activityId }, { $inc: { activeRegistrations: 1 } });
+  const volunteerToken = createToken(volunteer);
+
+  const present = await request(`/v1/organizations/actions/${activityId}/attendance`, {
+    method: "POST",
+    token: verifiedOrganizationToken,
+    body: { volunteerId: volunteer._id.toString(), attendanceStatus: "Hadir", hoursLogged: 3.5 }
+  });
+  assert.equal(present.response.status, 200);
+  assert.equal(present.data.attendance.hoursLogged, 3.5);
+
+  let profile = await request("/v1/volunteers/profile/me", { token: volunteerToken });
+  assert.equal(profile.response.status, 200);
+  assert.equal(profile.data.profile.stats.totalActions, 1);
+  assert.equal(profile.data.profile.stats.totalHours, 3.5);
+
+  const absent = await request(`/v1/organizations/actions/${activityId}/attendance`, {
+    method: "POST",
+    token: verifiedOrganizationToken,
+    body: { volunteerId: volunteer._id.toString(), attendanceStatus: "Alpha", hoursLogged: 0 }
+  });
+  assert.equal(absent.response.status, 200);
+  assert.equal(absent.data.attendance.hoursLogged, 0);
+
+  profile = await request("/v1/volunteers/profile/me", { token: volunteerToken });
+  assert.equal(profile.data.profile.stats.totalActions, 0);
+  assert.equal(profile.data.profile.stats.totalHours, 0);
+  assert.equal((await Registration.findById(registration._id)).status, "approved");
+});
+
 test("admin verification changes are atomically recorded and audit logs are admin-only", async () => {
   const verified = await request(`/organizations/${unverifiedOrganizationId}/verify`, {
     method: "PATCH",
@@ -320,4 +361,31 @@ test("admin verification changes are atomically recorded and audit logs are admi
 
   const forbidden = await request("/admin/audit-logs", { token: existingVolunteerToken });
   assert.equal(forbidden.response.status, 403);
+
+  const metrics = await request("/v1/admin/metrics", { token: adminToken });
+  assert.equal(metrics.response.status, 200);
+  assert.equal(typeof metrics.data.totalImpactHours, "number");
+  assert.equal(metrics.data.monthlyImpact.length, 6);
+
+  const unauthenticated = await request("/v1/admin/metrics");
+  assert.equal(unauthenticated.response.status, 401);
+  const forbiddenMetrics = await request("/v1/admin/metrics", { token: existingVolunteerToken });
+  assert.equal(forbiddenMetrics.response.status, 403);
+
+  const activityModeration = await request(`/v1/admin/verify/${activityId}`, {
+    method: "PATCH",
+    token: adminToken,
+    body: { entityType: "activity", decision: "rejected" }
+  });
+  assert.equal(activityModeration.response.status, 200);
+  assert.equal(activityModeration.data.entity.verificationStatus, "rejected");
+  assert.equal(activityModeration.data.entity.status, "cancelled");
+
+  const firstAuditPage = await request("/v1/admin/audit-logs?page=1&limit=1", { token: adminToken });
+  const secondAuditPage = await request("/v1/admin/audit-logs?page=2&limit=1", { token: adminToken });
+  assert.equal(firstAuditPage.response.status, 200);
+  assert.equal(secondAuditPage.response.status, 200);
+  assert.equal(firstAuditPage.data.auditLogs.length, 1);
+  assert.equal(secondAuditPage.data.auditLogs.length, 1);
+  assert.notEqual(firstAuditPage.data.auditLogs[0]._id, secondAuditPage.data.auditLogs[0]._id);
 });

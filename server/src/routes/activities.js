@@ -29,6 +29,7 @@ router.get("/", async (req, res, next) => {
     const { search, category, location, limit = 50, page = 1 } = req.query;
     const filter = {
       status: "published",
+      verificationStatus: { $nin: ["pending", "rejected"] },
       organization: { $in: await Organization.distinct("_id", { verified: true }) }
     };
     if (category && ACTIVITY_CATEGORIES.includes(category)) filter.category = category;
@@ -55,6 +56,7 @@ router.get("/stats", async (req, res, next) => {
     const [activities, organizations, volunteers, registrations] = await Promise.all([
       Activity.countDocuments({
         status: "published",
+        verificationStatus: { $nin: ["pending", "rejected"] },
         organization: { $in: await Organization.distinct("_id", { verified: true }) }
       }),
       Organization.countDocuments({ verified: true }),
@@ -82,6 +84,7 @@ router.get("/:id", async (req, res, next) => {
     const activity = await Activity.findOne({
       _id: req.params.id,
       status: "published",
+      verificationStatus: { $nin: ["pending", "rejected"] },
       organization: { $in: await Organization.distinct("_id", { verified: true }) }
     })
       .populate("organization", "name description verified address");
@@ -115,6 +118,9 @@ router.patch("/:id", validate(activityUpdateSchema), protect, authorize("organiz
   try {
     const activity = await getOwnedActivity(req, res);
     if (!activity) return;
+    if (req.body.status === "published" && ["pending", "rejected"].includes(activity.verificationStatus)) {
+      return res.status(403).json({ message: "Kegiatan yang menunggu verifikasi atau ditolak tidak dapat dipublikasikan." });
+    }
     if (req.body.status === "published") {
       const organization = await Organization.findById(activity.organization).select("verified");
       if (!organization?.verified) {

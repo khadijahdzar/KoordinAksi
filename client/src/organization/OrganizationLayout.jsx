@@ -1,5 +1,6 @@
 import React from "react";
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
+import { BarChart3, Building2, Users } from "lucide-react";
 import { useAuth } from "../AuthContext";
 
 export default function OrganizationLayout() {
@@ -30,7 +31,9 @@ export default function OrganizationLayout() {
       <aside className="organization-sidebar" aria-label="Navigasi organisasi">
         <span className="organization-sidebar-label">RUANG ORGANISASI</span>
         <nav className="organization-sidebar-nav">
-          <NavLink end to="/dashboard/organisasi"><span aria-hidden="true">▦</span> Kegiatan saya</NavLink>
+          <NavLink end to="/dashboard/organisasi"><Building2 size={16} aria-hidden="true" /> Kegiatan saya</NavLink>
+          <NavLink to="/dashboard/organisasi/volunteers"><Users size={16} aria-hidden="true" /> Verifikasi & log</NavLink>
+          <NavLink to="/dashboard/organisasi/impact"><BarChart3 size={16} aria-hidden="true" /> Laporan dampak</NavLink>
         </nav>
         <div className="organization-sidebar-account">
           <span className={`organization-verification-indicator${verified ? " is-verified" : ""}`}>
