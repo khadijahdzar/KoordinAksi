@@ -315,6 +315,16 @@ test("attendance corrections and volunteer profile totals use recorded log value
 });
 
 test("admin verification changes are atomically recorded and audit logs are admin-only", async () => {
+  const staleRoleToken = jwt.sign({
+    sub: adminId.toString(),
+    role: "volunteer"
+  }, process.env.JWT_SECRET);
+  const currentUser = await request("/auth/me", { token: staleRoleToken });
+  assert.equal(currentUser.response.status, 200);
+  assert.equal(currentUser.data.user.role, "admin");
+  const staleRoleAdminRequest = await request("/v1/admin/metrics", { token: staleRoleToken });
+  assert.equal(staleRoleAdminRequest.response.status, 200);
+
   const verified = await request(`/organizations/${unverifiedOrganizationId}/verify`, {
     method: "PATCH",
     token: adminToken,
@@ -369,8 +379,10 @@ test("admin verification changes are atomically recorded and audit logs are admi
 
   const unauthenticated = await request("/v1/admin/metrics");
   assert.equal(unauthenticated.response.status, 401);
+  assert.equal(unauthenticated.data.code, "AUTHENTICATION_REQUIRED");
   const forbiddenMetrics = await request("/v1/admin/metrics", { token: existingVolunteerToken });
   assert.equal(forbiddenMetrics.response.status, 403);
+  assert.equal(forbiddenMetrics.data.code, "ADMIN_REQUIRED");
 
   const activityModeration = await request(`/v1/admin/verify/${activityId}`, {
     method: "PATCH",

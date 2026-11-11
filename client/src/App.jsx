@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link, NavLink, Navigate, Outlet, Route, Routes, useNavigate, useParams } from "react-router-dom";
+import { Link, NavLink, Navigate, Outlet, Route, Routes, useLocation, useNavigate, useParams } from "react-router-dom";
 import api, { getErrorMessage } from "./api";
 import { getDashboardPath, useAuth } from "@/AuthContext";
 import ActivityList from "./public/ActivityList";
@@ -71,20 +71,59 @@ function SessionRecoveryNotice() {
 
 function ProtectedRoute({ roles }) {
   const { user, loading, sessionError } = useAuth();
+  const location = useLocation();
   if (loading) return <div className="container page-space"><p>Memuat sesi...</p></div>;
   if (sessionError && !user) return <SessionRecoveryNotice />;
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user) return <Navigate to="/login" replace state={{ from: location }} />;
   if (!roles.includes(user.role)) return <Navigate to={getDashboardPath(user.role)} replace />;
   return <Outlet />;
 }
 
 function ProtectedAdminRoute() {
-  const { user, loading, sessionError } = useAuth();
-  if (loading) return <div className="container page-space"><p>Memuat sesi...</p></div>;
-  if (sessionError && !user) return <SessionRecoveryNotice />;
-  if (!user) return <Navigate to="/login" replace />;
-  if (user.role !== "admin") return <Navigate to={getDashboardPath(user.role)} replace />;
+  const { user, loading, sessionError, refreshSession } = useAuth();
+  const location = useLocation();
+  const [validatedPath, setValidatedPath] = useState("");
+  const [refreshingRole, setRefreshingRole] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    setRefreshingRole(true);
+    refreshSession().finally(() => {
+      if (!active) return;
+      setValidatedPath(location.pathname);
+      setRefreshingRole(false);
+    });
+    return () => { active = false; };
+  }, [location.pathname, refreshSession]);
+
+  if (loading || refreshingRole || validatedPath !== location.pathname) {
+    return <div className="container page-space" role="status"><p>Memeriksa akses admin...</p></div>;
+  }
+  if (sessionError) return <SessionRecoveryNotice />;
+  if (!user) return <Navigate to="/login" replace state={{ from: location }} />;
+  if (user.role !== "admin") {
+    return <main className="container page-space not-found" role="alert">
+      <span className="eyebrow">403 · Akses admin diperlukan</span>
+      <h1>Akun ini bukan <em>administrator.</em></h1>
+      <p>Status akun terakhir diperbarui dari server. Jika peran baru saja diubah, periksa kembali sebelum melanjutkan.</p>
+      <button type="button" className="button button-ghost" onClick={async () => {
+        setRefreshingRole(true);
+        await refreshSession();
+        setRefreshingRole(false);
+      }}>Periksa ulang status akun</button>
+      <Link className="button" to={getDashboardPath(user.role)}>Kembali ke dashboard →</Link>
+    </main>;
+  }
   return <Outlet />;
+}
+
+function DashboardRedirect() {
+  const { user, loading, sessionError } = useAuth();
+  const location = useLocation();
+  if (loading) return <div className="container page-space" role="status"><p>Memuat sesi...</p></div>;
+  if (sessionError && !user) return <SessionRecoveryNotice />;
+  if (!user) return <Navigate to="/login" replace state={{ from: location }} />;
+  return <Navigate to={getDashboardPath(user.role)} replace />;
 }
 
 function AppRoutes() {
@@ -97,6 +136,13 @@ function AppRoutes() {
       <Route path="/kegiatan" element={<ActivityList />} />
       <Route path="/kegiatan/:id" element={<ActivityDetail />} />
       <Route path="/login" element={<AuthPage mode="login" />} />
+    </Route>
+    <Route path="/dashboard" element={<DashboardRedirect />} />
+    <Route element={<ProtectedRoute roles={["volunteer"]} />}>
+      <Route path="/dashboard/volunteer" element={<Navigate to="/dashboard/relawan" replace />} />
+    </Route>
+    <Route element={<ProtectedRoute roles={["organization"]} />}>
+      <Route path="/dashboard/organization" element={<Navigate to="/dashboard/organisasi" replace />} />
     </Route>
     <Route element={<ProtectedRoute roles={["volunteer"]} />}>
       <Route path="/dashboard/relawan" element={<VolunteerLayout />}>
@@ -686,6 +732,7 @@ function AuthPage({ mode }) {
   const { role: requestedRole } = useParams();
   const { login, register } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [form, setForm] = useState({ name: "", email: "", password: "", role: requestedRole === "organization" ? "organization" : "volunteer", organizationName: "" });
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -698,7 +745,11 @@ function AuthPage({ mode }) {
       const user = isRegister
         ? await register(form)
         : await login({ email: form.email, password: form.password });
-      navigate(getDashboardPath(user.role));
+      const requestedPath = location.state?.from?.pathname;
+      const canReturnToRequestedPath = requestedPath?.startsWith("/") &&
+        !requestedPath.startsWith("//") &&
+        (!requestedPath.startsWith("/admin") || user.role === "admin");
+      navigate(canReturnToRequestedPath ? requestedPath : getDashboardPath(user.role), { replace: true });
     } catch (err) {
       setError(getErrorMessage(err));
     } finally {

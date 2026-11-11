@@ -86,8 +86,11 @@ router.post("/login", validate(loginSchema), async (req, res, next) => {
 
 router.get("/me", protect, async (req, res, next) => {
   try {
-    const user = await User.findById(req.user.id).select("-password").populate("organization");
-    return res.json({ user });
+    if (!req.user) {
+      return res.status(401).json({ message: "Sesi tidak valid.", code: "INVALID_SESSION" });
+    }
+    const user = await req.user.populate("organization");
+    return res.json({ user: user.toObject() });
   } catch (error) {
     return next(error);
   }

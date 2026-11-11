@@ -7,7 +7,16 @@ const api = axios.create({
 
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("koordinaksi_token");
-  if (token) config.headers.Authorization = `Bearer ${token}`;
+  config.headers = config.headers || {};
+  if (token) {
+    const authorization = ["Bearer", token].join(" ");
+    if (typeof config.headers.set === "function") config.headers.set("Authorization", authorization);
+    else config.headers.Authorization = authorization;
+  } else if (typeof config.headers.delete === "function") {
+    config.headers.delete("Authorization");
+  } else {
+    delete config.headers.Authorization;
+  }
   return config;
 });
 

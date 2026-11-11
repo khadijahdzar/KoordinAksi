@@ -103,6 +103,7 @@ Tes mencakup larangan membuat kegiatan oleh organisasi belum diverifikasi, invar
 - Status pendaftaran mengikuti transisi `pending` → `approved`/`rejected`/`cancelled` dan `approved` → `attended`/`cancelled`; status akhir tidak dapat diaktifkan kembali.
 - Kegiatan mendukung status `draft`, `published`, dan `cancelled`. Status pendaftaran: `pending`, `approved`, `rejected`, `attended`, dan `cancelled`.
 - Registrasi publik hanya mengizinkan peran relawan atau organisasi; akun admin tidak dapat dibuat melalui form.
+- Dashboard relawan tersedia di `/dashboard/relawan` (alias `/dashboard/volunteer`), dashboard organisasi di `/dashboard/organisasi` (alias `/dashboard/organization`), dan `/dashboard` mengarahkan pengguna ke dashboard sesuai role database terbaru. `/admin` dan turunannya selalu memuat ulang role dari `/api/auth/me` sebelum UI admin ditampilkan.
 
 ### Membuat akun admin
 
@@ -113,6 +114,14 @@ node --env-file=server/.env --input-type=module -e "import mongoose from 'mongoo
 ```
 
 Jalankan perintah dari root dengan konfigurasi environment tersedia di `server/.env`. Password disimpan menggunakan bcrypt. Jangan membagikan akun admin atau kredensial tersebut.
+
+Jika akun sudah terdaftar sebagai relawan atau organisasi, operator database dapat mengubah perannya tanpa mengganti password:
+
+```powershell
+node --env-file=server/.env server/scripts/promote-admin.js nama@email.com
+```
+
+Perintah ini hanya memperbarui akun dengan email yang cocok; tidak ada endpoint publik untuk membuat atau menaikkan role admin. Setelah role diperbarui, buka `/admin` atau gunakan tombol periksa ulang status akun agar `AuthContext` memuat role terbaru dari `/api/auth/me`.
 
 ## REST API
 

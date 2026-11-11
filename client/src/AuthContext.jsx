@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import api from "./api";
 
 const AuthContext = createContext(null);
@@ -14,10 +14,12 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [sessionError, setSessionError] = useState("");
+  const refreshRequestId = useRef(0);
 
   const refreshSession = useCallback(async () => {
-    setLoading(true);
+    const requestId = ++refreshRequestId.current;
     const token = localStorage.getItem("koordinaksi_token");
+    setLoading(true);
     if (!token) {
       setUser(null);
       setSessionError("");
@@ -27,9 +29,11 @@ export function AuthProvider({ children }) {
 
     try {
       const { data } = await api.get("/auth/me");
+      if (requestId !== refreshRequestId.current || localStorage.getItem("koordinaksi_token") !== token) return;
       setUser(data.user);
       setSessionError("");
     } catch (error) {
+      if (requestId !== refreshRequestId.current || localStorage.getItem("koordinaksi_token") !== token) return;
       if (error.response?.status === 401) {
         localStorage.removeItem("koordinaksi_token");
         setUser(null);
@@ -38,12 +42,20 @@ export function AuthProvider({ children }) {
         setSessionError("Sesi belum dapat dipulihkan karena koneksi atau server bermasalah. Token tetap tersimpan; silakan coba lagi.");
       }
     } finally {
-      setLoading(false);
+      if (requestId === refreshRequestId.current) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
     refreshSession();
+  }, [refreshSession]);
+
+  useEffect(() => {
+    function handleStorageChange(event) {
+      if (event.key === "koordinaksi_token" || event.key === null) refreshSession();
+    }
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
   }, [refreshSession]);
 
   const value = useMemo(() => ({
@@ -53,21 +65,27 @@ export function AuthProvider({ children }) {
     refreshSession,
     async login(credentials) {
       const { data } = await api.post("/auth/login", credentials);
+      refreshRequestId.current += 1;
       localStorage.setItem("koordinaksi_token", data.token);
       setUser(data.user);
+      setLoading(false);
       setSessionError("");
       return data.user;
     },
     async register(details) {
       const { data } = await api.post("/auth/register", details);
+      refreshRequestId.current += 1;
       localStorage.setItem("koordinaksi_token", data.token);
       setUser(data.user);
+      setLoading(false);
       setSessionError("");
       return data.user;
     },
     logout() {
+      refreshRequestId.current += 1;
       localStorage.removeItem("koordinaksi_token");
       setUser(null);
+      setLoading(false);
       setSessionError("");
     }
   }), [user, loading, sessionError, refreshSession]);
