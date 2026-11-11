@@ -103,6 +103,8 @@ Tes mencakup larangan membuat kegiatan oleh organisasi belum diverifikasi, invar
 - Status pendaftaran mengikuti transisi `pending` → `approved`/`rejected`/`cancelled` dan `approved` → `attended`/`cancelled`; status akhir tidak dapat diaktifkan kembali.
 - Kegiatan mendukung status `draft`, `published`, dan `cancelled`. Status pendaftaran: `pending`, `approved`, `rejected`, `attended`, dan `cancelled`.
 - Registrasi publik hanya mengizinkan peran relawan atau organisasi; akun admin tidak dapat dibuat melalui form.
+- Jelajah kegiatan tersedia di `/jelajah` (alias `/kegiatan`) dengan filter kata kunci, kategori, lokasi, tanggal, dan pagination.
+- Direktori organisasi terverifikasi tersedia di `/organisasi`; pendaftaran lembaga tersedia melalui `/organisasi/pendaftaran` (alias `/register/organization`).
 - Dashboard relawan tersedia di `/dashboard/relawan` (alias `/dashboard/volunteer`), dashboard organisasi di `/dashboard/organisasi` (alias `/dashboard/organization`), dan `/dashboard` mengarahkan pengguna ke dashboard sesuai role database terbaru. `/admin` dan turunannya selalu memuat ulang role dari `/api/auth/me` sebelum UI admin ditampilkan.
 
 ### Membuat akun admin
@@ -132,7 +134,7 @@ Semua endpoint berawalan `/api`.
 | `POST` | `/auth/register` | Publik | Daftar relawan/organisasi (`name`, `email`, `password`, opsional `phone`; organisasi memerlukan `organizationName`) |
 | `POST` | `/auth/login` | Publik | Login dan memperoleh JWT |
 | `GET` | `/auth/me` | Login | Profil pengguna aktif |
-| `GET` | `/activities` | Publik | Daftar kegiatan; query `search`, `category`, `location`, `page`, `limit` |
+| `GET` | `/activities` | Publik | Daftar kegiatan; query `search`, `category`, `location`, `date` (`YYYY-MM-DD`), `page`, `limit` |
 | `GET` | `/activities/stats` | Publik | Statistik homepage |
 | `GET` | `/activities/meta` | Publik | Daftar kategori |
 | `GET` | `/activities/:id` | Publik | Detail kegiatan |
@@ -144,7 +146,7 @@ Semua endpoint berawalan `/api`.
 | `GET` | `/registrations/mine` | Relawan | Riwayat pendaftaran |
 | `GET` | `/registrations/activity/:activityId` | Pemilik/admin | Daftar peserta kegiatan |
 | `PATCH` | `/registrations/:id/status` | Pemilik/admin | Ubah status pendaftaran |
-| `GET` | `/organizations` | Publik | Daftar organisasi terverifikasi |
+| `GET` | `/organizations` | Publik | Direktori organisasi terverifikasi; query `search`, `focus`, `region`, `scale`, `legalRegistered`, `page`, `limit` |
 | `GET` | `/organizations/pending` | Admin | Organisasi menunggu verifikasi |
 | `PATCH` | `/organizations/:id/verify` | Admin | Verifikasi (`{ "verified": true }`) |
 | `GET` | `/admin/audit-logs` | Admin | Audit log verifikasi organisasi; mendukung `page` dan `limit` |

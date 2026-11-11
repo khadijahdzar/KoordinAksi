@@ -1,4 +1,5 @@
 import { Router } from "express";
+import mongoose from "mongoose";
 import Activity, { ACTIVITY_CATEGORIES } from "../models/Activity.js";
 import Registration from "../models/Registration.js";
 import Organization from "../models/Organization.js";
@@ -26,18 +27,54 @@ router.get("/meta", (req, res) => res.json({ categories: ACTIVITY_CATEGORIES }))
 
 router.get("/", async (req, res, next) => {
   try {
-    const { search, category, location, limit = 50, page = 1 } = req.query;
+    const { search, category, location, date, organization, limit = 50, page = 1 } = req.query;
+    const verifiedOrganizationIds = await Organization.distinct("_id", { verified: true });
     const filter = {
       status: "published",
       verificationStatus: { $nin: ["pending", "rejected"] },
-      organization: { $in: await Organization.distinct("_id", { verified: true }) }
+      organization: { $in: verifiedOrganizationIds }
     };
-    if (category && ACTIVITY_CATEGORIES.includes(category)) filter.category = category;
+    if (category) {
+      const categoryAliases = {
+        "Semua Kategori": [],
+        "Lingkungan Hidup": ["Penghijauan"],
+        "Pendidikan & Anak": ["Pendidikan"],
+        "Kesehatan & Lansia": ["Kesehatan", "Donor Darah"],
+        "Semua Bencana": ["Bantuan Bencana"],
+        "Pemberdayaan UMKM": ["Lainnya"],
+        "Kebudayaan": ["Bakti Sosial"]
+      };
+      const requestedCategories = String(category).split(",").flatMap((value) =>
+        categoryAliases[value] || (ACTIVITY_CATEGORIES.includes(value) ? [value] : [])
+      );
+      if (requestedCategories.length) filter.category = { $in: [...new Set(requestedCategories)] };
+    }
     if (location) {
       const escapedLocation = String(location).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
       filter.location = { $regex: escapedLocation, $options: "i" };
     }
+    if (organization) {
+      if (!mongoose.isValidObjectId(organization)) {
+        return res.status(400).json({ message: "ID organisasi tidak valid." });
+      }
+      const organizationId = new mongoose.Types.ObjectId(organization);
+      filter.organization = verifiedOrganizationIds.some((id) => id.equals(organizationId))
+        ? { $in: [organizationId] }
+        : { $in: [] };
+    }
     if (search) filter.$text = { $search: String(search) };
+    if (date) {
+      if (typeof date !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+        return res.status(400).json({ message: "Format tanggal harus YYYY-MM-DD." });
+      }
+      const startDate = new Date(`${date}T00:00:00.000Z`);
+      if (Number.isNaN(startDate.getTime()) || startDate.toISOString().slice(0, 10) !== date) {
+        return res.status(400).json({ message: "Tanggal kegiatan tidak valid." });
+      }
+      const endDate = new Date(startDate);
+      endDate.setUTCDate(endDate.getUTCDate() + 1);
+      filter.date = { $gte: startDate, $lt: endDate };
+    }
     const safeLimit = Math.min(Math.max(Number(limit) || 50, 1), 100);
     const safePage = Math.max(Number(page) || 1, 1);
     const [activities, total] = await Promise.all([

@@ -2,7 +2,10 @@ import React, { useEffect, useState } from "react";
 import { Link, NavLink, Navigate, Outlet, Route, Routes, useLocation, useNavigate, useParams } from "react-router-dom";
 import api, { getErrorMessage } from "./api";
 import { getDashboardPath, useAuth } from "@/AuthContext";
+import HeroSection from "./components/HeroSection";
 import ActivityList from "./public/ActivityList";
+import KabarAksi from "./public/KabarAksi";
+import OrganizationDirectory from "./public/OrganizationDirectory";
 import { AdminLayout } from "./AdminDashboard";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminActivityList from "./pages/admin/AdminActivityList";
@@ -38,9 +41,9 @@ function Header() {
     <div className="container nav-wrap">
       <Link className="brand" to={homePath}><span className="brand-mark">K</span> Koordin<span>Aksi</span></Link>
       <nav>
-        <NavLink to="/kegiatan">Jelajah</NavLink>
-        <Link to="/register/organization">Organisasi</Link>
-        <Link to="/#kegiatan-unggulan">Kabar Aksi</Link>
+        <NavLink to="/jelajah">Jelajah</NavLink>
+        <NavLink to="/organisasi">Organisasi</NavLink>
+        <NavLink to="/kabar-aksi">Kabar Aksi</NavLink>
         {user && <NavLink to={homePath}>Dashboard</NavLink>}
       </nav>
       <div className="nav-actions">
@@ -127,14 +130,30 @@ function DashboardRedirect() {
 }
 
 function AppRoutes() {
+  const location = useLocation();
+
+  useEffect(() => {
+    if (!location.hash) return undefined;
+
+    const frame = window.requestAnimationFrame(() => {
+      document.getElementById(location.hash.slice(1))?.scrollIntoView();
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [location.pathname, location.hash]);
+
   return <Routes>
     <Route path="/register" element={<RegistrationRolePage />} />
     <Route path="/register/volunteer" element={<VolunteerRegistration />} />
     <Route path="/register/organization" element={<OrganizationVerification />} />
+    <Route path="/organisasi/pendaftaran" element={<OrganizationVerification />} />
     <Route element={<PublicLayout />}>
-      <Route path="/" element={<Home />} />
+      <Route index element={<Home />} />
+      <Route path="/organisasi" element={<OrganizationDirectory />} />
+      <Route path="/jelajah" element={<ActivityList />} />
       <Route path="/kegiatan" element={<ActivityList />} />
       <Route path="/kegiatan/:id" element={<ActivityDetail />} />
+      <Route path="/kabar-aksi" element={<KabarAksi />} />
+      <Route path="/kabar-aksi/:id" element={<KabarAksi />} />
       <Route path="/login" element={<AuthPage mode="login" />} />
     </Route>
     <Route path="/dashboard" element={<DashboardRedirect />} />
@@ -190,15 +209,18 @@ function Home() {
       .catch((err) => setError(getErrorMessage(err)));
   }, []);
   return <>
-    <section className="hero"><div className="container hero-grid">
-      <div className="hero-copy"><span className="eyebrow"><span className="pulse" /> Platform aksi sosial Indonesia</span>
-        <h1>Kebaikan kecil,<br /><em>dampak besar.</em></h1>
-        <p>Temukan kegiatan sosial yang berarti bagimu. Terhubung dengan organisasi terpercaya dan bergerak bersama untuk Indonesia yang lebih baik.</p>
-        <div className="hero-actions"><Link className="button" to="/kegiatan">Jelajahi kegiatan <span>↗</span></Link><Link className="text-link" to="/register">Saya mengelola organisasi <span>→</span></Link></div>
-        <div className="hero-note"><div className="avatar-stack"><i>R</i><i>A</i><i>D</i><i>+</i></div><span>Bergabung bersama komunitas penuh kepedulian</span></div>
+    <HeroSection
+      className="home-hero"
+      eyebrow="Platform aksi sosial Indonesia"
+      title={<>Kebaikan kecil,<br />dampak besar.</>}
+      subtitle="Temukan kegiatan sosial yang berarti bagimu. Terhubung dengan organisasi terpercaya dan bergerak bersama untuk Indonesia yang lebih baik."
+    >
+      <div className="hero-section-actions">
+        <Link className="button button-light" to="/kegiatan">Jelajahi kegiatan <span>↗</span></Link>
+        <Link className="hero-section-link" to="/register">Saya mengelola organisasi <span>→</span></Link>
       </div>
-      <div className="hero-art" aria-label="Ilustrasi kegiatan relawan"><div className="art-sun" /><div className="art-circle"><span>♧</span></div><div className="art-card card-top"><b>01</b><span>mulai dari sekitar</span></div><div className="art-card card-bottom"><strong>Ruang untuk<br />berbuat baik.</strong><span>Temukan aksi yang tepat untukmu ↗</span></div><div className="art-leaf">✳</div></div>
-    </div></section>
+      <div className="hero-note"><div className="avatar-stack"><i>R</i><i>A</i><i>D</i><i>+</i></div><span>Bergabung bersama komunitas penuh kepedulian</span></div>
+    </HeroSection>
     <section className="stats-strip"><div className="container stats-grid">
       <Stat value={stats?.volunteers} label="Relawan bergabung" /><Stat value={stats?.organizations} label="Organisasi terverifikasi" /><Stat value={stats?.activities} label="Aksi terbuka" /><Stat value={stats?.registrations} label="Partisipasi tercatat" />
     </div></section>

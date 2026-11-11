@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { Link, useOutletContext } from "react-router-dom";
 import { Building2, Clock3, Search, TrendingUp, Users } from "lucide-react";
 import api, { getErrorMessage } from "../api";
+import HeroSection from "../components/HeroSection";
 import ActivityFormModal from "./ActivityFormModal";
 import { getOrganizationStats } from "./orgApi";
 
@@ -114,12 +115,15 @@ export default function OrganizationDashboard() {
   });
 
   return <section className="organization-dashboard">
-    <div className="organization-page-heading">
-      <div><span className="eyebrow">Kelola kegiatan</span><h1>Ruang aksi sosialmu.</h1>
-        <p>Publikasikan kegiatan dan koordinasikan para relawan.</p></div>
+    <HeroSection
+      className="dashboard-hero organization-dashboard-hero"
+      eyebrow="Kelola kegiatan"
+      title="Ruang aksi sosialmu."
+      subtitle="Publikasikan kegiatan dan koordinasikan para relawan."
+    >
       {canManagePublishedActivities && <button type="button" className="button"
         onClick={() => setCreateModalOpen(true)}>+ Buat kegiatan</button>}
-    </div>
+    </HeroSection>
     {notice && <div className="notice notice-success" role="status">{notice}</div>}
     {categoryError && <div className="organization-load-error" role="alert">
       <span>{categoryError}</span><button className="button button-small button-ghost" onClick={loadCategories}>Coba lagi memuat kategori</button>

@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { AlertCircle, ArrowRight, Check, FileSpreadsheet, ShieldCheck, TrendingUp, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import api, { getErrorMessage } from "../../api";
+import HeroSection from "../../components/HeroSection";
 import AdminToast from "../../admin/AdminToast";
 
 const metricsConfig = [
@@ -85,13 +86,16 @@ export default function AdminDashboard() {
   const maxHours = Math.max(1, ...(metrics?.monthlyImpact || []).map((month) => month.hours));
 
   return <section className="admin-dashboard admin-console-dashboard">
-    <header className="admin-page-heading">
-      <div><span className="eyebrow">KoordinAksi · Admin</span><h1>Verifikasi &amp; metrik admin</h1>
-        <p>Pantau dampak platform dan tinjau pengajuan yang membutuhkan tindakan.</p></div>
+    <HeroSection
+      className="dashboard-hero admin-dashboard-hero"
+      eyebrow="KoordinAksi · Admin"
+      title="Verifikasi & metrik admin"
+      subtitle="Pantau dampak platform dan tinjau pengajuan yang membutuhkan tindakan."
+    >
       <button type="button" className="button button-ghost" onClick={loadDashboard} disabled={loading}>
         {loading ? "Memuat…" : "Muat ulang"}
       </button>
-    </header>
+    </HeroSection>
     <AdminToast toast={toast} onDismiss={() => setToast(null)} />
     {error && <div className="admin-error" role="alert">
       <span>{error}</span><button type="button" className="button button-small button-ghost" onClick={loadDashboard}>Coba lagi</button>
