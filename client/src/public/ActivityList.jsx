@@ -1,12 +1,18 @@
 import React, { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import HeroSection from "../components/HeroSection";
+import { getActivityImage } from "./activityImages";
+import { getMockActivities } from "./activityMockData";
+import {
+  featuredOrganizations,
+  getOrganizationActivitiesUrl,
+  organizationLeaderboard
+} from "./organizationMockData";
 import {
   ArrowLeft,
   ArrowRight,
   ArrowUpRight,
   BadgeCheck,
-  Building2,
   CalendarDays,
   HandHeart,
   MapPin,
@@ -21,6 +27,7 @@ const categoryFilters = [
   "Lingkungan Hidup",
   "Pendidikan & Anak",
   "Kesehatan & Lansia",
+  "Bakti Sosial",
   "Semua Bencana",
   "Pemberdayaan UMKM",
   "Kebudayaan"
@@ -37,9 +44,9 @@ const locationOptions = [
   "Sumatera"
 ];
 const sampleVolunteers = [
-  { name: "Alya Prameswari", activities: 8, hours: 32 },
-  { name: "Bima Adinata", activities: 6, hours: 27 },
-  { name: "Siti Rahmawati", activities: 5, hours: 21 }
+  { name: "Khadijah Dzar", activities: 8, hours: 32 },
+  { name: "Kenneth Xanth Taylor", activities: 6, hours: 27 },
+  { name: "Dije Joss", activities: 5, hours: 21 }
 ];
 
 function formatActivityDate(date) {
@@ -62,7 +69,7 @@ function ActivityExploreCard({ activity }) {
 
   return <article className="explore-card">
     <Link className="explore-card-image" to={`/kegiatan/${activity._id}`} aria-label={`Lihat detail ${activity.title}`}>
-      <img src={activity.imageUrl || "/3fingers.jpg"} alt={`Dokumentasi kegiatan ${activity.title}`} loading="lazy" />
+      <img src={getActivityImage(activity)} alt={`Dokumentasi kegiatan ${activity.title}`} loading="lazy" />
       <span className="explore-card-category">{activity.category}</span>
       <span className={`explore-card-status${isFull ? " is-full" : ""}`}>
         <i aria-hidden="true" />{isFull ? "Kuota terpenuhi" : "Pendaftaran dibuka"}
@@ -112,9 +119,14 @@ export default function ActivityList() {
   const [params, setParams] = useSearchParams();
   const [activities, setActivities] = useState([]);
   const [organizations, setOrganizations] = useState([]);
+  const [leaderboard, setLeaderboard] = useState([]);
+  const [followedOrganizations, setFollowedOrganizations] = useState(() =>
+    (localStorage.getItem("koordinaksi_followed_organizations") || "").split(",").filter(Boolean)
+  );
   const [pagination, setPagination] = useState({ total: 0, page: 1, pages: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [usingMockActivities, setUsingMockActivities] = useState(false);
   const [organizationsError, setOrganizationsError] = useState("");
   const [search, setSearch] = useState(params.get("search") || "");
   const [location, setLocation] = useState(params.get("location") || "");
@@ -146,11 +158,20 @@ export default function ActivityList() {
       setLoading(true);
       try {
         const { data } = await api.get(`/activities?${query.toString()}`, { signal: controller.signal });
-        setActivities(data.activities);
-        setPagination(data.pagination);
+        const results = data.activities.length || organization
+          ? { activities: data.activities, pagination: data.pagination }
+          : getMockActivities(query, pageSize);
+        setActivities(results.activities);
+        setPagination(results.pagination);
+        setUsingMockActivities(!data.activities.length && !organization);
         setError("");
       } catch (requestError) {
-        if (requestError.code !== "ERR_CANCELED") setError(getErrorMessage(requestError));
+        if (requestError.code !== "ERR_CANCELED") {
+          setActivities([]);
+          setPagination({ total: 0, page: 1, pages: 0 });
+          setUsingMockActivities(false);
+          setError(getErrorMessage(requestError));
+        }
       } finally {
         if (!controller.signal.aborted) setLoading(false);
       }
@@ -166,6 +187,7 @@ export default function ActivityList() {
       try {
         const { data } = await api.get("/organizations", { signal: controller.signal });
         setOrganizations(data.organizations);
+        setLeaderboard(data.leaderboard || []);
         setOrganizationsError("");
       } catch (requestError) {
         if (requestError.code !== "ERR_CANCELED") setOrganizationsError(getErrorMessage(requestError));
@@ -207,6 +229,19 @@ export default function ActivityList() {
     setDate("");
     setParams({ page: "1" });
   }
+
+  function toggleFollow(organizationId) {
+    setFollowedOrganizations((current) => {
+      const updated = current.includes(organizationId)
+        ? current.filter((id) => id !== organizationId)
+        : [...current, organizationId];
+      localStorage.setItem("koordinaksi_followed_organizations", updated.join(","));
+      return updated;
+    });
+  }
+
+  const selectedOrganizations = organizations.length ? organizations.slice(0, 4) : featuredOrganizations;
+  const topOrganizations = leaderboard.length ? leaderboard.slice(0, 3) : organizationLeaderboard;
 
   return <section className="explore-page">
     <HeroSection
@@ -255,6 +290,7 @@ export default function ActivityList() {
             <h2>{loading ? "Mencari kegiatan..." : `${pagination.total} aksi ditemukan`}</h2></div>
           <span className="explore-results-hint">Pilih aksi yang paling dekat denganmu</span>
         </div>
+        {usingMockActivities && !loading && <p className="explore-demo-note" role="note">Data demonstrasi ditampilkan karena belum ada kegiatan yang cocok dengan filter. Pendaftaran belum tersedia untuk data ini.</p>}
         {error && <div className="explore-error" role="alert">
           <span>{error}</span><button type="button" onClick={() => setParams(new URLSearchParams(params))}>Coba lagi</button>
         </div>}
@@ -277,13 +313,35 @@ export default function ActivityList() {
           <span className="eyebrow">Komunitas terpercaya</span>
           <h2>Organisasi Terpilih</h2>
           {organizationsError && <p className="explore-bottom-error" role="alert">{organizationsError}</p>}
-          {!organizationsError && !organizations.length && <p className="explore-bottom-muted">Organisasi terverifikasi akan tampil di sini.</p>}
           <ul className="explore-organization-list">
-            {organizations.slice(0, 4).map((organization) => <li key={organization._id}>
-              <span className="explore-org-mark"><Building2 size={15} aria-hidden="true" /></span>
-              <span>{organization.name}</span><BadgeCheck size={15} aria-label="Terverifikasi" />
+            {selectedOrganizations.map((organization) => <li key={organization._id}>
+              <Link className="explore-selected-org" to={`/organisasi/${organization._id}`}>
+                <img src={organization.logoUrl || "/logokoordinaski.png"} alt="" />
+                <span><strong>{organization.name}</strong><small>{organization.focusCategory}</small></span>
+              </Link>
+              <span className={`explore-org-badge${organization.simulated ? " is-demo" : ""}`}>
+                {organization.simulated ? "Profil demo" : <><BadgeCheck size={13} aria-label="Terverifikasi" /> Terverifikasi</>}
+              </span>
+              <button type="button" className={`explore-org-follow${followedOrganizations.includes(organization._id) ? " is-followed" : ""}`}
+                aria-pressed={followedOrganizations.includes(organization._id)}
+                onClick={() => toggleFollow(organization._id)}>
+                {followedOrganizations.includes(organization._id) ? "Diikuti" : "Ikuti"}
+              </button>
             </li>)}
           </ul>
+          <Link className="explore-org-directory-link" to="/organisasi">Lihat semua profil <ArrowUpRight size={14} /></Link>
+        </article>
+        <article className="explore-bottom-panel">
+          <span className="eyebrow">Bulan ini</span>
+          <h2>Lembaga Teraktif</h2>
+          {!leaderboard.length && <p className="explore-bottom-muted">Peringkat demonstrasi bulan ini.</p>}
+          <ol className="explore-volunteer-list">
+            {topOrganizations.map((organization, index) => <li key={organization._id || organization.name}>
+              <span className="explore-volunteer-rank">{index + 1}</span>
+              <span className="explore-volunteer-name">{organization.name}<small>{organization.score ?? organization.actions} aksi selesai</small></span>
+              <strong>{organization.score ?? organization.actions} aksi</strong>
+            </li>)}
+          </ol>
         </article>
         <article className="explore-bottom-panel">
           <span className="eyebrow">Bulan ini · contoh</span>

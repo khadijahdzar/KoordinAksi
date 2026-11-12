@@ -1,11 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { Link, NavLink, Navigate, Outlet, Route, Routes, useLocation, useNavigate, useParams } from "react-router-dom";
+import { Instagram, Linkedin, Mail, MapPin, Phone, Youtube } from "lucide-react";
 import api, { getErrorMessage } from "./api";
 import { getDashboardPath, useAuth } from "@/AuthContext";
 import HeroSection from "./components/HeroSection";
 import ActivityList from "./public/ActivityList";
+import ActivityDetail from "./public/ActivityDetail";
+import { featuredCategories } from "./public/activityImages";
 import KabarAksi from "./public/KabarAksi";
 import OrganizationDirectory from "./public/OrganizationDirectory";
+import OrganizationProfile from "./public/OrganizationProfile";
 import { AdminLayout } from "./AdminDashboard";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminActivityList from "./pages/admin/AdminActivityList";
@@ -23,7 +27,6 @@ import ActivityParticipants from "./organization/ActivityParticipants";
 import VolunteerVerification from "./organization/VolunteerVerification";
 import OrganizationImpactReport from "./organization/OrganizationImpactReport";
 
-const categories = ["Donor Darah", "Bantuan Bencana", "Bakti Sosial", "Penghijauan", "Pendidikan", "Kesehatan", "Lainnya"];
 const volunteerInterests = ["Lingkungan & Konservasi", "Pendidikan & Literasi", "Medis & PKS", "Tanggap Bencana", "Logistik", "Dokumen & Media"];
 const organizationFocusCategories = ["Lingkungan & Konservasi", "Pendidikan & Literasi", "Kesehatan & Medis", "Tanggap Bencana", "Pemberdayaan Masyarakat", "Sosial & Kemanusiaan", "Lainnya"];
 const organizationDocumentTypes = [
@@ -39,7 +42,7 @@ function Header() {
   const homePath = user ? getDashboardPath(user.role) : "/";
   return <header className="site-header">
     <div className="container nav-wrap">
-      <Link className="brand" to={homePath}><span className="brand-mark">K</span> Koordin<span>Aksi</span></Link>
+      <Link className="brand" to={homePath}><img className="brand-logo" src="/logokoordinaski.png" alt="" /> Koordin<span>Aksi</span></Link>
       <nav>
         <NavLink to="/jelajah">Jelajah</NavLink>
         <NavLink to="/organisasi">Organisasi</NavLink>
@@ -56,7 +59,38 @@ function Header() {
 
 function Footer() {
   const { user } = useAuth();
-  return <footer className="footer"><div className="container footer-row"><Link className="brand" to={user ? getDashboardPath(user.role) : "/"}><span className="brand-mark">K</span> Koordin<span>Aksi</span></Link><p>Ruang bertemu untuk setiap niat baik.</p><small>© {new Date().getFullYear()} KoordinAksi</small></div></footer>;
+  return <footer className="footer">
+    <div className="container footer-main">
+      <section className="footer-about">
+        <Link className="brand" to={user ? getDashboardPath(user.role) : "/"}>
+          <img className="brand-logo" src="/logokoordinaski.png" alt="" /> Koordin<span>Aksi</span>
+        </Link>
+        <p>Ruang bertemu untuk setiap niat baik. Temukan aksi, relawan, dan komunitas yang bergerak untuk Indonesia.</p>
+      </section>
+      <nav className="footer-column" aria-label="Tautan cepat">
+        <h2>Tautan Cepat</h2>
+        <Link to="/jelajah">Jelajah Kegiatan</Link>
+        <Link to="/organisasi">Organisasi</Link>
+        <Link to="/kabar-aksi">Kabar Aksi</Link>
+        <Link to="/register">Bergabung</Link>
+      </nav>
+      <section className="footer-column">
+        <h2>Kontak & Lokasi</h2>
+        <a href="mailto:hallo@koordinaksi.id"><Mail size={15} /> hallo@koordinaksi.id</a>
+        <a href="tel:+6281234567890"><Phone size={15} /> +62 812-3456-7890</a>
+        <a href="https://maps.google.com/?q=Jl.+Sudirman+No.+45,+Jakarta+Selatan" target="_blank" rel="noreferrer">
+          <MapPin size={15} /> Jl. Sudirman No. 45, Jakarta Selatan, DKI Jakarta
+        </a>
+      </section>
+      <section className="footer-column footer-social">
+        <h2>Ikuti Kami</h2>
+        <a href="https://instagram.com/koordinaksi.id" target="_blank" rel="noreferrer"><Instagram size={17} /> @koordinaksi.id</a>
+        <a href="https://www.linkedin.com/company/koordinaksi-indonesia" target="_blank" rel="noreferrer"><Linkedin size={17} /> KoordinAksi Indonesia</a>
+        <a href="https://youtube.com/@koordinaksi" target="_blank" rel="noreferrer"><Youtube size={17} /> YouTube KoordinAksi</a>
+      </section>
+    </div>
+    <div className="container footer-bottom"><span>© {new Date().getFullYear()} KoordinAksi Indonesia</span><span>Ruang bertemu untuk setiap niat baik.</span></div>
+  </footer>;
 }
 
 function PublicLayout() {
@@ -85,34 +119,18 @@ function ProtectedRoute({ roles }) {
 function ProtectedAdminRoute() {
   const { user, loading, sessionError, refreshSession } = useAuth();
   const location = useLocation();
-  const [validatedPath, setValidatedPath] = useState("");
-  const [refreshingRole, setRefreshingRole] = useState(false);
-
-  useEffect(() => {
-    let active = true;
-    setRefreshingRole(true);
-    refreshSession().finally(() => {
-      if (!active) return;
-      setValidatedPath(location.pathname);
-      setRefreshingRole(false);
-    });
-    return () => { active = false; };
-  }, [location.pathname, refreshSession]);
-
-  if (loading || refreshingRole || validatedPath !== location.pathname) {
+  if (loading) {
     return <div className="container page-space" role="status"><p>Memeriksa akses admin...</p></div>;
   }
-  if (sessionError) return <SessionRecoveryNotice />;
+  if (sessionError && !user) return <SessionRecoveryNotice />;
   if (!user) return <Navigate to="/login" replace state={{ from: location }} />;
   if (user.role !== "admin") {
     return <main className="container page-space not-found" role="alert">
       <span className="eyebrow">403 · Akses admin diperlukan</span>
-      <h1>Akun ini bukan <em>administrator.</em></h1>
-      <p>Status akun terakhir diperbarui dari server. Jika peran baru saja diubah, periksa kembali sebelum melanjutkan.</p>
+      <h1>Akun ini tidak memiliki akses <em>administrator.</em></h1>
+      <p>Masuk dengan akun admin yang telah diverifikasi server. Peran akun biasa tidak diubah saat membuka halaman ini.</p>
       <button type="button" className="button button-ghost" onClick={async () => {
-        setRefreshingRole(true);
         await refreshSession();
-        setRefreshingRole(false);
       }}>Periksa ulang status akun</button>
       <Link className="button" to={getDashboardPath(user.role)}>Kembali ke dashboard →</Link>
     </main>;
@@ -149,12 +167,14 @@ function AppRoutes() {
     <Route element={<PublicLayout />}>
       <Route index element={<Home />} />
       <Route path="/organisasi" element={<OrganizationDirectory />} />
+      <Route path="/organisasi/:id" element={<OrganizationProfile />} />
       <Route path="/jelajah" element={<ActivityList />} />
       <Route path="/kegiatan" element={<ActivityList />} />
       <Route path="/kegiatan/:id" element={<ActivityDetail />} />
       <Route path="/kabar-aksi" element={<KabarAksi />} />
       <Route path="/kabar-aksi/:id" element={<KabarAksi />} />
       <Route path="/login" element={<AuthPage mode="login" />} />
+      <Route path="/masuk" element={<AuthPage mode="login" />} />
     </Route>
     <Route path="/dashboard" element={<DashboardRedirect />} />
     <Route element={<ProtectedRoute roles={["volunteer"]} />}>
@@ -198,14 +218,10 @@ function AppRoutes() {
 
 function Home() {
   const [stats, setStats] = useState(null);
-  const [activities, setActivities] = useState([]);
   const [error, setError] = useState("");
   useEffect(() => {
-    Promise.all([api.get("/activities/stats"), api.get("/activities?limit=3")])
-      .then(([statsResult, activityResult]) => {
-        setStats(statsResult.data);
-        setActivities(activityResult.data.activities);
-      })
+    api.get("/activities/stats")
+      .then(({ data }) => setStats(data))
       .catch((err) => setError(getErrorMessage(err)));
   }, []);
   return <>
@@ -216,71 +232,27 @@ function Home() {
       subtitle="Temukan kegiatan sosial yang berarti bagimu. Terhubung dengan organisasi terpercaya dan bergerak bersama untuk Indonesia yang lebih baik."
     >
       <div className="hero-section-actions">
-        <Link className="button button-light" to="/kegiatan">Jelajahi kegiatan <span>↗</span></Link>
+        <Link className="button button-light" to="/jelajah">Jelajahi kegiatan <span>↗</span></Link>
         <Link className="hero-section-link" to="/register">Saya mengelola organisasi <span>→</span></Link>
       </div>
       <div className="hero-note"><div className="avatar-stack"><i>R</i><i>A</i><i>D</i><i>+</i></div><span>Bergabung bersama komunitas penuh kepedulian</span></div>
     </HeroSection>
+    {error && <div className="container"><Notice message={error} /></div>}
     <section className="stats-strip"><div className="container stats-grid">
       <Stat value={stats?.volunteers} label="Relawan bergabung" /><Stat value={stats?.organizations} label="Organisasi terverifikasi" /><Stat value={stats?.activities} label="Aksi terbuka" /><Stat value={stats?.registrations} label="Partisipasi tercatat" />
     </div></section>
-    <section className="section container"><div className="section-heading"><div><span className="eyebrow">Pilih cara berkontribusi</span><h2>Satu kepedulian,<br />banyak kemungkinan.</h2></div><Link to="/kegiatan" className="text-link">Lihat semua kegiatan <span>→</span></Link></div>
-      <div className="category-grid">{categories.slice(0, 6).map((category, index) => <Link className={`category-tile tile-${index}`} key={category} to={`/kegiatan?category=${encodeURIComponent(category)}`}><span>{["♡", "⌂", "✳", "♧", "▤", "＋"][index]}</span><strong>{category}</strong><small>Jadi bagian dari perubahan</small><b>↗</b></Link>)}</div>
+    <section className="section container"><div className="section-heading"><div><span className="eyebrow">Pilih cara berkontribusi</span><h2>Satu kepedulian,<br />banyak kemungkinan.</h2></div><Link to="/jelajah" className="text-link">Lihat semua kegiatan <span>→</span></Link></div>
+      <div className="category-grid">{featuredCategories.map(({ label, category, icon, image }, index) => <Link className={`category-tile tile-${index}${image ? " category-tile-image" : ""}`} key={label} to={`/jelajah?category=${encodeURIComponent(category)}`}>
+        {image && <img src={image} alt="" aria-hidden="true" loading="lazy" />}
+        <span>{icon}</span><strong>{label}</strong><small>Jadi bagian dari perubahan</small><b>↗</b>
+      </Link>)}</div>
     </section>
-    <section id="kegiatan-unggulan" className="section featured-section"><div className="container"><div className="section-heading"><div><span className="eyebrow">Kesempatan untuk berbuat baik</span><h2>Kegiatan pilihan</h2></div><Link to="/kegiatan" className="text-link">Jelajahi semua <span>→</span></Link></div>
-      {error && <Notice message={error} />}
-      <div className="activity-grid">{activities.map((activity) => <ActivityCard key={activity._id} activity={activity} />)}</div>
-      {!activities.length && !error && <p className="empty-state">Belum ada kegiatan tersedia. Coba kembali nanti.</p>}
-    </div></section>
     <section className="callout"><div className="container callout-inner"><div><span className="eyebrow">Untuk organisasi sosial</span><h2>Setiap aksi lebih kuat<br />saat dilakukan bersama.</h2><p>Kelola relawan, publikasi kegiatan, dan perluas dampak organisasimu.</p></div><Link className="button button-light" to="/register">Daftarkan organisasi <span>↗</span></Link></div></section>
   </>;
 }
 
 function Stat({ value, label }) {
   return <div className="stat"><strong>{value == null ? "—" : Number(value).toLocaleString("id-ID")}<span>+</span></strong><small>{label}</small></div>;
-}
-
-function ActivityCard({ activity }) {
-  return <article className="activity-card"><div className="activity-visual"><span className="category-label">{activity.category}</span><span className="visual-symbol">{activity.category === "Penghijauan" ? "♧" : activity.category === "Donor Darah" ? "♡" : "✳"}</span><span className="visual-index">AKSI SOSIAL&nbsp; / &nbsp;{String(activity._id).slice(-4).toUpperCase()}</span></div>
-    <div className="activity-card-body"><div className="card-meta"><span>◷ {formatDate(activity.date)}</span><span>⌖ {activity.location}</span></div><h3><Link to={`/kegiatan/${activity._id}`}>{activity.title}</Link></h3><div className="card-bottom"><span>{activity.organization?.name || "Organisasi"}</span><Link aria-label={`Lihat ${activity.title}`} to={`/kegiatan/${activity._id}`}>↗</Link></div></div>
-  </article>;
-}
-
-function ActivityDetail() {
-  const { id } = useParams();
-  const { user } = useAuth();
-  const navigate = useNavigate();
-  const [activity, setActivity] = useState(null);
-  const [note, setNote] = useState("");
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
-  const [registering, setRegistering] = useState(false);
-  useEffect(() => {
-    api.get(`/activities/${id}`).then(({ data }) => setActivity(data.activity))
-      .catch((err) => setError(getErrorMessage(err)));
-  }, [id]);
-  async function register(event) {
-    event.preventDefault();
-    if (!user) return navigate("/login");
-    setRegistering(true);
-    setError("");
-    setMessage("");
-    try {
-      await api.post("/registrations", { activityId: id, note });
-      setMessage("Pendaftaran berhasil dikirim. Organisasi akan meninjau permohonanmu.");
-    } catch (err) {
-      setError(getErrorMessage(err));
-    } finally {
-      setRegistering(false);
-    }
-  }
-  if (error && !activity) return <div className="container page-space"><Notice message={error} /></div>;
-  if (!activity) return <div className="container page-space"><p>Memuat kegiatan...</p></div>;
-  return <section className="container page-space detail-layout"><div><Link className="back-link" to="/kegiatan">← Kembali ke kegiatan</Link><div className="detail-visual"><span>{activity.category}</span><strong>Jadilah bagian<br />dari perubahan.</strong></div><span className="eyebrow">{activity.category}</span><h1 className="detail-title">{activity.title}</h1><div className="detail-meta"><span>◷ {formatDate(activity.date)}</span><span>⌖ {activity.location}</span><span>◉ {activity.capacity} relawan</span></div><h2>Tentang kegiatan</h2><p className="long-copy">{activity.description}</p><div className="organization-note"><span className="org-avatar">{activity.organization?.name?.charAt(0) || "O"}</span><div><small>Diselenggarakan oleh</small><strong>{activity.organization?.name}</strong></div>{activity.organization?.verified && <span className="verified">✓ Terverifikasi</span>}</div></div>
-    <aside className="register-panel"><span className="eyebrow">Ambil bagian</span><h2>Waktumu berarti.</h2><p>Daftar sebagai relawan dan tunggu konfirmasi dari penyelenggara.</p>{message && <Notice success message={message} />}{error && <Notice message={error} />}
-      {user?.role === "volunteer" ? <form onSubmit={register}><label>Pesan untuk penyelenggara <textarea value={note} onChange={(e) => setNote(e.target.value)} rows="4" placeholder="Ceritakan sedikit tentang motivasimu (opsional)" /></label><button className="button full-width" disabled={registering}>{registering ? "Mengirim..." : "Daftar sebagai relawan"} {!registering && <span>→</span>}</button></form>
-        : <Link className="button full-width" to={user ? getDashboardPath(user.role) : "/login"}>{user ? "Masuk ke dashboard" : "Masuk untuk mendaftar"} <span>→</span></Link>}
-    </aside></section>;
 }
 
 function RegistrationRolePage() {
@@ -316,7 +288,7 @@ function RegistrationRolePage() {
   return <main className="registration-choice-page">
     <div className="registration-choice-backdrop" aria-hidden="true" />
     <section className="registration-choice-card" aria-labelledby="registration-choice-title">
-      <div className="registration-choice-brand"><span className="brand-mark">K</span><span>Koordin<span>Aksi</span></span></div>
+      <div className="registration-choice-brand"><img src="/logokoordinaski.png" alt="Logo KoordinAksi" /><span>Koordin<span>Aksi</span></span></div>
       <header className="registration-choice-heading">
         <span className="eyebrow">Langkah baik dimulai di sini</span>
         <h1 id="registration-choice-title">Mulai Langkah Baikmu<br />Bersama KoordinAksi</h1>

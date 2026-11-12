@@ -15,6 +15,7 @@ import {
 import { Link, useSearchParams } from "react-router-dom";
 import api, { getErrorMessage } from "../api";
 import HeroSection from "../components/HeroSection";
+import { getMockOrganizations, getOrganizationActivitiesUrl } from "./organizationMockData";
 
 const pageSize = 9;
 const focusOptions = [
@@ -44,20 +45,25 @@ function OrganizationCard({ organization, followed, onToggleFollow }) {
   const location = organization.address?.split(",").filter(Boolean).slice(-2).join(", ").trim() || "Indonesia";
 
   return <article className="organization-directory-card">
+    <Link className="organization-card-overlay" to={`/organisasi/${organization._id}`}
+      aria-label={`Buka profil ${organization.name}`} />
     <div className="organization-directory-image">
       <img src={organization.logoUrl || "/3fingers.jpg"} alt="" loading="lazy" />
       <span className="organization-focus-badge">{organization.focusCategory || "Sosial & Kemanusiaan"}</span>
-      <span className="organization-verified-badge"><BadgeCheck size={13} /> Terverifikasi</span>
+      {organization.simulated
+        ? <span className="organization-verified-badge">Profil simulasi</span>
+        : organization.verified && <span className="organization-verified-badge"><BadgeCheck size={13} />Terverifikasi</span>}
       <span className="organization-directory-mark">{organization.name?.slice(0, 1) || "O"}</span>
     </div>
     <div className="organization-directory-card-content">
       <div className="organization-directory-title">
         <div><h2>{organization.name}</h2><span><MapPin size={13} />{location}</span></div>
-        <BadgeCheck size={18} aria-label="Organisasi terverifikasi" />
+        {organization.verified && <BadgeCheck size={18} aria-label="Organisasi terverifikasi" />}
       </div>
       <p className="organization-directory-description">
         {organization.description || `Bergerak di bidang ${organization.focusCategory || "sosial dan kemanusiaan"} untuk mendukung masyarakat.`}
       </p>
+      {organization.simulated && <p className="organization-simulation-note">Data profil dan angka merupakan simulasi.</p>}
       <div className="organization-directory-stats">
         <div><strong>{formatNumber(completedActions)}</strong><span>Aksi selesai</span></div>
         <div><strong>{formatNumber(volunteers)}</strong><span>Relawan</span></div>
@@ -68,7 +74,7 @@ function OrganizationCard({ organization, followed, onToggleFollow }) {
           aria-pressed={followed} onClick={() => onToggleFollow(organization._id)}>
           {followed ? <Check size={14} /> : <Heart size={14} />}{followed ? "Diikuti" : "Ikuti"}
         </button>
-        <Link className="organization-active-actions-button" to={`/jelajah?organization=${encodeURIComponent(organization._id)}`}>
+        <Link className="organization-active-actions-button" to={getOrganizationActivitiesUrl(organization)}>
           {activeActions} Aksi Aktif <ArrowUpRight size={14} />
         </Link>
       </div>
@@ -100,6 +106,7 @@ export default function OrganizationDirectory() {
   const [pagination, setPagination] = useState({ total: 0, page: 1, pages: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [usingMockOrganizations, setUsingMockOrganizations] = useState(false);
   const [search, setSearch] = useState(params.get("search") || "");
   const [focus, setFocus] = useState(params.get("focus") || "");
   const [region, setRegion] = useState(params.get("region") || "");
@@ -129,13 +136,22 @@ export default function OrganizationDirectory() {
       setLoading(true);
       try {
         const { data } = await api.get(`/organizations?${query.toString()}`, { signal: controller.signal });
-        setOrganizations(data.organizations);
+        const results = data.organizations.length || data.summary.verifiedOrganizations
+          ? { organizations: data.organizations, pagination: data.pagination }
+          : getMockOrganizations(query, pageSize);
+        setOrganizations(results.organizations);
         setSummary(data.summary);
         setLeaderboard(data.leaderboard);
-        setPagination(data.pagination);
+        setPagination(results.pagination);
+        setUsingMockOrganizations(!data.organizations.length);
         setError("");
       } catch (requestError) {
-        if (requestError.code !== "ERR_CANCELED") setError(getErrorMessage(requestError));
+        if (requestError.code !== "ERR_CANCELED") {
+          setOrganizations([]);
+          setPagination({ total: 0, page: 1, pages: 0 });
+          setUsingMockOrganizations(false);
+          setError(getErrorMessage(requestError));
+        }
       } finally {
         if (!controller.signal.aborted) setLoading(false);
       }
@@ -243,6 +259,7 @@ export default function OrganizationDirectory() {
           <button type="button" className="organization-directory-submit" onClick={applyFilters}>Tampilkan</button>
           <button type="button" className="organization-directory-reset" onClick={resetFilters}>Reset</button>
         </div>
+        {usingMockOrganizations && !loading && <p className="organization-directory-demo-note" role="note">Profil simulasi ditampilkan karena belum ada organisasi terverifikasi di server. Data ini bukan mitra terverifikasi.</p>}
       </div>
       {showFilters && <label className="organization-legal-filter">
         <input type="checkbox" checked={legalOnly} onChange={(event) => setLegalOnly(event.target.checked)} />

@@ -14,7 +14,7 @@ export function AdminLayout() {
 
   return <div className="admin-portal">
     <aside className="admin-sidebar">
-      <Link className="brand" to="/admin/dashboard"><span className="brand-mark">K</span> Koordin<span>Aksi</span></Link>
+      <Link className="brand" to="/admin/dashboard"><img className="brand-logo" src="/logokoordinaski.png" alt="" /> Koordin<span>Aksi</span></Link>
       <span className="admin-sidebar-label">PORTAL ADMIN</span>
       <nav className="admin-sidebar-nav" aria-label="Navigasi admin">
         <NavLink to="/admin/dashboard"><span aria-hidden="true"><LayoutDashboard size={17} /></span> Ringkasan</NavLink>

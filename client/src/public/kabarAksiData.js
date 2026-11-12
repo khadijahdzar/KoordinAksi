@@ -8,7 +8,7 @@ const kabarAksiData = [
     tanggal: "10 November 2026",
     ringkasan: "Relawan mengadakan kelas membaca dan berhitung bagi anak-anak di sebuah desa di Nusa Tenggara Timur. Kegiatan ini juga menghadirkan sudut baca dengan buku-buku sumbangan masyarakat.",
     konten: "Suasana balai desa di Nusa Tenggara Timur terasa lebih ramai ketika belasan relawan tiba membawa buku cerita, alat tulis, dan papan belajar portabel. Bersama Sahabat Belajar Nusantara, mereka mengadakan kelas membaca dan berhitung untuk anak-anak setempat. Kegiatan dibuka dengan membaca cerita secara bergantian, dilanjutkan permainan angka yang mendorong anak-anak belajar sambil berkolaborasi. Di akhir kegiatan, relawan merapikan buku sumbangan menjadi sudut baca sederhana yang dapat digunakan warga. Program ini direncanakan berlangsung rutin agar anak-anak memiliki ruang belajar tambahan yang menyenangkan.",
-    gambar: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=1200&q=80"
+    gambar: "/pendidikan.jpeg"
   },
   {
     id: 2,
@@ -19,7 +19,7 @@ const kabarAksiData = [
     tanggal: "8 November 2026",
     ringkasan: "Warga dan relawan menanam bibit pohon di sepanjang daerah aliran sungai yang membutuhkan penghijauan. Mereka turut menandai area tanam dan menyusun jadwal perawatan bersama.",
     konten: "Sejak pagi, warga bersama relawan Ruang Hijau Bersama menanam ratusan bibit pohon di sepanjang daerah aliran sungai di Jawa Barat. Sebelum penanaman, peserta mendapat arahan singkat mengenai jarak tanam dan cara merawat bibit agar dapat tumbuh dengan baik. Kegiatan dilanjutkan dengan membersihkan sampah di sekitar lokasi dan memasang penanda sederhana pada area yang telah ditanami. Warga setempat kemudian menyepakati jadwal pemantauan agar bibit tetap terawat setelah kegiatan selesai. Aksi ini menjadi langkah awal membangun kebiasaan menjaga lingkungan secara bersama-sama.",
-    gambar: "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=1200&q=80"
+    gambar: "/karhutla.jpg"
   },
   {
     id: 3,
@@ -30,7 +30,7 @@ const kabarAksiData = [
     tanggal: "6 November 2026",
     ringkasan: "Relawan mendirikan dapur umum untuk menyiapkan makanan bagi warga terdampak banjir. Distribusi dilakukan bersama warga setempat dengan memperhatikan kebutuhan keluarga dan lansia.",
     konten: "Di tengah proses pemulihan setelah banjir, relawan Posko Peduli Sesama bekerja bersama warga untuk mengoperasikan dapur umum di lokasi yang aman. Bahan makanan yang terkumpul diolah menjadi hidangan hangat dan dibagikan secara bertahap kepada keluarga terdampak, termasuk lansia. Warga membantu mendata kebutuhan dan mengatur distribusi supaya bantuan menjangkau lebih banyak orang. Selain makanan, relawan juga membagikan informasi mengenai titik bantuan dan mengajak masyarakat menjaga kebersihan area pengungsian. Koordinasi dengan warga terus dilakukan agar dukungan berikutnya sesuai dengan kebutuhan di lapangan.",
-    gambar: "https://images.unsplash.com/photo-1547683905-f686c993190c?auto=format&fit=crop&w=1200&q=80"
+    gambar: "/banjir.jpg"
   },
   {
     id: 4,
@@ -41,7 +41,7 @@ const kabarAksiData = [
     tanggal: "11 November 2026",
     ringkasan: "Upaya gerak cepat pemadaman titik api secara gotong royong serta pembagian ribuan masker medis untuk melindungi warga dari paparan asap pekat.",
     konten: "Relawan Garda Hijau Nusantara bersama warga setempat bergerak membantu penanganan titik api di area terdampak kebakaran hutan dan lahan. Dengan berkoordinasi bersama petugas di lokasi, warga dan relawan membantu upaya pemadaman serta menjaga agar masyarakat menjauhi area berisiko. Tim juga membagikan masker medis kepada warga sebagai perlindungan dari paparan asap dan menyampaikan imbauan untuk mengikuti informasi resmi serta arahan petugas. Kegiatan ini menekankan pentingnya gotong royong, keselamatan, dan koordinasi dalam merespons karhutla.",
-    gambar: "https://images.unsplash.com/photo-1473448912268-2022ce9509d8?auto=format&fit=crop&w=1200&q=80"
+    gambar: "/karhutla.jpg"
   }
 ];
 
