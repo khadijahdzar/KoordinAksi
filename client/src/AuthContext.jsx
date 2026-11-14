@@ -81,6 +81,15 @@ export function AuthProvider({ children }) {
       setSessionError("");
       return data.user;
     },
+    async googleAuth(credential, registrationDetails = {}) {
+      const { data } = await api.post("/auth/google", { credential, ...registrationDetails });
+      refreshRequestId.current += 1;
+      localStorage.setItem("koordinaksi_token", data.token);
+      setUser(data.user);
+      setLoading(false);
+      setSessionError("");
+      return data.user;
+    },
     logout() {
       refreshRequestId.current += 1;
       localStorage.removeItem("koordinaksi_token");

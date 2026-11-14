@@ -52,6 +52,30 @@ export const loginSchema = Joi.object({
   password
 }).unknown(false);
 
+export const googleAuthSchema = Joi.object({
+  credential: Joi.string().min(1).required(),
+  role: Joi.string().valid("volunteer", "organization"),
+  name: Joi.string().trim().min(1).max(100),
+  acceptedTerms: Joi.boolean(),
+  organizationEmail: Joi.string().trim().lowercase().email().max(254),
+  phone: Joi.string().trim().min(8).max(30),
+  city: Joi.string().trim().min(1).max(100),
+  interests: Joi.array().items(Joi.string().valid(...volunteerInterests)).max(volunteerInterests.length).unique(),
+  organizationName: Joi.string().trim().min(1).max(150),
+  focusCategory: Joi.string().trim().max(100),
+  legalNumber: Joi.string().trim().max(100),
+  picTitle: Joi.string().trim().max(100)
+}).unknown(false);
+
+export const googleOrganizationRegistrationSchema = Joi.object({
+  phone: Joi.string().trim().min(8).max(30).required(),
+  email: Joi.string().trim().lowercase().email().max(254),
+  organizationName: Joi.string().trim().min(1).max(150).required(),
+  focusCategory: Joi.string().trim().min(1).max(100).required(),
+  legalNumber: Joi.string().trim().min(1).max(100).required(),
+  picTitle: Joi.string().trim().min(1).max(100).required()
+}).unknown(false);
+
 export const activityCreateSchema = Joi.object({
   title: Joi.string().trim().min(1).max(160).required(),
   description: Joi.string().trim().min(1).max(5000).required(),

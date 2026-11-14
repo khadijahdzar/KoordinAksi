@@ -5,7 +5,7 @@ const userSchema = new mongoose.Schema({
   name: { type: String, required: true, trim: true, maxlength: 100 },
   username: { type: String, trim: true, lowercase: true, maxlength: 30, sparse: true, unique: true },
   email: { type: String, required: true, unique: true, lowercase: true, trim: true },
-  password: { type: String, required: true, minlength: 8, select: false },
+  password: { type: String, minlength: 8, select: false },
   role: { type: String, enum: ["volunteer", "organization", "admin"], default: "volunteer" },
   avatarUrl: { type: String, trim: true, maxlength: 500 },
   bio: { type: String, trim: true, maxlength: 500 },
@@ -22,10 +22,11 @@ const userSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 userSchema.pre("save", async function hashPassword() {
-  if (this.isModified("password")) this.password = await bcrypt.hash(this.password, 12);
+  if (this.password && this.isModified("password")) this.password = await bcrypt.hash(this.password, 12);
 });
 
 userSchema.methods.comparePassword = function comparePassword(candidate) {
+  if (!this.password) return false;
   return bcrypt.compare(candidate, this.password);
 };
 

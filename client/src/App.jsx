@@ -3,6 +3,7 @@ import { Link, NavLink, Navigate, Outlet, Route, Routes, useLocation, useNavigat
 import { Instagram, Linkedin, Mail, MapPin, Phone, Youtube } from "lucide-react";
 import api, { getErrorMessage } from "./api";
 import { getDashboardPath, useAuth } from "@/AuthContext";
+import GoogleAuthButton from "./components/GoogleAuthButton";
 import HeroSection from "./components/HeroSection";
 import ActivityList from "./public/ActivityList";
 import ActivityDetail from "./public/ActivityDetail";
@@ -76,18 +77,17 @@ function Footer() {
       </nav>
       <section className="footer-column">
         <h2>Kontak & Lokasi</h2>
-        <a href="mailto:hallo@koordinaksi.id"><Mail size={15} /> hallo@koordinaksi.id</a>
-        <a href="tel:+6281234567890"><Phone size={15} /> +62 812-3456-7890</a>
+        <a href="mailto:khadijahdzar2509@gmail.com"><Mail size={15} /> khadijahdzar2509@gmail.com</a>
+        <a href="tel:+6282134008512"><Phone size={15} /> +62 821-3400-8512</a>
         <a href="https://maps.google.com/?q=Jl.+Sudirman+No.+45,+Jakarta+Selatan" target="_blank" rel="noreferrer">
           <MapPin size={15} /> Jl. Sudirman No. 45, Jakarta Selatan, DKI Jakarta
         </a>
       </section>
       <section className="footer-column footer-social">
         <h2>Ikuti Kami</h2>
-        <a href="https://instagram.com/koordinaksi.id" target="_blank" rel="noreferrer"><Instagram size={17} /> @koordinaksi.id</a>
-        <a href="https://www.linkedin.com/company/koordinaksi-indonesia" target="_blank" rel="noreferrer"><Linkedin size={17} /> KoordinAksi Indonesia</a>
-        <a href="https://youtube.com/@koordinaksi" target="_blank" rel="noreferrer"><Youtube size={17} /> YouTube KoordinAksi</a>
-      </section>
+        <a href="https://instagram.com/okeyydijah" target="_blank" rel="noreferrer"><Instagram size={17} /> @Okeyydijah</a>
+        <a href="https://www.linkedin.com/in/khadijahdzar" target="_blank" rel="noreferrer"><Linkedin size={17} /> Khadijah Dzar</a>
+        </section>
     </div>
     <div className="container footer-bottom"><span>© {new Date().getFullYear()} KoordinAksi Indonesia</span><span>Ruang bertemu untuk setiap niat baik.</span></div>
   </footer>;
@@ -163,6 +163,7 @@ function AppRoutes() {
     <Route path="/register" element={<RegistrationRolePage />} />
     <Route path="/register/volunteer" element={<VolunteerRegistration />} />
     <Route path="/register/organization" element={<OrganizationVerification />} />
+    <Route path="/register/organisasi" element={<OrganizationVerification />} />
     <Route path="/organisasi/pendaftaran" element={<OrganizationVerification />} />
     <Route element={<PublicLayout />}>
       <Route index element={<Home />} />
@@ -309,7 +310,7 @@ function RegistrationRolePage() {
       <div className="registration-choice-stats" aria-label="Dampak KoordinAksi">
         <div><strong>45.200<span>+</span></strong><small>Relawan Aktif</small></div>
         <div><strong>2.450<span>+</span></strong><small>Aksi Terlaksana</small></div>
-        <div><strong>34</strong><small>Provinsi</small></div>
+        <div><strong>38</strong><small>Provinsi</small></div>
       </div>
       <p className="registration-choice-login">Sudah memiliki akun? <Link to="/login">Masuk Sekarang <span aria-hidden="true">→</span></Link></p>
     </section>
@@ -317,7 +318,7 @@ function RegistrationRolePage() {
 }
 
 function VolunteerRegistration() {
-  const { register } = useAuth();
+  const { register, googleAuth } = useAuth();
   const navigate = useNavigate();
   const [form, setForm] = useState({
     name: "",
@@ -331,7 +332,6 @@ function VolunteerRegistration() {
   });
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState({});
-  const [googleMessage, setGoogleMessage] = useState("");
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -372,6 +372,47 @@ function VolunteerRegistration() {
     setFieldErrors((current) => ({ ...current, [field]: "" }));
   }
 
+  async function handleGoogleRegister(credential) {
+    const errors = validateVolunteerForm();
+    delete errors.name;
+    delete errors.email;
+    delete errors.password;
+    setFieldErrors(errors);
+    if (Object.keys(errors).length) {
+      setError("Lengkapi data dan persetujuan terlebih dahulu untuk mendaftar dengan Google.");
+      focusFirstInvalidField();
+      return;
+    }
+
+    setBusy(true);
+    setError("");
+    try {
+      const user = await googleAuth(credential, {
+        role: "volunteer",
+        name: form.name.trim() || undefined,
+        phone: form.phone.trim(),
+        city: form.city.trim(),
+        interests: form.interests,
+        acceptedTerms: true
+      });
+      navigate(getDashboardPath(user.role));
+    } catch (err) {
+      const validationErrors = err.response?.data?.errors;
+      if (Array.isArray(validationErrors) && validationErrors.length) {
+        setFieldErrors((current) => ({
+          ...current,
+          ...Object.fromEntries(validationErrors.map(({ field, message }) => [field, message]))
+        }));
+        setError("");
+        focusFirstInvalidField();
+      } else {
+        setError(getErrorMessage(err));
+      }
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function submit(event) {
     event.preventDefault();
     const errors = validateVolunteerForm();
@@ -407,22 +448,21 @@ function VolunteerRegistration() {
     }
   }
 
-  return <main className="volunteer-signup-page">
-    <div className="volunteer-signup-backdrop" aria-hidden="true" />
+  return <main className="volunteer-signup-page registration-split-page">
+    <aside className="registration-split-visual">
+      <div className="registration-split-copy">
+        <span className="registration-split-kicker">KoordinAksi · Relawan</span>
+        <h2>Mulai dari satu langkah kecil.</h2>
+        <p>Temukan aksi yang bermakna dan tumbuh bersama komunitas yang peduli.</p>
+      </div>
+    </aside>
     <section className="volunteer-signup-card" aria-labelledby="volunteer-signup-title">
-      <Link className="volunteer-signup-brand" to="/"><span className="brand-mark">K</span><span>Koordin<span>Aksi</span></span></Link>
+      <Link className="volunteer-signup-brand" to="/"><img src="/logokoordinaski.png" alt="Logo KoordinAksi" /><span>Koordin<span>Aksi</span></span></Link>
       <header className="volunteer-signup-heading">
         <span className="eyebrow">Satu langkah menuju aksi nyata</span>
-        <h1 id="volunteer-signup-title">Pendaftaran Relawan KoordinAksi</h1>
+        <h1 id="volunteer-signup-title">Daftar sebagai Volunteer</h1>
         <p>Lengkapi data singkatmu untuk mulai terhubung dengan berbagai aksi kebaikan.</p>
       </header>
-
-      <button className="volunteer-google-button" type="button" onClick={() => setGoogleMessage("Pendaftaran dengan Google belum tersedia. Silakan lanjutkan menggunakan formulir ini.")}>
-        <span className="volunteer-google-mark" aria-hidden="true">G</span>
-        Lanjutkan dengan Google
-      </button>
-      {googleMessage && <p className="volunteer-google-message" role="status">{googleMessage}</p>}
-      <div className="volunteer-signup-divider"><span>atau daftar dengan email</span></div>
 
       <form className="volunteer-signup-form" noValidate onSubmit={submit}>
         {error && <Notice message={error} />}
@@ -460,13 +500,15 @@ function VolunteerRegistration() {
         <button className="button full-width volunteer-signup-submit" disabled={busy}>{busy ? "Memproses..." : "Daftar"} {!busy && <span aria-hidden="true">→</span>}</button>
       </form>
 
+      <div className="volunteer-signup-divider"><span>atau daftar dengan Google</span></div>
+      <GoogleAuthButton onSuccess={handleGoogleRegister} onError={setError} />
       <p className="volunteer-signup-login">Sudah memiliki akun? <Link to="/login">Masuk Sekarang</Link></p>
     </section>
   </main>;
 }
 
 function OrganizationVerification() {
-  const { register } = useAuth();
+  const { register, googleAuth } = useAuth();
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [form, setForm] = useState({
@@ -487,7 +529,7 @@ function OrganizationVerification() {
 
   useEffect(() => {
     const previousTitle = document.title;
-    document.title = "Verifikasi Lembaga & Organisasi - KoordinAksi";
+    document.title = "Pendaftaran Organisasi - KoordinAksi";
     try {
       const savedDraft = localStorage.getItem(organizationRegistrationDraftKey);
       if (savedDraft) {
@@ -554,6 +596,62 @@ function OrganizationVerification() {
     setError("");
     setNotice("");
     setStep((current) => Math.min(2, current + 1));
+  }
+
+  async function handleGoogleRegister(credential) {
+    const errors = {};
+    if (!form.organizationName.trim()) errors.organizationName = "Masukkan nama resmi organisasi atau yayasan.";
+    if (!form.focusCategory) errors.focusCategory = "Pilih kategori fokus lembaga.";
+    if (!form.legalNumber.trim()) errors.legalNumber = "Masukkan nomor SK Kemenkumham atau Akta Notaris.";
+    if (!form.picTitle.trim()) errors.picTitle = "Masukkan jabatan dalam organisasi.";
+    const phoneDigits = form.phone.replace(/\D/g, "");
+    if (!phoneDigits) errors.phone = "Masukkan nomor WhatsApp PIC.";
+    else if (!/^[+\d\s().-]+$/.test(form.phone.trim())) errors.phone = "Gunakan hanya angka, spasi, tanda +, tanda kurung, atau tanda hubung.";
+    else if (phoneDigits.length < 8 || phoneDigits.length > 15) errors.phone = "Masukkan nomor dengan 8–15 digit, termasuk kode negara bila ada.";
+    if (Object.keys(errors).length) {
+      setFieldErrors((current) => ({ ...current, ...errors }));
+      setStep(errors.organizationName || errors.focusCategory || errors.legalNumber ? 0 : 1);
+      setError("");
+      setNotice("");
+      focusFirstInvalidField();
+      return;
+    }
+
+    setBusy(true);
+    setError("");
+    setNotice("");
+    try {
+      const user = await googleAuth(credential, {
+        role: "organization",
+        name: form.picName.trim() || undefined,
+        organizationEmail: form.email.trim() || undefined,
+        phone: form.phone.trim(),
+        organizationName: form.organizationName.trim(),
+        focusCategory: form.focusCategory,
+        legalNumber: form.legalNumber.trim(),
+        picTitle: form.picTitle.trim()
+      });
+      localStorage.removeItem(organizationRegistrationDraftKey);
+      navigate(getDashboardPath(user.role));
+    } catch (err) {
+      const validationErrors = err.response?.data?.errors;
+      if (Array.isArray(validationErrors) && validationErrors.length) {
+        setFieldErrors((current) => ({
+          ...current,
+          ...Object.fromEntries(validationErrors.map(({ field, message }) => [
+            field === "organizationEmail" ? "email" : field,
+            message
+          ]))
+        }));
+        setStep(validationErrors.some(({ field }) => ["organizationName", "focusCategory", "legalNumber"].includes(field)) ? 0 : 1);
+        setError("");
+        focusFirstInvalidField();
+      } else {
+        setError(getErrorMessage(err));
+      }
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function submit(event) {
@@ -630,15 +728,21 @@ function OrganizationVerification() {
   }
 
   const steps = ["Identitas & Legalitas", "Penanggung Jawab (PIC)", "Berkas & Dokumen"];
-  return <main className="organization-verification-page">
-    <div className="organization-verification-backdrop" aria-hidden="true" />
+  return <main className="organization-verification-page registration-split-page">
+    <aside className="registration-split-visual">
+      <div className="registration-split-copy">
+        <span className="registration-split-kicker">KoordinAksi · Organisasi</span>
+        <h2>Kebaikan tumbuh saat bergerak bersama.</h2>
+        <p>Bangun kolaborasi dan hadirkan lebih banyak dampak untuk komunitasmu.</p>
+      </div>
+    </aside>
     <section className="organization-verification-card" aria-labelledby="organization-verification-title">
       <header className="organization-verification-header">
-        <Link className="organization-verification-brand" to="/"><span className="brand-mark">K</span><span>Koordin<span>Aksi</span></span></Link>
+        <Link className="organization-verification-brand" to="/"><img src="/logokoordinaski.png" alt="Logo KoordinAksi" /><span>Koordin<span>Aksi</span></span></Link>
         <Link className="organization-verification-exit" to="/register">Kembali ke pilihan peran</Link>
       </header>
       <div className="organization-verification-title-row">
-        <div><span className="eyebrow">Verifikasi lembaga</span><h1 id="organization-verification-title">Verifikasi Lembaga &amp; Organisasi</h1><p>Lengkapi informasi berikut agar lembagamu dapat dipercaya komunitas.</p></div>
+        <div><span className="eyebrow">Pendaftaran organisasi</span><h1 id="organization-verification-title">Daftar sebagai Organisasi</h1><p>Lengkapi informasi berikut agar lembagamu dapat dipercaya komunitas.</p></div>
         <span className="organization-verification-badge"><i /> Proses aman</span>
       </div>
 
@@ -717,6 +821,8 @@ function OrganizationVerification() {
             : <button className="button organization-verification-submit" disabled={busy} type="submit">{busy ? "Menyimpan akun..." : "Simpan Akun & Lanjutkan ke Verifikasi Berkas"} {!busy && <span aria-hidden="true">→</span>}</button>}
         </div>
       </form>
+      <div className="organization-google-divider"><span>atau daftar dengan Google</span></div>
+      <GoogleAuthButton onSuccess={handleGoogleRegister} onError={setError} />
     </section>
   </main>;
 }
@@ -724,13 +830,30 @@ function OrganizationVerification() {
 function AuthPage({ mode }) {
   const isRegister = mode === "register";
   const { role: requestedRole } = useParams();
-  const { login, register } = useAuth();
+  const { login, register, googleAuth } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [form, setForm] = useState({ name: "", email: "", password: "", role: requestedRole === "organization" ? "organization" : "volunteer", organizationName: "" });
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [acceptedGoogleTerms, setAcceptedGoogleTerms] = useState(false);
   if (isRegister && requestedRole !== "volunteer" && requestedRole !== "organization") return <Navigate to="/register" replace />;
+  function navigateAfterAuth(user) {
+    const requestedPath = location.state?.from?.pathname;
+    const canReturnToRequestedPath = requestedPath?.startsWith("/") &&
+      !requestedPath.startsWith("//") &&
+      (!requestedPath.startsWith("/admin") || user.role === "admin");
+    navigate(canReturnToRequestedPath ? requestedPath : getDashboardPath(user.role), { replace: true });
+  }
+  async function handleGoogleLogin(credential) {
+    setError("");
+    try {
+      const user = await googleAuth(credential, { acceptedTerms: acceptedGoogleTerms });
+      navigateAfterAuth(user);
+    } catch (err) {
+      setError(getErrorMessage(err));
+    }
+  }
   async function submit(event) {
     event.preventDefault();
     setBusy(true);
@@ -739,11 +862,7 @@ function AuthPage({ mode }) {
       const user = isRegister
         ? await register(form)
         : await login({ email: form.email, password: form.password });
-      const requestedPath = location.state?.from?.pathname;
-      const canReturnToRequestedPath = requestedPath?.startsWith("/") &&
-        !requestedPath.startsWith("//") &&
-        (!requestedPath.startsWith("/admin") || user.role === "admin");
-      navigate(canReturnToRequestedPath ? requestedPath : getDashboardPath(user.role), { replace: true });
+      navigateAfterAuth(user);
     } catch (err) {
       setError(getErrorMessage(err));
     } finally {
@@ -754,6 +873,11 @@ function AuthPage({ mode }) {
       {error && <Notice message={error} />}
       {isRegister && <><label>Nama lengkap<input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Nama kamu" /></label><label>Daftar sebagai<select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}><option value="volunteer">Relawan</option><option value="organization">Organisasi</option></select></label>{form.role === "organization" && <label>Nama organisasi<input required value={form.organizationName} onChange={(e) => setForm({ ...form, organizationName: e.target.value })} placeholder="Nama organisasi sosial" /></label>}</>}
       <label>Email<input required type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="nama@email.com" /></label><label>Password<input required minLength="8" type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="Minimal 8 karakter" /></label><button className="button full-width" disabled={busy}>{busy ? "Memproses..." : isRegister ? "Buat akun" : "Masuk"} <span>→</span></button>
+      {!isRegister && <>
+        <div className="google-login-divider"><span>atau masuk dengan</span></div>
+        <GoogleAuthButton onSuccess={handleGoogleLogin} onError={setError} />
+        <label className="auth-google-terms"><input type="checkbox" checked={acceptedGoogleTerms} onChange={(event) => setAcceptedGoogleTerms(event.target.checked)} /> Saya menyetujui Ketentuan Layanan &amp; Kebijakan Data Privasi jika membuat akun baru.</label>
+      </>}
       <small className="auth-switch">{isRegister ? "Sudah punya akun?" : "Belum punya akun?"} <Link to={isRegister ? "/login" : "/register"}>{isRegister ? "Masuk" : "Daftar sekarang"}</Link></small>
     </form></div></section>;
 }
