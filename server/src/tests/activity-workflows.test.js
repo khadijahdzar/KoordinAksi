@@ -18,6 +18,7 @@ let activityId;
 let registrationId;
 let rejectedRegistrationId;
 let unverifiedOrganizationId;
+let verifiedOrganizationId;
 let server;
 let baseUrl;
 let unverifiedOrganizationToken;
@@ -81,12 +82,16 @@ before(async () => {
 
   const verifiedOwner = await createUser("organization", "verified");
   const verifiedOrganization = await Organization.create({
-    name: "Verified Integration Organization",
+    name: `Verified Integration Organization ${Date.now()}`,
+    description: "Organization used by isolated route integration tests.",
+    focusCategory: "Pendidikan & Literasi",
+    logoUrl: "https://example.test/organization-logo.png",
     email: verifiedOwner.email,
     owner: verifiedOwner._id,
     verified: true
   });
   createdOrganizationIds.push(verifiedOrganization._id);
+  verifiedOrganizationId = verifiedOrganization._id;
   verifiedOwner.organization = verifiedOrganization._id;
   await verifiedOwner.save();
   verifiedOrganizationToken = createToken(verifiedOwner);
@@ -107,6 +112,7 @@ before(async () => {
     date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
     capacity: 5,
     activeRegistrations: 3,
+    imageUrl: "https://example.test/verified-action.jpg",
     organization: verifiedOrganization._id
   });
   activityId = activity._id;
@@ -146,6 +152,31 @@ after(async () => {
     await User.deleteMany({ _id: { $in: createdUserIds } });
   }
   if (mongoose.connection.readyState) await mongoose.disconnect();
+});
+
+test("public organization pages expose profile fields and current activity metrics", async () => {
+  const [directory, profile, invalidProfile] = await Promise.all([
+    request(`/organizations?search=${encodeURIComponent("Verified Integration Organization")}&scale=local`),
+    request(`/organizations/${verifiedOrganizationId}`),
+    request("/organizations/not-an-object-id")
+  ]);
+
+  assert.equal(directory.response.status, 200);
+  const directoryOrganization = directory.data.organizations.find(
+    (organization) => organization._id === verifiedOrganizationId.toString()
+  );
+  assert.ok(directoryOrganization);
+  assert.equal(directoryOrganization.stats.activeActionsCount, 1);
+  assert.equal(directoryOrganization.stats.totalVolunteers, 3);
+  assert.equal(directoryOrganization.stats.completedActions, 0);
+
+  assert.equal(profile.response.status, 200);
+  assert.equal(profile.data.organization.focusCategory, "Pendidikan & Literasi");
+  assert.equal(profile.data.organization.logoUrl, "https://example.test/organization-logo.png");
+  assert.equal(profile.data.organization.stats.activeActionsCount, 1);
+  assert.equal(profile.data.organization.stats.totalVolunteers, 3);
+  assert.deepEqual(profile.data.organization.gallery, ["https://example.test/verified-action.jpg"]);
+  assert.equal(invalidProfile.response.status, 400);
 });
 
 test("unverified organization cannot create draft activities", async () => {

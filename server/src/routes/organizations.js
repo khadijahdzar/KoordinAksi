@@ -3,9 +3,98 @@ import mongoose from "mongoose";
 import Activity from "../models/Activity.js";
 import Organization from "../models/Organization.js";
 import AuditLog from "../models/AuditLog.js";
+import Registration from "../models/Registration.js";
 import { authorize, protect } from "../middleware/auth.js";
 
 const router = Router();
+const countedRegistrationStatuses = ["pending", "approved", "attended"];
+
+async function getOrganizationMetrics(organizationIds, now) {
+  const metrics = new Map(organizationIds.map((id) => [String(id), {
+    activeActionsCount: 0,
+    completedActions: 0,
+    totalVolunteers: 0
+  }]));
+  if (!organizationIds.length) return metrics;
+
+  const [activityIds, activityMetrics] = await Promise.all([
+    Activity.distinct("_id", {
+      organization: { $in: organizationIds },
+      status: "published",
+      verificationStatus: { $nin: ["pending", "rejected"] }
+    }),
+    Activity.aggregate([
+      {
+        $match: {
+          organization: { $in: organizationIds },
+          status: "published",
+          verificationStatus: { $nin: ["pending", "rejected"] }
+        }
+      },
+      {
+        $group: {
+          _id: "$organization",
+          activeActionsCount: {
+            $sum: { $cond: [{ $gte: ["$date", now] }, 1, 0] }
+          },
+          completedActions: {
+            $sum: { $cond: [{ $lt: ["$date", now] }, 1, 0] }
+          }
+        }
+      }
+    ])
+  ]);
+  for (const activityMetric of activityMetrics) {
+    Object.assign(metrics.get(String(activityMetric._id)), {
+      activeActionsCount: activityMetric.activeActionsCount,
+      completedActions: activityMetric.completedActions
+    });
+  }
+
+  if (activityIds.length) {
+    const volunteerMetrics = await Registration.aggregate([
+      {
+        $match: {
+          activity: { $in: activityIds },
+          status: { $in: countedRegistrationStatuses }
+        }
+      },
+      {
+        $lookup: {
+          from: Activity.collection.name,
+          localField: "activity",
+          foreignField: "_id",
+          as: "activity"
+        }
+      },
+      { $unwind: "$activity" },
+      {
+        $group: {
+          _id: "$activity.organization",
+          volunteers: { $addToSet: "$volunteer" }
+        }
+      },
+      {
+        $project: {
+          totalVolunteers: { $size: "$volunteers" }
+        }
+      }
+    ]);
+    for (const volunteerMetric of volunteerMetrics) {
+      const organizationMetrics = metrics.get(String(volunteerMetric._id));
+      if (organizationMetrics) organizationMetrics.totalVolunteers = volunteerMetric.totalVolunteers;
+    }
+  }
+
+  return metrics;
+}
+
+function isWithinScale(scale, totalVolunteers) {
+  if (scale === "local") return totalVolunteers < 50;
+  if (scale === "growing") return totalVolunteers >= 50 && totalVolunteers < 200;
+  if (scale === "national") return totalVolunteers >= 200;
+  return true;
+}
 
 router.get("/", async (req, res, next) => {
   try {
@@ -26,9 +115,6 @@ router.get("/", async (req, res, next) => {
     }
     if (focus) filter.focusCategory = focus;
     if (region) filter.address = new RegExp(escapeRegex(region), "i");
-    if (scale === "local") filter["stats.totalVolunteers"] = { $lt: 50 };
-    if (scale === "growing") filter["stats.totalVolunteers"] = { $gte: 50, $lt: 200 };
-    if (scale === "national") filter["stats.totalVolunteers"] = { $gte: 200 };
     if (legalRegistered === "true") filter.legalNumber = { $exists: true, $ne: "" };
 
     const safeLimit = Math.min(Math.max(Number(limit) || 50, 1), 50);
@@ -36,6 +122,16 @@ router.get("/", async (req, res, next) => {
     const now = new Date();
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
     const verifiedOrganizationIds = await Organization.distinct("_id", { verified: true });
+    const scaleMetrics = ["local", "growing", "national"].includes(scale)
+      ? await getOrganizationMetrics(verifiedOrganizationIds, now)
+      : null;
+    if (scaleMetrics) {
+      filter._id = {
+        $in: verifiedOrganizationIds.filter((id) =>
+          isWithinScale(scale, scaleMetrics.get(String(id))?.totalVolunteers || 0)
+        )
+      };
+    }
     const [organizations, total, verifiedOrganizations, legalRecords, completedActions, monthlyActivityCounts] = await Promise.all([
       Organization.find(filter)
         .select("name description focusCategory logoUrl address verified createdAt stats")
@@ -49,10 +145,18 @@ router.get("/", async (req, res, next) => {
       Activity.countDocuments({
         organization: { $in: verifiedOrganizationIds },
         status: "published",
+        verificationStatus: { $nin: ["pending", "rejected"] },
         date: { $lt: now }
       }),
       Activity.aggregate([
-        { $match: { organization: { $in: verifiedOrganizationIds }, status: "published", date: { $gte: monthStart, $lt: now } } },
+        {
+          $match: {
+            organization: { $in: verifiedOrganizationIds },
+            status: "published",
+            verificationStatus: { $nin: ["pending", "rejected"] },
+            date: { $gte: monthStart, $lt: now }
+          }
+        },
         { $group: { _id: "$organization", score: { $sum: 1 } } },
         { $sort: { score: -1, _id: 1 } },
         { $limit: 5 }
@@ -72,19 +176,15 @@ router.get("/", async (req, res, next) => {
       score: entry.score
     })).filter((entry) => entry.name);
 
-    const organizationIds = organizations.map((organization) => organization._id);
-    const completedByOrganization = organizationIds.length
-      ? await Activity.aggregate([
-        { $match: { organization: { $in: organizationIds }, status: "published", date: { $lt: now } } },
-        { $group: { _id: "$organization", count: { $sum: 1 } } }
-      ])
-      : [];
-    const completedCounts = new Map(completedByOrganization.map((item) => [String(item._id), item.count]));
+    const organizationMetrics = scaleMetrics || await getOrganizationMetrics(
+      organizations.map((organization) => organization._id),
+      now
+    );
     const enrichedOrganizations = organizations.map((organization) => ({
       ...organization,
       stats: {
         ...organization.stats,
-        completedActions: completedCounts.get(String(organization._id)) || 0
+        ...(organizationMetrics.get(String(organization._id)) || {})
       }
     }));
 
@@ -158,10 +258,42 @@ router.patch("/:id/verify", protect, authorize("admin"), async (req, res, next) 
 
 router.get("/:id", async (req, res, next) => {
   try {
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      return res.status(400).json({ message: "ID organisasi tidak valid." });
+    }
     const organization = await Organization.findOne({ _id: req.params.id, verified: true })
-      .select("name description address verified createdAt");
+      .select("name description focusCategory logoUrl address verified createdAt stats")
+      .lean();
     if (!organization) return res.status(404).json({ message: "Organisasi tidak ditemukan." });
-    return res.json({ organization });
+
+    const activityFilter = {
+      organization: organization._id,
+      status: "published",
+      verificationStatus: { $nin: ["pending", "rejected"] }
+    };
+    const [activities, galleryActivities] = await Promise.all([
+      Activity.find(activityFilter).select("_id date").lean(),
+      Activity.find({ ...activityFilter, imageUrl: { $exists: true, $ne: "" } })
+        .select("imageUrl").sort({ date: -1 }).limit(6).lean()
+    ]);
+    const volunteerIds = activities.length
+      ? await Registration.distinct("volunteer", {
+        status: { $in: countedRegistrationStatuses },
+        activity: { $in: activities.map((activity) => activity._id) }
+      })
+      : [];
+    const now = new Date();
+    const profile = {
+      ...organization,
+      stats: {
+        ...organization.stats,
+        activeActionsCount: activities.filter((activity) => activity.date >= now).length,
+        completedActions: activities.filter((activity) => activity.date < now).length,
+        totalVolunteers: volunteerIds.length
+      },
+      gallery: galleryActivities.map((activity) => activity.imageUrl)
+    };
+    return res.json({ organization: profile });
   } catch (error) {
     return next(error);
   }
