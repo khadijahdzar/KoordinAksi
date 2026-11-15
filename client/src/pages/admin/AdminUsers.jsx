@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { Search, Users } from "lucide-react";
+import { Search, Trash2, Users } from "lucide-react";
 import api, { getErrorMessage } from "../../api";
+import AdminToast from "../../admin/AdminToast";
 
 function formatDate(value) {
   return value ? new Intl.DateTimeFormat("id-ID", { dateStyle: "medium" }).format(new Date(value)) : "—";
@@ -14,6 +15,9 @@ export default function AdminUsers() {
   const [pagination, setPagination] = useState({ total: 0, pages: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [selected, setSelected] = useState(null);
+  const [workingId, setWorkingId] = useState("");
+  const [toast, setToast] = useState(null);
 
   const loadUsers = useCallback(async (signal) => {
     setLoading(true);
@@ -46,12 +50,30 @@ export default function AdminUsers() {
     setPage(1);
   }
 
+  async function deleteUser() {
+    if (!selected || workingId) return;
+    setWorkingId(selected._id);
+    setToast(null);
+    try {
+      await api.delete(`/admin/users/${selected._id}`);
+      setSelected(null);
+      setToast({ type: "success", message: "Akun pengguna berhasil dihapus." });
+      if (users.length === 1 && page > 1) setPage((current) => current - 1);
+      else await loadUsers();
+    } catch (requestError) {
+      setToast({ type: "error", message: getErrorMessage(requestError) });
+    } finally {
+      setWorkingId("");
+    }
+  }
+
   return <section className="admin-dashboard admin-data-page">
     <header className="admin-page-heading">
       <div><span className="eyebrow">Manajemen pengguna</span><h1>Pengguna KoordinAksi</h1>
-        <p>Daftar akun relawan dan organisasi beserta perannya di platform.</p></div>
+        <p>Daftar akun relawan, organisasi, dan admin beserta perannya di platform.</p></div>
       <span className="admin-count admin-queue-count"><Users size={15} /> {pagination.total.toLocaleString("id-ID")} pengguna</span>
     </header>
+    <AdminToast toast={toast} onDismiss={() => setToast(null)} />
     {error && <div className="admin-error" role="alert"><span>{error}</span>
       <button type="button" className="button button-small button-ghost" onClick={() => loadUsers()}>Coba lagi</button></div>}
     <section className="admin-panel">
@@ -63,6 +85,7 @@ export default function AdminUsers() {
           <option value="">Semua peran</option>
           <option value="volunteer">Relawan</option>
           <option value="organization">Organisasi</option>
+          <option value="admin">Admin</option>
         </select>
       </div>
       {loading
@@ -70,15 +93,20 @@ export default function AdminUsers() {
         : users.length
           ? <div className="admin-table-wrap"><table className="admin-data-table">
             <thead><tr><th scope="col">Nama</th><th scope="col">Email</th><th scope="col">Peran</th>
-              <th scope="col">Organisasi</th><th scope="col">Terdaftar</th></tr></thead>
+              <th scope="col">Organisasi</th><th scope="col">Terdaftar</th><th scope="col">Tindakan</th></tr></thead>
             <tbody>{users.map((account) => <tr key={account._id}>
               <td data-label="Nama"><strong>{account.name}</strong></td>
               <td data-label="Email">{account.email}</td>
               <td data-label="Peran"><span className={`admin-status-pill is-${account.role}`}>
-                {account.role === "organization" ? "Organisasi" : "Relawan"}
+                {account.role === "organization" ? "Organisasi" : account.role === "admin" ? "Admin" : "Relawan"}
               </span></td>
               <td data-label="Organisasi">{account.organization?.name || "—"}</td>
               <td data-label="Terdaftar">{formatDate(account.createdAt)}</td>
+              <td data-label="Tindakan">{account.role === "admin"
+                ? <span className="admin-protected-account">Akun admin dilindungi</span>
+                : <button type="button" className="button button-small admin-takedown-button"
+                  aria-label={`Hapus akun ${account.name}`} disabled={Boolean(workingId)}
+                  onClick={() => setSelected(account)}><Trash2 size={14} /> Hapus akun</button>}</td>
             </tr>)}</tbody>
           </table></div>
           : <div className="admin-table-state"><strong>Pengguna tidak ditemukan</strong><span>Ubah kata kunci atau filter peran.</span></div>}
@@ -90,5 +118,20 @@ export default function AdminUsers() {
             onClick={() => setPage((value) => value + 1)}>Berikutnya</button></div>
       </div>
     </section>
+    {selected && <div className="admin-confirm-backdrop" onMouseDown={(event) => {
+      if (event.target === event.currentTarget && !workingId) setSelected(null);
+    }}>
+      <section className="admin-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="user-delete-title">
+        <span className="eyebrow">Konfirmasi penghapusan</span>
+        <h2 id="user-delete-title">Hapus akun pengguna?</h2>
+        <p><strong>{selected.name}</strong> akan dihapus jika tidak memiliki organisasi, pendaftaran, atau catatan kontribusi yang masih terhubung.</p>
+        <div>
+          <button type="button" className="button button-ghost" disabled={Boolean(workingId)} onClick={() => setSelected(null)}>Kembali</button>
+          <button type="button" className="button admin-danger-button" disabled={Boolean(workingId)} onClick={deleteUser}>
+            {workingId ? "Menghapus…" : "Hapus akun"}
+          </button>
+        </div>
+      </section>
+    </div>}
   </section>;
 }

@@ -363,10 +363,10 @@ export async function getUsers(req, res, next) {
     const offset = (page - 1) * limit;
     if (!Number.isSafeInteger(offset)) return invalidQuery(res);
 
-    const filter = { role: { $in: ["volunteer", "organization"] } };
+    const filter = { role: { $in: ["volunteer", "organization", "admin"] } };
     if (req.query.role !== undefined) {
       const role = String(req.query.role);
-      if (!["volunteer", "organization"].includes(role)) return invalidQuery(res);
+      if (!["volunteer", "organization", "admin"].includes(role)) return invalidQuery(res);
       filter.role = role;
     }
     if (req.query.search !== undefined) {
@@ -388,6 +388,44 @@ export async function getUsers(req, res, next) {
       users,
       pagination: { total, page, limit, pages: Math.ceil(total / limit) }
     });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+export async function deleteUser(req, res, next) {
+  const { id } = req.params;
+  if (!mongoose.isValidObjectId(id)) return res.status(400).json({ message: "ID pengguna tidak valid." });
+  if (String(req.user._id) === id) {
+    return res.status(409).json({ message: "Akun admin yang sedang digunakan tidak dapat dihapus." });
+  }
+
+  try {
+    const user = await User.findById(id).select("_id role organization").lean();
+    if (!user) return res.status(404).json({ message: "Pengguna tidak ditemukan." });
+    if (user.role === "admin") {
+      return res.status(409).json({ message: "Akun admin dilindungi dan tidak dapat dihapus dari daftar pengguna." });
+    }
+
+    const organizationFilters = [{ owner: user._id }];
+    if (user.organization) organizationFilters.push({ _id: user.organization });
+    const [organization, registration, volunteerLog] = await Promise.all([
+      Organization.exists({ $or: organizationFilters }),
+      Registration.exists({ volunteer: user._id }),
+      VolunteerLog.exists({ volunteerId: user._id })
+    ]);
+    if (organization) {
+      return res.status(409).json({ message: "Akun terhubung ke data organisasi. Hapus atau pindahkan data organisasi sebelum menghapus akun." });
+    }
+    if (registration || volunteerLog) {
+      return res.status(409).json({ message: "Akun memiliki riwayat pendaftaran atau kontribusi dan tidak dapat dihapus." });
+    }
+
+    const result = await User.deleteOne({ _id: user._id, role: { $ne: "admin" } });
+    if (result.deletedCount !== 1) {
+      return res.status(409).json({ message: "Akun berubah saat diproses. Muat ulang daftar pengguna." });
+    }
+    return res.json({ message: "Akun pengguna berhasil dihapus." });
   } catch (error) {
     return next(error);
   }

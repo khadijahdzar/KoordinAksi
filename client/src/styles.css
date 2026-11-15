@@ -1348,3 +1348,24 @@ h1 em,.page-intro em,.not-found em{font-style:normal;color:var(--green)}
   .volunteer-hub-stats article>span{font-size:8px}
   .volunteer-hub-stats strong{font-size:17px}
 }
+
+.admin-mobile-menu-toggle{display:none}
+.admin-sidebar-nav a.active{box-shadow:inset 3px 0 #e4ad38}
+.admin-sidebar-nav a:focus-visible{outline:3px solid #e6b849;outline-offset:2px}
+.admin-search-field:focus-within,.admin-data-filters>select:focus-visible,.admin-sort-order:focus-visible,
+.admin-data-page button:focus-visible,.admin-console-dashboard button:focus-visible{outline:3px solid #e6b849;outline-offset:2px}
+.admin-status-pill.is-pending{background:#fff3cd;color:#75510d}
+.admin-status-pill.is-admin{background:#fff3cd;color:#75510d}
+.admin-protected-account{color:#52665b;font-size:9px;font-weight:700}
+.admin-approve-button:focus-visible,.admin-takedown-button:focus-visible,.admin-icon-action:focus-visible{outline:3px solid #e6b849;outline-offset:2px}
+@media(max-width:700px){
+  .admin-portal{position:relative;display:block;min-height:100vh}
+  .admin-sidebar{position:fixed;z-index:91;top:0;right:auto;bottom:0;left:0;width:min(290px,86vw);height:100vh;height:100dvh;padding:20px;overflow-y:auto;transform:translateX(-105%);visibility:hidden;transition:transform .2s ease,visibility .2s ease;box-shadow:12px 0 32px #0f172a30}
+  .admin-portal.is-mobile-menu-open .admin-sidebar{transform:translateX(0);visibility:visible}
+  .admin-sidebar-backdrop{position:fixed;z-index:90;inset:0;display:block;width:100%;height:100%;border:0;background:#0f172a80}
+  .admin-main{min-width:0}
+  .admin-mobile-menu-toggle{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:0 12px;margin:0 0 16px;border:1px solid #dbe5df;border-radius:9px;background:#fff;color:#0f172a;font-size:11px;font-weight:800}
+  .admin-sidebar-nav{display:grid;overflow:visible;flex-wrap:initial;padding-bottom:0}
+  .admin-sidebar-nav a{flex:initial}
+  .admin-sidebar-backdrop:focus-visible,.admin-mobile-menu-toggle:focus-visible{outline:3px solid #e6b849;outline-offset:2px}
+}
