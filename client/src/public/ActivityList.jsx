@@ -1,13 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import HeroSection from "../components/HeroSection";
-import { getActivityImage } from "./activityImages";
-import { getMockActivities } from "./activityMockData";
-import {
-  featuredOrganizations,
-  getOrganizationActivitiesUrl,
-  organizationLeaderboard
-} from "./organizationMockData";
 import {
   ArrowLeft,
   ArrowRight,
@@ -20,6 +12,9 @@ import {
   UsersRound
 } from "lucide-react";
 import api, { getErrorMessage } from "../api";
+import HeroSection from "../components/HeroSection";
+import { getActivityImage } from "./activityImages";
+import { getOrganizationActivitiesUrl } from "./organizationUtils";
 
 const pageSize = 9;
 const categoryFilters = [
@@ -43,12 +38,6 @@ const locationOptions = [
   "Nusa Tenggara Timur",
   "Sumatera"
 ];
-const sampleVolunteers = [
-  { name: "Khadijah Dzar", activities: 8, hours: 32 },
-  { name: "Kenneth Xanth Taylor", activities: 6, hours: 27 },
-  { name: "Dije Joss", activities: 5, hours: 21 }
-];
-
 function formatActivityDate(date) {
   const parsedDate = new Date(date);
   if (Number.isNaN(parsedDate.getTime())) return "Tanggal menyusul";
@@ -68,7 +57,7 @@ function ActivityExploreCard({ activity }) {
   const isFull = capacity > 0 && volunteers >= capacity;
 
   return <article className="explore-card">
-    <Link className="explore-card-image" to={`/kegiatan/${activity._id}`} aria-label={`Lihat detail ${activity.title}`}>
+    <Link className="explore-card-image" to={`/kegiatan/${activity._id}`} aria-label={`Buka detail dan ikuti kegiatan ${activity.title}`}>
       <img src={getActivityImage(activity)} alt={`Dokumentasi kegiatan ${activity.title}`} loading="lazy" />
       <span className="explore-card-category">{activity.category}</span>
       <span className={`explore-card-status${isFull ? " is-full" : ""}`}>
@@ -90,7 +79,7 @@ function ActivityExploreCard({ activity }) {
         </div>
       </div>
       <Link className="explore-card-cta" to={`/kegiatan/${activity._id}`}>
-        Lihat Detail <ArrowUpRight size={16} aria-hidden="true" />
+        Ikuti <ArrowUpRight size={16} aria-hidden="true" />
       </Link>
     </div>
   </article>;
@@ -126,7 +115,6 @@ export default function ActivityList() {
   const [pagination, setPagination] = useState({ total: 0, page: 1, pages: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [usingMockActivities, setUsingMockActivities] = useState(false);
   const [organizationsError, setOrganizationsError] = useState("");
   const [search, setSearch] = useState(params.get("search") || "");
   const [location, setLocation] = useState(params.get("location") || "");
@@ -158,18 +146,13 @@ export default function ActivityList() {
       setLoading(true);
       try {
         const { data } = await api.get(`/activities?${query.toString()}`, { signal: controller.signal });
-        const results = data.activities.length || organization
-          ? { activities: data.activities, pagination: data.pagination }
-          : getMockActivities(query, pageSize);
-        setActivities(results.activities);
-        setPagination(results.pagination);
-        setUsingMockActivities(!data.activities.length && !organization);
+        setActivities(data.activities);
+        setPagination(data.pagination);
         setError("");
       } catch (requestError) {
         if (requestError.code !== "ERR_CANCELED") {
           setActivities([]);
           setPagination({ total: 0, page: 1, pages: 0 });
-          setUsingMockActivities(false);
           setError(getErrorMessage(requestError));
         }
       } finally {
@@ -240,8 +223,8 @@ export default function ActivityList() {
     });
   }
 
-  const selectedOrganizations = organizations.length ? organizations.slice(0, 4) : featuredOrganizations;
-  const topOrganizations = leaderboard.length ? leaderboard.slice(0, 3) : organizationLeaderboard;
+  const selectedOrganizations = organizations.slice(0, 4);
+  const topOrganizations = leaderboard.slice(0, 3);
 
   return <section className="explore-page">
     <HeroSection
@@ -290,7 +273,6 @@ export default function ActivityList() {
             <h2>{loading ? "Mencari kegiatan..." : `${pagination.total} aksi ditemukan`}</h2></div>
           <span className="explore-results-hint">Pilih aksi yang paling dekat denganmu</span>
         </div>
-        {usingMockActivities && !loading && <p className="explore-demo-note" role="note">Data demonstrasi ditampilkan karena belum ada kegiatan yang cocok dengan filter. Pendaftaran belum tersedia untuk data ini.</p>}
         {error && <div className="explore-error" role="alert">
           <span>{error}</span><button type="button" onClick={() => setParams(new URLSearchParams(params))}>Coba lagi</button>
         </div>}
@@ -319,9 +301,9 @@ export default function ActivityList() {
                 <img src={organization.logoUrl || "/logokoordinaski.png"} alt="" />
                 <span><strong>{organization.name}</strong><small>{organization.focusCategory}</small></span>
               </Link>
-              <span className={`explore-org-badge${organization.simulated ? " is-demo" : ""}`}>
-                {organization.simulated ? "Profil demo" : <><BadgeCheck size={13} aria-label="Terverifikasi" /> Terverifikasi</>}
-              </span>
+              {organization.verified && <span className="explore-org-badge">
+                <BadgeCheck size={13} aria-label="Terverifikasi" /> Terverifikasi
+              </span>}
               <button type="button" className={`explore-org-follow${followedOrganizations.includes(organization._id) ? " is-followed" : ""}`}
                 aria-pressed={followedOrganizations.includes(organization._id)}
                 onClick={() => toggleFollow(organization._id)}>
@@ -329,12 +311,13 @@ export default function ActivityList() {
               </button>
             </li>)}
           </ul>
+          {!selectedOrganizations.length && !organizationsError && <p className="explore-bottom-muted">Belum ada organisasi terverifikasi untuk ditampilkan.</p>}
           <Link className="explore-org-directory-link" to="/organisasi">Lihat semua profil <ArrowUpRight size={14} /></Link>
         </article>
         <article className="explore-bottom-panel">
           <span className="eyebrow">Bulan ini</span>
           <h2>Lembaga Teraktif</h2>
-          {!leaderboard.length && <p className="explore-bottom-muted">Peringkat demonstrasi bulan ini.</p>}
+          {!leaderboard.length && <p className="explore-bottom-muted">Peringkat lembaga bulan ini belum tersedia.</p>}
           <ol className="explore-volunteer-list">
             {topOrganizations.map((organization, index) => <li key={organization._id || organization.name}>
               <span className="explore-volunteer-rank">{index + 1}</span>
@@ -344,16 +327,9 @@ export default function ActivityList() {
           </ol>
         </article>
         <article className="explore-bottom-panel">
-          <span className="eyebrow">Bulan ini · contoh</span>
+          <span className="eyebrow">Bulan ini</span>
           <h2>Relawan Teraktif</h2>
-          <p className="explore-bottom-muted">Contoh tampilan leaderboard relawan.</p>
-          <ol className="explore-volunteer-list">
-            {sampleVolunteers.map((volunteer, index) => <li key={volunteer.name}>
-              <span className="explore-volunteer-rank">{index + 1}</span>
-              <span className="explore-volunteer-name">{volunteer.name}<small>{volunteer.activities} partisipasi</small></span>
-              <strong>{volunteer.hours} jam</strong>
-            </li>)}
-          </ol>
+          <p className="explore-bottom-muted">Peringkat relawan belum tersedia.</p>
         </article>
         <article className="explore-bottom-cta">
           <span>Untuk organisasi sosial</span>

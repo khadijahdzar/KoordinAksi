@@ -54,6 +54,8 @@ export async function getMetrics(req, res, next) {
 
     const [
       totalUsers,
+      totalVolunteers,
+      totalOrganizations,
       activeVolunteers,
       pendingOrganizations,
       pendingActivities,
@@ -63,6 +65,8 @@ export async function getMetrics(req, res, next) {
       monthlyHours
     ] = await Promise.all([
       User.countDocuments(),
+      User.countDocuments({ role: "volunteer" }),
+      Organization.countDocuments(),
       VolunteerLog.distinct("volunteerId", { attendanceStatus: "Hadir" }),
       Organization.countDocuments({ verified: false, verificationStatus: { $ne: "rejected" } }),
       Activity.countDocuments({ verificationStatus: "pending" }),
@@ -96,6 +100,8 @@ export async function getMetrics(req, res, next) {
 
     return res.json({
       totalUsers,
+      totalVolunteers,
+      totalOrganizations,
       activeVolunteers: activeVolunteers.length,
       pendingVerifications: pendingOrganizations + pendingActivities,
       pendingOrganizations,
@@ -342,6 +348,44 @@ export async function getVolunteers(req, res, next) {
     const total = result?.metadata?.[0]?.total || 0;
     return res.json({
       volunteers,
+      pagination: { total, page, limit, pages: Math.ceil(total / limit) }
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+export async function getUsers(req, res, next) {
+  try {
+    const page = parsePage(req.query.page);
+    const limit = parseLimit(req.query.limit, 20);
+    if (!page || !limit) return invalidQuery(res);
+    const offset = (page - 1) * limit;
+    if (!Number.isSafeInteger(offset)) return invalidQuery(res);
+
+    const filter = { role: { $in: ["volunteer", "organization"] } };
+    if (req.query.role !== undefined) {
+      const role = String(req.query.role);
+      if (!["volunteer", "organization"].includes(role)) return invalidQuery(res);
+      filter.role = role;
+    }
+    if (req.query.search !== undefined) {
+      const search = String(req.query.search).trim().slice(0, 100);
+      if (search) {
+        const pattern = new RegExp(escapeRegex(search), "i");
+        filter.$or = [{ name: pattern }, { email: pattern }];
+      }
+    }
+
+    const [users, total] = await Promise.all([
+      User.find(filter).select("name email role createdAt organization")
+        .populate({ path: "organization", select: "name" })
+        .sort({ createdAt: -1, _id: 1 }).skip(offset).limit(limit).lean(),
+      User.countDocuments(filter)
+    ]);
+
+    return res.json({
+      users,
       pagination: { total, page, limit, pages: Math.ceil(total / limit) }
     });
   } catch (error) {

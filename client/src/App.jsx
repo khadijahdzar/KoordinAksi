@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Link, NavLink, Navigate, Outlet, Route, Routes, useLocation, useNavigate, useParams } from "react-router-dom";
-import { Instagram, Linkedin, Mail, MapPin, Phone, Youtube } from "lucide-react";
+import { Instagram, Linkedin, Mail, MapPin, Menu, Phone, X } from "lucide-react";
 import api, { getErrorMessage } from "./api";
 import { getDashboardPath, useAuth } from "@/AuthContext";
 import GoogleAuthButton from "./components/GoogleAuthButton";
@@ -15,6 +15,7 @@ import { AdminLayout } from "./AdminDashboard";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminActivityList from "./pages/admin/AdminActivityList";
 import AdminVolunteerDatabase from "./pages/admin/AdminVolunteerDatabase";
+import AdminUsers from "./pages/admin/AdminUsers";
 import AdminOrganizations from "./AdminOrganizations";
 import AdminSystem from "./AdminSystem";
 import VolunteerLayout from "./volunteer/VolunteerLayout";
@@ -40,19 +41,70 @@ const formatDate = (date) => new Intl.DateTimeFormat("id-ID", { dateStyle: "long
 function Header() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const homePath = user ? getDashboardPath(user.role) : "/";
+  const location = useLocation();
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [avatarError, setAvatarError] = useState(false);
+  const profileMenuRef = useRef(null);
+  const name = user?.name || "Pengguna";
+  const initials = name.trim().split(/\s+/).slice(0, 2).map((part) => part[0]).join("").toUpperCase();
+  const roleLabel = { volunteer: "Relawan", organization: "Organisasi", admin: "Admin" }[user?.role] || "Pengguna";
+
+  useEffect(() => {
+    setProfileMenuOpen(false);
+    setMobileMenuOpen(false);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    setAvatarError(false);
+  }, [user?.avatarUrl]);
+
+  useEffect(() => {
+    function handlePointerDown(event) {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target)) setProfileMenuOpen(false);
+    }
+    function handleKeyDown(event) {
+      if (event.key === "Escape") {
+        setProfileMenuOpen(false);
+        setMobileMenuOpen(false);
+      }
+    }
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
+
   return <header className="site-header">
     <div className="container nav-wrap">
-      <Link className="brand" to={homePath}><img className="brand-logo" src="/logokoordinaski.png" alt="" /> Koordin<span>Aksi</span></Link>
-      <nav>
-        <NavLink to="/jelajah">Jelajah</NavLink>
-        <NavLink to="/organisasi">Organisasi</NavLink>
-        <NavLink to="/kabar-aksi">Kabar Aksi</NavLink>
-        {user && <NavLink to={homePath}>Dashboard</NavLink>}
+      <Link className="brand" to="/"><img className="brand-logo" src="/logokoordinaski.png" alt="" /> Koordin<span>Aksi</span></Link>
+      <nav className={mobileMenuOpen ? "is-open" : ""} aria-label="Navigasi utama">
+        <NavLink to="/jelajah" onClick={() => setMobileMenuOpen(false)}>Jelajah</NavLink>
+        <NavLink to="/organisasi" onClick={() => setMobileMenuOpen(false)}>Organisasi</NavLink>
+        <NavLink to="/kabar-aksi" onClick={() => setMobileMenuOpen(false)}>Kabar Aksi</NavLink>
+        {user && <NavLink to={getDashboardPath(user.role)} onClick={() => setMobileMenuOpen(false)}>Ruang Saya</NavLink>}
       </nav>
-      <div className="nav-actions">
-        {user ? <>{user.role === "volunteer" && <Link className="registered-actions-link" to="/dashboard/relawan/history">Aksi Terdaftar</Link>}<Link className="header-avatar" to={homePath} aria-label={`Profil ${user.name}`}>{user.name.charAt(0).toUpperCase()}</Link><button className="button button-small button-ghost" onClick={() => { logout(); navigate("/"); }}>Keluar</button></>
+      <div className="nav-actions" ref={profileMenuRef}>
+        {user ? <div className="header-profile">
+          <button type="button" className="header-avatar" aria-label="Buka menu profil" aria-haspopup="menu"
+            aria-expanded={profileMenuOpen} onClick={() => { setProfileMenuOpen((open) => !open); setMobileMenuOpen(false); }}>
+            <span>{initials}</span>
+            {user.avatarUrl && !avatarError && <img src={user.avatarUrl} alt="" onError={() => setAvatarError(true)} />}
+          </button>
+          {profileMenuOpen && <div className="profile-dropdown" role="menu">
+            <div className="profile-dropdown-identity"><strong>{name}</strong><span>{roleLabel}</span></div>
+            <Link role="menuitem" to={getDashboardPath(user.role)}>Ruang Saya</Link>
+            {user.role === "volunteer" && <Link role="menuitem" to="/dashboard/relawan/profile">Profil Saya</Link>}
+            <button type="button" role="menuitem" onClick={() => { logout(); navigate("/"); }}>Keluar</button>
+          </div>}
+        </div>
           : <><Link className="login-link" to="/login">Masuk</Link><Link className="button button-small" to="/register">Mulai Bergabung</Link></>}
+        <button type="button" className="mobile-nav-toggle" aria-label={mobileMenuOpen ? "Tutup menu" : "Buka menu"}
+          aria-expanded={mobileMenuOpen} onClick={() => { setMobileMenuOpen((open) => !open); setProfileMenuOpen(false); }}>
+          {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+        </button>
       </div>
     </div>
   </header>;
@@ -117,24 +169,14 @@ function ProtectedRoute({ roles }) {
 }
 
 function ProtectedAdminRoute() {
-  const { user, loading, sessionError, refreshSession } = useAuth();
+  const { user, loading, sessionError } = useAuth();
   const location = useLocation();
   if (loading) {
     return <div className="container page-space" role="status"><p>Memeriksa akses admin...</p></div>;
   }
   if (sessionError && !user) return <SessionRecoveryNotice />;
   if (!user) return <Navigate to="/login" replace state={{ from: location }} />;
-  if (user.role !== "admin") {
-    return <main className="container page-space not-found" role="alert">
-      <span className="eyebrow">403 · Akses admin diperlukan</span>
-      <h1>Akun ini tidak memiliki akses <em>administrator.</em></h1>
-      <p>Masuk dengan akun admin yang telah diverifikasi server. Peran akun biasa tidak diubah saat membuka halaman ini.</p>
-      <button type="button" className="button button-ghost" onClick={async () => {
-        await refreshSession();
-      }}>Periksa ulang status akun</button>
-      <Link className="button" to={getDashboardPath(user.role)}>Kembali ke dashboard →</Link>
-    </main>;
-  }
+  if (user.role !== "admin") return <Navigate to="/" replace />;
   return <Outlet />;
 }
 
@@ -160,13 +202,13 @@ function AppRoutes() {
   }, [location.pathname, location.hash]);
 
   return <Routes>
-    <Route path="/register" element={<RegistrationRolePage />} />
-    <Route path="/register/volunteer" element={<VolunteerRegistration />} />
-    <Route path="/register/organization" element={<OrganizationVerification />} />
-    <Route path="/register/organisasi" element={<OrganizationVerification />} />
-    <Route path="/organisasi/pendaftaran" element={<OrganizationVerification />} />
     <Route element={<PublicLayout />}>
       <Route index element={<Home />} />
+      <Route path="/register" element={<RegistrationRolePage />} />
+      <Route path="/register/volunteer" element={<VolunteerRegistration />} />
+      <Route path="/register/organization" element={<OrganizationVerification />} />
+      <Route path="/register/organisasi" element={<OrganizationVerification />} />
+      <Route path="/organisasi/pendaftaran" element={<OrganizationVerification />} />
       <Route path="/organisasi" element={<OrganizationDirectory />} />
       <Route path="/organisasi/:id" element={<OrganizationProfile />} />
       <Route path="/jelajah" element={<ActivityList />} />
@@ -176,6 +218,14 @@ function AppRoutes() {
       <Route path="/kabar-aksi/:id" element={<KabarAksi />} />
       <Route path="/login" element={<AuthPage mode="login" />} />
       <Route path="/masuk" element={<AuthPage mode="login" />} />
+      <Route element={<ProtectedRoute roles={["volunteer"]} />}>
+        <Route path="/dashboard/relawan" element={<VolunteerLayout />}>
+          <Route index element={<VolunteerDashboard />} />
+          <Route path="history" element={<RegistrationHistory />} />
+          <Route path="profile" element={<VolunteerProfile />} />
+          <Route path="feed" element={<VolunteerFeed />} />
+        </Route>
+      </Route>
     </Route>
     <Route path="/dashboard" element={<DashboardRedirect />} />
     <Route element={<ProtectedRoute roles={["volunteer"]} />}>
@@ -183,14 +233,6 @@ function AppRoutes() {
     </Route>
     <Route element={<ProtectedRoute roles={["organization"]} />}>
       <Route path="/dashboard/organization" element={<Navigate to="/dashboard/organisasi" replace />} />
-    </Route>
-    <Route element={<ProtectedRoute roles={["volunteer"]} />}>
-      <Route path="/dashboard/relawan" element={<VolunteerLayout />}>
-        <Route index element={<VolunteerDashboard />} />
-        <Route path="history" element={<RegistrationHistory />} />
-        <Route path="profile" element={<VolunteerProfile />} />
-        <Route path="feed" element={<VolunteerFeed />} />
-      </Route>
     </Route>
     <Route element={<ProtectedRoute roles={["organization"]} />}>
       <Route path="/dashboard/organisasi" element={<OrganizationLayout />}>
@@ -205,6 +247,7 @@ function AppRoutes() {
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<AdminDashboard />} />
         <Route path="activities" element={<AdminActivityList />} />
+        <Route path="users" element={<AdminUsers />} />
         <Route path="volunteers" element={<AdminVolunteerDatabase />} />
         <Route path="organizations/pending" element={<AdminOrganizations />} />
         <Route path="system" element={<AdminSystem />} />
@@ -286,7 +329,7 @@ function RegistrationRolePage() {
     }
   ];
 
-  return <main className="registration-choice-page">
+  return <section className="registration-choice-page">
     <div className="registration-choice-backdrop" aria-hidden="true" />
     <section className="registration-choice-card" aria-labelledby="registration-choice-title">
       <div className="registration-choice-brand"><img src="/logokoordinaski.png" alt="Logo KoordinAksi" /><span>Koordin<span>Aksi</span></span></div>
@@ -314,7 +357,7 @@ function RegistrationRolePage() {
       </div>
       <p className="registration-choice-login">Sudah memiliki akun? <Link to="/login">Masuk Sekarang <span aria-hidden="true">→</span></Link></p>
     </section>
-  </main>;
+  </section>;
 }
 
 function VolunteerRegistration() {
@@ -448,7 +491,7 @@ function VolunteerRegistration() {
     }
   }
 
-  return <main className="volunteer-signup-page registration-split-page">
+  return <section className="volunteer-signup-page registration-split-page">
     <aside className="registration-split-visual">
       <div className="registration-split-copy">
         <span className="registration-split-kicker">KoordinAksi · Relawan</span>
@@ -504,7 +547,7 @@ function VolunteerRegistration() {
       <GoogleAuthButton onSuccess={handleGoogleRegister} onError={setError} />
       <p className="volunteer-signup-login">Sudah memiliki akun? <Link to="/login">Masuk Sekarang</Link></p>
     </section>
-  </main>;
+  </section>;
 }
 
 function OrganizationVerification() {
@@ -728,7 +771,7 @@ function OrganizationVerification() {
   }
 
   const steps = ["Identitas & Legalitas", "Penanggung Jawab (PIC)", "Berkas & Dokumen"];
-  return <main className="organization-verification-page registration-split-page">
+  return <section className="organization-verification-page registration-split-page">
     <aside className="registration-split-visual">
       <div className="registration-split-copy">
         <span className="registration-split-kicker">KoordinAksi · Organisasi</span>
@@ -824,7 +867,7 @@ function OrganizationVerification() {
       <div className="organization-google-divider"><span>atau daftar dengan Google</span></div>
       <GoogleAuthButton onSuccess={handleGoogleRegister} onError={setError} />
     </section>
-  </main>;
+  </section>;
 }
 
 function AuthPage({ mode }) {

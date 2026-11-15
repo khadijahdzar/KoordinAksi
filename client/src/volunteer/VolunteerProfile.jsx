@@ -1,13 +1,9 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Award, Calendar, CheckCircle, Clock, MapPin, Pencil, User, X } from "lucide-react";
+import { Award, Calendar, Clock, MapPin, Pencil, User, X } from "lucide-react";
 import { getErrorMessage } from "../api";
+import { useAuth } from "../AuthContext";
 import { getVolunteerActions, getVolunteerProfile, updateVolunteerProfile } from "../services/volunteerApi";
-
-const tabs = [
-  { label: "Aksi Saya", path: "/dashboard/relawan/profile", icon: Calendar },
-  { label: "Kabar Aksi", path: "/dashboard/relawan/feed", icon: CheckCircle }
-];
 
 function formatDate(value) {
   if (!value) return "Tanggal belum tersedia";
@@ -15,6 +11,7 @@ function formatDate(value) {
 }
 
 export default function VolunteerProfile() {
+  const { updateUser } = useAuth();
   const [profile, setProfile] = useState(null);
   const [actions, setActions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -53,6 +50,7 @@ export default function VolunteerProfile() {
     try {
       const { data } = await updateVolunteerProfile(form);
       setProfile((current) => ({ ...current, ...data.profile }));
+      updateUser(data.profile);
       setEditing(false);
       setNotice("Profil berhasil diperbarui.");
     } catch (requestError) {
@@ -68,24 +66,14 @@ export default function VolunteerProfile() {
     <button type="button" className="button button-small button-ghost" onClick={loadProfile}>Coba lagi</button>
   </section>;
 
-  const initials = profile.name?.trim().charAt(0).toUpperCase() || "R";
-  const actionCount = profile.stats?.totalActions || 0;
-  const volunteerLevel = actionCount >= 10 ? "Penggerak" : actionCount >= 3 ? "Aktif" : "Pemula";
-
   return <section className="volunteer-dashboard volunteer-profile">
-    <div className="volunteer-profile-cover"><span className="eyebrow">RUANG RELAWAN</span><div className="volunteer-cover-mark" aria-hidden="true">✳</div></div>
-    <header className="volunteer-profile-header">
-      <div className="volunteer-profile-avatar" aria-label={`Foto ${profile.name}`}>
-        {profile.avatarUrl ? <img src={profile.avatarUrl} alt="" /> : <span>{initials}</span>}
-      </div>
-      <div className="volunteer-profile-identity"><span className="eyebrow">Profil relawan</span><h1>{profile.name}</h1>
-        <p><User size={15} /> {profile.username ? `@${profile.username}` : profile.email}</p>
-      </div>
+    <header className="volunteer-profile-settings-heading">
+      <div><span className="eyebrow">PENGATURAN AKUN</span><h2>Profil relawan</h2>
+        <p><User size={15} /> {profile.username ? `@${profile.username}` : profile.email}</p></div>
       <button className="button button-small button-ghost volunteer-edit-button" onClick={() => { setEditing((current) => !current); setNotice(""); }}>
         {editing ? <X size={15} /> : <Pencil size={15} />}{editing ? "Tutup" : "Edit profil"}
       </button>
     </header>
-    {profile.bio && <p className="volunteer-profile-bio">{profile.bio}</p>}
     {notice && <div className="notice notice-success" role="status">{notice}</div>}
     {error && <div className="notice" role="alert">{error}</div>}
     {editing && <form className="volunteer-profile-edit" onSubmit={saveProfile}>
@@ -95,14 +83,8 @@ export default function VolunteerProfile() {
       <button className="button button-small" disabled={saving}>{saving ? "Menyimpan…" : "Simpan perubahan"}</button>
     </form>}
 
-    <div className="volunteer-profile-stats">
-      <div><span><Calendar size={16} /> Total aksi</span><strong>{profile.stats?.totalActions || 0}</strong></div>
-      <div><span><Clock size={16} /> Jam kontribusi</span><strong>{profile.stats?.totalHours || 0}<small> jam</small></strong></div>
-      <div><span><Award size={16} /> Level relawan</span><strong>{volunteerLevel}<small> · {profile.stats?.badgesCount || 0} lencana</small></strong></div>
-    </div>
-
-    <nav className="volunteer-profile-tabs" aria-label="Bagian profil relawan">
-      {tabs.map(({ label, path, icon: Icon }, index) => <Link className={selectedTab === "actions" && index === 0 ? "active" : ""} key={label} to={path}><Icon size={16} />{label}</Link>)}
+    <nav className="volunteer-profile-tabs" aria-label="Riwayat kontribusi">
+      <button type="button" className={selectedTab === "actions" ? "active" : ""} onClick={() => setSelectedTab("actions")}><Calendar size={16} />Aksi selesai</button>
       <button type="button" className={selectedTab === "certificates" ? "active" : ""} onClick={() => setSelectedTab("certificates")}><Award size={16} />Sertifikat</button>
     </nav>
 

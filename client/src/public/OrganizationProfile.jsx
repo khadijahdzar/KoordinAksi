@@ -1,24 +1,21 @@
 import React, { useEffect, useState } from "react";
-import { ArrowLeft, BadgeCheck, CalendarDays, MapPin, UsersRound } from "lucide-react";
+import { ArrowLeft, BadgeCheck, CalendarDays, Check, Heart, MapPin, UsersRound } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import api, { getErrorMessage } from "../api";
-import { getMockOrganizationById, getOrganizationActivitiesUrl } from "./organizationMockData";
+import { getOrganizationActivitiesUrl } from "./organizationUtils";
 
 export default function OrganizationProfile() {
   const { id } = useParams();
   const [organization, setOrganization] = useState(null);
   const [error, setError] = useState("");
+  const [followed, setFollowed] = useState(() =>
+    (localStorage.getItem("koordinaksi_followed_organizations") || "").split(",").includes(id)
+  );
 
   useEffect(() => {
-    const mockOrganization = getMockOrganizationById(id);
-    if (mockOrganization) {
-      setOrganization(mockOrganization);
-      setError("");
-      return undefined;
-    }
-
     const controller = new AbortController();
     setOrganization(null);
+    setError("");
     api.get(`/organizations/${id}`, { signal: controller.signal })
       .then(({ data }) => setOrganization(data.organization))
       .catch((requestError) => {
@@ -27,15 +24,28 @@ export default function OrganizationProfile() {
     return () => controller.abort();
   }, [id]);
 
+  useEffect(() => {
+    setFollowed((localStorage.getItem("koordinaksi_followed_organizations") || "").split(",").includes(id));
+  }, [id]);
+
+  function toggleFollow() {
+    setFollowed((current) => {
+      const followedIds = (localStorage.getItem("koordinaksi_followed_organizations") || "").split(",").filter(Boolean);
+      const next = current
+        ? followedIds.filter((followedId) => followedId !== id)
+        : [...new Set([...followedIds, id])];
+      localStorage.setItem("koordinaksi_followed_organizations", next.join(","));
+      return !current;
+    });
+  }
+
   if (error) return <main className="container organization-profile-state" role="alert">
     <p>{error}</p><Link className="button" to="/organisasi">Kembali ke organisasi</Link>
   </main>;
   if (!organization) return <main className="container organization-profile-state" role="status">Memuat profil organisasi…</main>;
 
-  const isSimulated = Boolean(organization.simulated);
   const banner = organization.bannerUrl || organization.logoUrl || "/baktisosial.jpeg";
   const gallery = organization.gallery || [];
-  const volunteers = organization.volunteers || [];
 
   return <main className="organization-profile-page">
     <div className="organization-profile-banner" style={{ backgroundImage: `linear-gradient(90deg,#102b1c88,#102b1c22),url("${banner}")` }} />
@@ -47,13 +57,19 @@ export default function OrganizationProfile() {
           <div className="organization-profile-title">
             <h1>{organization.name}</h1>
             {organization.verified && <span className="organization-profile-verified"><BadgeCheck size={16} /> Terverifikasi</span>}
-            {isSimulated && <span className="organization-profile-simulated">Profil simulasi</span>}
           </div>
           <p>{organization.focusCategory || "Organisasi sosial"} <span aria-hidden="true">·</span> <MapPin size={14} /> {organization.address || "Indonesia"}</p>
         </div>
-        <Link className="button organization-profile-action" to={getOrganizationActivitiesUrl(organization)}>Lihat kegiatan</Link>
+        <div className="organization-profile-actions">
+          <button type="button" className={`organization-follow-button${followed ? " is-followed" : ""}`}
+            aria-pressed={followed} onClick={toggleFollow}>
+            {followed ? <Check size={14} /> : <Heart size={14} />}{followed ? "Diikuti" : "Ikuti"}
+          </button>
+          <Link className="organization-active-actions-button" to={getOrganizationActivitiesUrl(organization)}>
+            Lihat aksi <span className="organization-profile-action-count">({Number(organization.stats?.activeActionsCount || 0)})</span>
+          </Link>
+        </div>
       </header>
-      {isSimulated && <p className="organization-profile-demo-note" role="note">Profil dan angka berikut merupakan data simulasi, bukan informasi organisasi terverifikasi.</p>}
 
       <div className="organization-profile-layout">
         <div className="organization-profile-content">
@@ -80,9 +96,7 @@ export default function OrganizationProfile() {
         <aside className="organization-profile-panel organization-profile-volunteers">
           <span className="eyebrow">Komunitas</span>
           <h2>Relawan bergabung</h2>
-          {isSimulated
-            ? <ul>{volunteers.map((volunteer) => <li key={volunteer}><span>{volunteer.slice(0, 1)}</span>{volunteer}</li>)}</ul>
-            : <p className="organization-profile-muted">Terdapat {Number(organization.stats?.totalVolunteers || 0).toLocaleString("id-ID")} relawan terdaftar. Daftar nama tidak ditampilkan untuk menjaga privasi.</p>}
+          <p className="organization-profile-muted">Terdapat {Number(organization.stats?.totalVolunteers || 0).toLocaleString("id-ID")} relawan terdaftar. Daftar nama tidak ditampilkan untuk menjaga privasi.</p>
         </aside>
       </div>
     </section>

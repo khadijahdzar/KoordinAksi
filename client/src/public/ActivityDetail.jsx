@@ -13,7 +13,6 @@ import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../AuthContext";
 import api, { getErrorMessage } from "../api";
 import { getActivityImage } from "./activityImages";
-import { getMockActivityById } from "./activityMockData";
 
 const facilities = ["Konsumsi", "E-sertifikat", "Atribut kegiatan", "Transportasi lokal"];
 const donationPackages = [
@@ -52,14 +51,6 @@ export default function ActivityDetail() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    const mockActivity = getMockActivityById(id);
-    if (mockActivity) {
-      setActivity(mockActivity);
-      setError("");
-      setLoading(false);
-      return undefined;
-    }
-
     const controller = new AbortController();
     setActivity(null);
     setLoading(true);
@@ -81,10 +72,6 @@ export default function ActivityDetail() {
   async function joinActivity(event) {
     event.preventDefault();
     setMessage("");
-    if (activity?._id.startsWith("demo-")) {
-      setMessage("Kegiatan ini merupakan data demonstrasi; pendaftaran belum tersedia.");
-      return;
-    }
     if (path === "donation") {
       setMessage("Pembayaran belum tersedia. Silakan pilih Jalur Relawan Murni untuk mendaftar.");
       return;
@@ -118,7 +105,6 @@ export default function ActivityDetail() {
     <p>Kegiatan tidak ditemukan.</p><Link className="button" to="/jelajah">Kembali ke Jelajah</Link>
   </div>;
 
-  const isDemo = String(activity._id).startsWith("demo-");
   const isVerified = activity.organization
     ? Boolean(activity.organization.verified)
     : Boolean(activity.isVerified);
@@ -129,7 +115,6 @@ export default function ActivityDetail() {
   return <section className="activity-detail-page">
     <div className="container activity-detail-container">
       <Link className="activity-detail-back" to="/jelajah"><ArrowLeft size={16} /> Kembali ke Jelajah</Link>
-      {isDemo && <Notice message="Ini adalah data demonstrasi. Informasi dan pendaftaran belum dikonfirmasi oleh penyelenggara." />}
 
       <section className="activity-detail-banner">
         <img src={getActivityImage(activity)} alt={`Dokumentasi kegiatan ${activity.title}`} />
@@ -151,9 +136,6 @@ export default function ActivityDetail() {
             <span className="eyebrow">Tentang kegiatan</span>
             <h2>Tentang Aksi</h2>
             <p className="activity-detail-description">{activity.description || "Deskripsi kegiatan akan diperbarui oleh penyelenggara."}</p>
-            {activity._id === "demo-activity-green" && <p className="activity-detail-description">
-              Bersama warga dan relawan, peserta akan membersihkan area sungai, menanam bibit, serta mempelajari cara merawat kawasan hijau. Aksi ini dirancang untuk memberi dampak berkelanjutan dan terbuka bagi relawan pemula.
-            </p>}
           </section>
 
           <section className="activity-detail-panel">
@@ -173,7 +155,7 @@ export default function ActivityDetail() {
             <ul className="activity-detail-facilities">
               {(activity.facilities?.length ? activity.facilities : facilities).map((facility) => <li key={facility}><Check size={16} />{facility}</li>)}
             </ul>
-            {!activity.facilities?.length && !isDemo && <p className="activity-detail-facility-note">Rincian fasilitas dikonfirmasi oleh penyelenggara.</p>}
+            {!activity.facilities?.length && <p className="activity-detail-facility-note">Rincian fasilitas dikonfirmasi oleh penyelenggara.</p>}
           </section>
           <Link className="activity-detail-bottom-back" to="/jelajah"><ArrowLeft size={15} /> Kembali ke Jelajah</Link>
         </div>
@@ -183,7 +165,7 @@ export default function ActivityDetail() {
           <h2>Pilih Jalur Keikutsertaan</h2>
           <p className="activity-join-intro">Pilih cara berkontribusi yang paling sesuai untukmu.</p>
           {error && <Notice message={error} />}
-          {message && <Notice message={message} success={!isDemo && path === "volunteer" && message.startsWith("Pendaftaran berhasil")} />}
+          {message && <Notice message={message} success={path === "volunteer" && message.startsWith("Pendaftaran berhasil")} />}
 
           <form onSubmit={joinActivity}>
             <label className={`activity-path-option${path === "volunteer" ? " is-selected" : ""}`}>
@@ -206,12 +188,12 @@ export default function ActivityDetail() {
               </label>)}
             </div>}
             <div className="activity-join-assurance"><ShieldCheck size={16} /><span>Informasi kegiatan dan penyelenggara ditampilkan secara transparan.</span></div>
-            {path === "volunteer" && user?.role === "volunteer" && !isDemo && <label className="activity-join-note">
+            {path === "volunteer" && user?.role === "volunteer" && <label className="activity-join-note">
               Pesan untuk penyelenggara (opsional)
               <textarea value={note} onChange={(event) => setNote(event.target.value)} rows="3" placeholder="Ceritakan motivasimu" />
             </label>}
             <button className="activity-join-submit" type="submit" disabled={submitting}>
-              {submitting ? "Mengirim pendaftaran…" : path === "donation" ? "Lanjut ke Pembayaran" : isDemo ? "Ikut Beraksi Sekarang" : "Ikut Beraksi Sekarang"}
+              {submitting ? "Mengirim pendaftaran…" : path === "donation" ? "Lanjut ke Pembayaran" : "Ikut Beraksi Sekarang"}
             </button>
             {path === "donation" && <small className="activity-payment-note">Pembayaran belum terhubung; belum ada transaksi yang akan diproses.</small>}
           </form>

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Calendar, CheckCircle, Heart, ImagePlus, MessageCircle, Send, User } from "lucide-react";
+import { Heart, ImagePlus, MessageCircle, Send, User } from "lucide-react";
 import { getErrorMessage } from "../api";
 import { createVolunteerPost, getVolunteerFeed, getVolunteerProfile } from "../services/volunteerApi";
 
@@ -55,7 +55,6 @@ export default function VolunteerFeed() {
 
   return <section className="volunteer-dashboard volunteer-feed-page">
     <header className="volunteer-feed-heading"><div><span className="eyebrow">KOMUNITAS RELAWAN</span><h1>Kabar Aksi</h1><p>Cerita kecil dari setiap langkah baik yang dilakukan bersama.</p></div><Link className="button button-small" to="/dashboard/relawan/profile">Lihat profil <span>→</span></Link></header>
-    <nav className="volunteer-profile-tabs" aria-label="Bagian relawan"><Link to="/dashboard/relawan/profile"><Calendar size={16} />Aksi Saya</Link><Link className="active" to="/dashboard/relawan/feed"><CheckCircle size={16} />Kabar Aksi</Link></nav>
     {error && <div className="notice" role="alert">{error}</div>}
     <form className="volunteer-post-composer" onSubmit={submitPost}>
       <div className="volunteer-post-compose-top"><div className="volunteer-feed-avatar">{profile?.avatarUrl ? <img src={profile.avatarUrl} alt="" /> : getInitials(profile?.name)}</div>

@@ -4,6 +4,7 @@ import {
   getAuditLogs,
   getMetrics,
   getStats,
+  getUsers,
   getVerifications,
   getVolunteers,
   moderateEntity
@@ -15,6 +16,7 @@ const router = Router();
 router.use(verifyAdminToken);
 router.get("/stats", getStats);
 router.get("/metrics", getMetrics);
+router.get("/users", getUsers);
 router.get("/verifications", getVerifications);
 router.get("/activities", getActivities);
 router.get("/volunteers-database", getVolunteers);

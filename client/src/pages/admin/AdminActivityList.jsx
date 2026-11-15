@@ -95,7 +95,11 @@ export default function AdminActivityList() {
               const isPending = activity.verificationStatus === "pending";
               const canModerate = activity.status === "published" || isPending;
               return <tr key={activity._id}>
-                <td data-label="Kegiatan"><strong>{activity.title}</strong><small>{activity.category} · {activity.location}</small></td>
+                <td data-label="Kegiatan"><strong>{activity.title}</strong><small>{activity.category} · {activity.location}</small>
+                  <details className="admin-activity-details"><summary>Tinjau detail</summary>
+                    <p>{activity.description || "Deskripsi kegiatan tidak tersedia."}</p>
+                  </details>
+                </td>
                 <td data-label="Organisasi">{activity.organization?.name || "Organisasi tidak tersedia"}</td>
                 <td data-label="Jadwal">{formatDate(activity.date)}</td>
                 <td data-label="Status"><span className={`admin-status-pill is-${activity.verificationStatus || activity.status}`}>
@@ -106,7 +110,7 @@ export default function AdminActivityList() {
                     onClick={() => setSelected({ ...activity, moderationDecision: "approved" })}><Check size={14} /> Setujui</button>}
                   {canModerate && <button type="button" className="button button-small admin-takedown-button" disabled={Boolean(workingId)}
                     onClick={() => setSelected({ ...activity, moderationDecision: "rejected" })}>
-                    <AlertCircle size={14} /> {isPending ? "Tolak" : "Turunkan"}
+                    <AlertCircle size={14} /> {isPending ? "Tolak" : "Nonaktifkan"}
                   </button>}
                 </div></td>
               </tr>;
@@ -125,14 +129,14 @@ export default function AdminActivityList() {
     }}>
       <section className="admin-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="activity-confirm-title">
         <span className="eyebrow">Konfirmasi tindakan</span>
-        <h2 id="activity-confirm-title">{selected.moderationDecision === "approved" ? "Setujui kegiatan?" : "Turunkan kegiatan?"}</h2>
+        <h2 id="activity-confirm-title">{selected.moderationDecision === "approved" ? "Setujui kegiatan?" : "Nonaktifkan kegiatan?"}</h2>
         <p><strong>{selected.title}</strong> {selected.moderationDecision === "approved"
           ? "akan disetujui untuk ditampilkan sesuai status publikasinya."
-          : "akan dihentikan dan tidak lagi ditampilkan kepada relawan."}</p>
+          : "akan ditolak dan tidak lagi ditampilkan kepada relawan."}</p>
         <div><button type="button" className="button button-ghost" disabled={Boolean(workingId)} onClick={() => setSelected(null)}>Kembali</button>
           <button type="button" className={`button ${selected.moderationDecision === "rejected" ? "admin-danger-button" : ""}`}
             disabled={Boolean(workingId)} onClick={() => moderate(selected.moderationDecision || "rejected")}>
-            {workingId ? "Memproses…" : selected.moderationDecision === "approved" ? "Ya, setujui" : "Ya, turunkan"}
+            {workingId ? "Memproses…" : selected.moderationDecision === "approved" ? "Ya, setujui" : "Ya, nonaktifkan"}
           </button></div>
       </section>
     </div>}

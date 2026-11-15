@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
-import { ClipboardCheck, LayoutDashboard, ShieldCheck, Users } from "lucide-react";
+import { ClipboardCheck, LayoutDashboard, ShieldCheck, Users, UserRound } from "lucide-react";
 import { useAuth } from "./AuthContext";
 
 export function AdminLayout() {
@@ -20,6 +20,7 @@ export function AdminLayout() {
         <NavLink to="/admin/dashboard"><span aria-hidden="true"><LayoutDashboard size={17} /></span> Ringkasan</NavLink>
         <NavLink to="/admin/organizations/pending"><span aria-hidden="true"><ShieldCheck size={17} /></span> Verifikasi organisasi</NavLink>
         <NavLink to="/admin/activities"><span aria-hidden="true"><ClipboardCheck size={17} /></span> Daftar kegiatan</NavLink>
+        <NavLink to="/admin/users"><span aria-hidden="true"><UserRound size={17} /></span> Pengguna</NavLink>
         <NavLink to="/admin/volunteers"><span aria-hidden="true"><Users size={17} /></span> Database relawan</NavLink>
         <NavLink to="/admin/system"><span aria-hidden="true">⚙</span> Manajemen sistem</NavLink>
       </nav>

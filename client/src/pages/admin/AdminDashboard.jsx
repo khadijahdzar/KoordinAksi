@@ -6,9 +6,9 @@ import HeroSection from "../../components/HeroSection";
 import AdminToast from "../../admin/AdminToast";
 
 const metricsConfig = [
-  { key: "totalUsers", label: "Total pengguna", detail: "Seluruh akun platform", Icon: Users },
-  { key: "activeVolunteers", label: "Relawan aktif", detail: "Pernah mencatat kehadiran", Icon: ShieldCheck },
-  { key: "totalImpactHours", label: "Jam dampak", detail: "Jam kontribusi terverifikasi", Icon: TrendingUp },
+  { key: "totalVolunteers", label: "Total relawan", detail: "Akun relawan terdaftar", Icon: Users },
+  { key: "totalOrganizations", label: "Total organisasi", detail: "Organisasi terdaftar", Icon: ShieldCheck },
+  { key: "activeActivities", label: "Kegiatan aktif", detail: "Kegiatan dipublikasikan", Icon: TrendingUp },
   { key: "pendingVerifications", label: "Menunggu verifikasi", detail: "Organisasi dan kegiatan", Icon: AlertCircle }
 ];
 

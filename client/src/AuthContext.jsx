@@ -63,6 +63,9 @@ export function AuthProvider({ children }) {
     loading,
     sessionError,
     refreshSession,
+    updateUser(updates) {
+      setUser((current) => current ? { ...current, ...updates } : current);
+    },
     async login(credentials) {
       const { data } = await api.post("/auth/login", credentials);
       refreshRequestId.current += 1;
