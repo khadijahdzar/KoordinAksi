@@ -7,6 +7,7 @@
     "dev": "nodemon src/index.js",
     "start": "node src/index.js",
     "test:integration": "node --env-file=.env.test --test src/tests/activity-workflows.test.js",
+    "seed:directory": "node src/scripts/seedPublicDirectory.js",
     "migrate:registration-counts": "node --env-file=.env src/scripts/backfillRegistrationCounts.js",
     "verify:replica-set": "node --env-file=.env src/scripts/verifyReplicaSet.js"
   },

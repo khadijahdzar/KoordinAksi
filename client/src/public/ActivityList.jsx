@@ -109,6 +109,8 @@ export default function ActivityList() {
   const [activities, setActivities] = useState([]);
   const [organizations, setOrganizations] = useState([]);
   const [leaderboard, setLeaderboard] = useState([]);
+  const [volunteerLeaderboard, setVolunteerLeaderboard] = useState([]);
+  const [volunteerLeaderboardError, setVolunteerLeaderboardError] = useState("");
   const [followedOrganizations, setFollowedOrganizations] = useState(() =>
     (localStorage.getItem("koordinaksi_followed_organizations") || "").split(",").filter(Boolean)
   );
@@ -177,6 +179,24 @@ export default function ActivityList() {
       }
     }
     loadOrganizations();
+    return () => controller.abort();
+  }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    async function loadVolunteerLeaderboard() {
+      try {
+        const { data } = await api.get("/leaderboards/volunteers", { signal: controller.signal });
+        setVolunteerLeaderboard(data.volunteers || []);
+        setVolunteerLeaderboardError("");
+      } catch (requestError) {
+        if (requestError.code !== "ERR_CANCELED") {
+          setVolunteerLeaderboard([]);
+          setVolunteerLeaderboardError(getErrorMessage(requestError));
+        }
+      }
+    }
+    loadVolunteerLeaderboard();
     return () => controller.abort();
   }, []);
 
@@ -329,7 +349,14 @@ export default function ActivityList() {
         <article className="explore-bottom-panel">
           <span className="eyebrow">Bulan ini</span>
           <h2>Relawan Teraktif</h2>
-          <p className="explore-bottom-muted">Peringkat relawan belum tersedia.</p>
+          {volunteerLeaderboardError && <p className="explore-bottom-error" role="alert">{volunteerLeaderboardError}</p>}
+          {volunteerLeaderboard.length
+            ? <ol className="explore-volunteer-list">{volunteerLeaderboard.slice(0, 3).map((volunteer, index) => <li key={volunteer._id}>
+              <span className="explore-volunteer-rank">{index + 1}</span>
+              <span className="explore-volunteer-name">{volunteer.name}<small>{volunteer.actions} aksi · {volunteer.hours} jam kontribusi</small></span>
+              <strong>{volunteer.hours} jam</strong>
+            </li>)}</ol>
+            : !volunteerLeaderboardError && <p className="explore-bottom-muted">Belum ada aktivitas tercatat bulan ini.</p>}
         </article>
         <article className="explore-bottom-cta">
           <span>Untuk organisasi sosial</span>

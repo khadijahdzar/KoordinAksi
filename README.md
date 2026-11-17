@@ -55,6 +55,14 @@ npm run build
 npm start
 ```
 
+Untuk mengisi Jelajah dan direktori Organisasi pada database development lokal, jalankan seeder idempoten berikut dari root. Seeder hanya menerima MongoDB lokal dan menolak `NODE_ENV=production`:
+
+```powershell
+npm run seed:directory --workspace=server
+```
+
+Seeder menambahkan organisasi, kegiatan mendatang, relawan, serta catatan kegiatan bulan ini untuk peringkat. Data terkait diperbarui berdasarkan identitas seed; data lain tidak dihapus.
+
 Untuk menjalankan frontend terpisah, opsional buat `client/.env` dan isi `VITE_API_URL=http://localhost:5000/api`.
 
 ### Transaksi dan kapasitas pendaftaran
@@ -147,6 +155,7 @@ Semua endpoint berawalan `/api`.
 | `GET` | `/registrations/activity/:activityId` | Pemilik/admin | Daftar peserta kegiatan |
 | `PATCH` | `/registrations/:id/status` | Pemilik/admin | Ubah status pendaftaran |
 | `GET` | `/organizations` | Publik | Direktori organisasi terverifikasi; query `search`, `focus`, `region`, `scale`, `legalRegistered`, `page`, `limit` |
+| `GET` | `/leaderboards/volunteers` | Publik | Peringkat relawan bulan ini berdasarkan jam hadir tercatat |
 | `GET` | `/organizations/pending` | Admin | Organisasi menunggu verifikasi |
 | `PATCH` | `/organizations/:id/verify` | Admin | Verifikasi (`{ "verified": true }`) |
 | `GET` | `/admin/audit-logs` | Admin | Audit log verifikasi organisasi; mendukung `page` dan `limit` |

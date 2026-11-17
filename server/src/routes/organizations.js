@@ -134,7 +134,7 @@ router.get("/", async (req, res, next) => {
     }
     const [organizations, total, verifiedOrganizations, legalRecords, completedActions, monthlyActivityCounts] = await Promise.all([
       Organization.find(filter)
-        .select("name description focusCategory logoUrl address verified createdAt stats")
+        .select("name description focusCategory logoUrl bannerUrl address verified createdAt stats")
         .sort({ "stats.impactScore": -1, name: 1 })
         .skip((safePage - 1) * safeLimit)
         .limit(safeLimit)
@@ -262,7 +262,7 @@ router.get("/:id", async (req, res, next) => {
       return res.status(400).json({ message: "ID organisasi tidak valid." });
     }
     const organization = await Organization.findOne({ _id: req.params.id, verified: true })
-      .select("name description focusCategory logoUrl address verified createdAt stats")
+      .select("name description focusCategory logoUrl bannerUrl address verified createdAt stats")
       .lean();
     if (!organization) return res.status(404).json({ message: "Organisasi tidak ditemukan." });
 

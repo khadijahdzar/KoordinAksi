@@ -34,15 +34,18 @@ router.get("/", async (req, res, next) => {
       verificationStatus: { $nin: ["pending", "rejected"] },
       organization: { $in: verifiedOrganizationIds }
     };
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+    filter.date = { $gte: today };
     if (category) {
       const categoryAliases = {
         "Semua Kategori": [],
-        "Lingkungan Hidup": ["Penghijauan"],
-        "Pendidikan & Anak": ["Pendidikan"],
-        "Kesehatan & Lansia": ["Kesehatan", "Donor Darah"],
-        "Semua Bencana": ["Bantuan Bencana"],
-        "Pemberdayaan UMKM": ["Lainnya"],
-        "Kebudayaan": ["Bakti Sosial"]
+        "Lingkungan Hidup": ["Lingkungan Hidup", "Penghijauan"],
+        "Pendidikan & Anak": ["Pendidikan & Anak", "Pendidikan"],
+        "Kesehatan & Lansia": ["Kesehatan & Lansia", "Kesehatan", "Donor Darah"],
+        "Semua Bencana": ["Semua Bencana", "Bantuan Bencana"],
+        "Pemberdayaan UMKM": ["Pemberdayaan UMKM", "Lainnya"],
+        "Kebudayaan": ["Kebudayaan", "Bakti Sosial"]
       };
       const requestedCategories = String(category).split(",").flatMap((value) =>
         categoryAliases[value] || (ACTIVITY_CATEGORIES.includes(value) ? [value] : [])

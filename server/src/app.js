@@ -8,6 +8,7 @@ import registrationRoutes from "./routes/registrations.js";
 import organizationRoutes from "./routes/organizations.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import volunteerRoutes from "./routes/volunteerRoutes.js";
+import leaderboardRoutes from "./routes/leaderboards.js";
 import orgRoutes from "./routes/orgRoutes.js";
 import { errorHandler, notFound } from "./middleware/errors.js";
 
@@ -22,6 +23,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/activities", activityRoutes);
 app.use("/api/registrations", registrationRoutes);
 app.use("/api/organizations", organizationRoutes);
+app.use("/api/leaderboards", leaderboardRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/v1/admin", adminRoutes);
 app.use("/api/v1/volunteers", volunteerRoutes);

@@ -33,7 +33,7 @@ export async function listOrganizations(req, res, next) {
     const limit = Math.min(Math.max(Number(req.query.limit) || 24, 1), 100);
     const page = Math.max(Number(req.query.page) || 1, 1);
     const [organizations, total] = await Promise.all([
-      Organization.find(filter).select("name description focusCategory logoUrl address verified createdAt")
+      Organization.find(filter).select("name description focusCategory logoUrl bannerUrl address verified createdAt")
         .sort({ name: 1 }).skip((page - 1) * limit).limit(limit),
       Organization.countDocuments(filter)
     ]);

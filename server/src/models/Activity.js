@@ -7,7 +7,13 @@ export const ACTIVITY_CATEGORIES = [
   "Penghijauan",
   "Pendidikan",
   "Kesehatan",
-  "Lainnya"
+  "Lainnya",
+  "Lingkungan Hidup",
+  "Pendidikan & Anak",
+  "Kesehatan & Lansia",
+  "Semua Bencana",
+  "Pemberdayaan UMKM",
+  "Kebudayaan"
 ];
 
 const activitySchema = new mongoose.Schema({

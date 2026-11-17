@@ -5,6 +5,7 @@ const organizationSchema = new mongoose.Schema({
   description: { type: String, trim: true, maxlength: 2000 },
   focusCategory: { type: String, trim: true, maxlength: 100 },
   logoUrl: { type: String, trim: true, maxlength: 500 },
+  bannerUrl: { type: String, trim: true, maxlength: 500 },
   legalNumber: { type: String, trim: true, maxlength: 100 },
   email: { type: String, trim: true, lowercase: true },
   phone: { type: String, trim: true },

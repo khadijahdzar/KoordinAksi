@@ -52,6 +52,7 @@ export default function KabarAksi() {
         eyebrow={article.kategori}
         title={article.judul}
         subtitle={article.ringkasan}
+        style={{ backgroundImage: `linear-gradient(90deg,rgba(2,44,34,.6),rgba(6,78,59,.5) 52%,rgba(20,83,45,.5)),url("${article.gambar}")` }}
       />
       <div className="container kabar-detail-content">
         <Link className="kabar-back-link" to="/kabar-aksi"><ArrowLeft size={16} /> Kembali ke Kabar Aksi</Link>

@@ -48,7 +48,7 @@ function OrganizationCard({ organization, followed, onToggleFollow }) {
     <Link className="organization-card-overlay" to={`/organisasi/${organization._id}`}
       aria-label={`Buka profil ${organization.name}`} />
     <div className="organization-directory-image">
-      <img src={organization.logoUrl || "/3fingers.jpg"} alt="" loading="lazy" />
+      <img src={organization.bannerUrl || organization.logoUrl || "/3fingers.jpg"} alt="" loading="lazy" />
       <span className="organization-focus-badge">{organization.focusCategory || "Sosial & Kemanusiaan"}</span>
       {organization.verified && <span className="organization-verified-badge"><BadgeCheck size={13} />Terverifikasi</span>}
       <span className="organization-directory-mark">{organization.name?.slice(0, 1) || "O"}</span>

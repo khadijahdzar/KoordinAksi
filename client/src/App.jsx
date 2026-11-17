@@ -138,7 +138,7 @@ function Footer() {
       <section className="footer-column footer-social">
         <h2>Ikuti Kami</h2>
         <a href="https://instagram.com/okeyydijah" target="_blank" rel="noreferrer"><Instagram size={17} /> @Okeyydijah</a>
-        <a href="https://www.linkedin.com/in/khadijahdzar" target="_blank" rel="noreferrer"><Linkedin size={17} /> Khadijah Dzar</a>
+        <a href="https://www.linkedin.com/in/khadijah-dzar-990355405" target="_blank" rel="noreferrer"><Linkedin size={17} /> Khadijah Dzar</a>
         </section>
     </div>
     <div className="container footer-bottom"><span>© {new Date().getFullYear()} KoordinAksi Indonesia</span><span>Ruang bertemu untuk setiap niat baik.</span></div>

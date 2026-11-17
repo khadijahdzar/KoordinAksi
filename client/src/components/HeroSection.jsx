@@ -1,7 +1,7 @@
 import React from "react";
 
-export default function HeroSection({ title, subtitle, eyebrow, children, className = "" }) {
-  return <section className={`hero-section${className ? ` ${className}` : ""}`}>
+export default function HeroSection({ title, subtitle, eyebrow, children, className = "", style }) {
+  return <section className={`hero-section${className ? ` ${className}` : ""}`} style={style}>
     <div className="hero-section-content">
       {eyebrow && <span className="hero-section-eyebrow">{eyebrow}</span>}
       <h1 className="hero-section-title">{title}</h1>
