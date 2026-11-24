@@ -102,7 +102,13 @@ export const activityUpdateSchema = Joi.object({
 
 export const registrationCreateSchema = Joi.object({
   activityId: Joi.string().hex().length(24).required(),
-  note: Joi.string().trim().max(1000).allow("")
+  note: Joi.string().trim().max(1000).allow(""),
+  participationPath: Joi.string().valid("volunteer", "donation").default("volunteer"),
+  donationPackage: Joi.object({
+    id: Joi.string().trim().max(50).allow(""),
+    label: Joi.string().trim().max(100).allow(""),
+    amount: Joi.number().integer().min(0).max(100000000)
+  }).optional()
 }).unknown(false);
 
 export const registrationStatusSchema = Joi.object({
