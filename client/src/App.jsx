@@ -41,6 +41,75 @@ const formatDate = (date) => new Intl.DateTimeFormat("id-ID", { dateStyle: "long
 
 function Header() {
   return <SiteHeader />;
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [avatarError, setAvatarError] = useState(false);
+  const profileMenuRef = useRef(null);
+  const name = user?.name || "Pengguna";
+  const initials = name.trim().split(/\s+/).slice(0, 2).map((part) => part[0]).join("").toUpperCase();
+  const roleLabel = { volunteer: "Relawan", organization: "Organisasi", admin: "Admin" }[user?.role] || "Pengguna";
+
+  useEffect(() => {
+    setProfileMenuOpen(false);
+    setMobileMenuOpen(false);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    setAvatarError(false);
+  }, [user?.avatarUrl]);
+
+  useEffect(() => {
+    function handlePointerDown(event) {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target)) setProfileMenuOpen(false);
+    }
+    function handleKeyDown(event) {
+      if (event.key === "Escape") {
+        setProfileMenuOpen(false);
+        setMobileMenuOpen(false);
+      }
+    }
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
+
+  return <header className="site-header">
+    <div className="container nav-wrap">
+      <Link className="brand" to="/"><img className="brand-logo" src="/logokoordinaski.png" alt="" /> Koordin<span>Aksi</span></Link>
+      <nav className={mobileMenuOpen ? "is-open" : ""} aria-label="Navigasi utama">
+        <NavLink to="/jelajah" onClick={() => setMobileMenuOpen(false)}>Jelajah</NavLink>
+        <NavLink to="/organisasi" onClick={() => setMobileMenuOpen(false)}>Organisasi</NavLink>
+        <NavLink to="/kabar-aksi" onClick={() => setMobileMenuOpen(false)}>Kabar Aksi</NavLink>
+        {user && <NavLink to={getDashboardPath(user.role)} onClick={() => setMobileMenuOpen(false)}>Ruang Saya</NavLink>}
+      </nav>
+      <div className="nav-actions" ref={profileMenuRef}>
+        {user ? <div className="header-profile">
+          <button type="button" className="header-avatar" aria-label="Buka menu profil" aria-haspopup="menu"
+            aria-expanded={profileMenuOpen} onClick={() => { setProfileMenuOpen((open) => !open); setMobileMenuOpen(false); }}>
+            <span>{initials}</span>
+            {user.avatarUrl && !avatarError && <img src={user.avatarUrl} alt="" onError={() => setAvatarError(true)} />}
+          </button>
+          {profileMenuOpen && <div className="profile-dropdown" role="menu">
+            <div className="profile-dropdown-identity"><strong>{name}</strong><span>{roleLabel}</span></div>
+            <Link role="menuitem" to={getDashboardPath(user.role)}>Ruang Saya</Link>
+            {user.role === "volunteer" && <Link role="menuitem" to="/dashboard/relawan/profile">Profil Saya</Link>}
+            <button type="button" role="menuitem" onClick={() => { logout(); navigate("/"); }}>Keluar</button>
+          </div>}
+        </div>
+          : <><Link className="login-link" to="/login">Masuk</Link><Link className="button button-small" to="/register">Mulai Bergabung</Link></>}
+        <button type="button" className="mobile-nav-toggle" aria-label={mobileMenuOpen ? "Tutup menu" : "Buka menu"}
+          aria-expanded={mobileMenuOpen} onClick={() => { setMobileMenuOpen((open) => !open); setProfileMenuOpen(false); }}>
+          {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+        </button>
+      </div>
+    </div>
+  </header>;
 }
 
 function Footer() {
