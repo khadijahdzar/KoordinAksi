@@ -1,0 +1,8 @@
+/* Fix: judul kegiatan di banner detail agar putih & terbaca */
+.activity-detail-banner h1 {
+  color: #fff !important;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+}
+.activity-detail-organizer {
+  color: #fff !important;
+}

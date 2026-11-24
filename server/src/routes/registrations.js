@@ -2,6 +2,7 @@ import { Router } from "express";
 import mongoose from "mongoose";
 import Activity from "../models/Activity.js";
 import Registration from "../models/Registration.js";
+import AdminLog from "../models/AdminLog.js";
 import { authorize, protect } from "../middleware/auth.js";
 import { validate } from "../middleware/validate.js";
 import { registrationCreateSchema, registrationStatusSchema } from "../validation/requestSchemas.js";
@@ -66,6 +67,43 @@ router.post("/", validate(registrationCreateSchema), protect, authorize("volunte
         volunteer: req.user.id,
         note: req.body.note
       }], { session });
+
+      const donation = req.body.donationPackage;
+      const isDonation = req.body.participationPath === "donation" || Boolean(donation);
+      if (isDonation) {
+        await AdminLog.create([{
+          actorId: req.user.id,
+          action: "registration.donation_pending",
+          targetModel: "Activity",
+          targetId: activity._id,
+          details: {
+            registrationId: registration._id,
+            volunteerId: req.user.id,
+            volunteerName: req.user.name,
+            volunteerEmail: req.user.email,
+            activityTitle: activity.title,
+            packageId: donation?.id || null,
+            packageLabel: donation?.label || null,
+            amount: donation?.amount || null,
+            note: req.body.note || null
+          }
+        }], { session });
+      } else {
+        await AdminLog.create([{
+          actorId: req.user.id,
+          action: "registration.volunteer_pending",
+          targetModel: "Activity",
+          targetId: activity._id,
+          details: {
+            registrationId: registration._id,
+            volunteerId: req.user.id,
+            volunteerName: req.user.name,
+            volunteerEmail: req.user.email,
+            activityTitle: activity.title,
+            note: req.body.note || null
+          }
+        }], { session });
+      }
     });
 
     return res.status(201).json({ registration });
