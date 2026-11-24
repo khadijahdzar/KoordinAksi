@@ -5,6 +5,7 @@ import { GoogleOAuthProvider } from "@react-oauth/google";
 import { AuthProvider } from "@/AuthContext";
 import App from "./App";
 import "./styles.css";
+import "./activity-detail-fix.css";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
