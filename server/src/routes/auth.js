@@ -23,17 +23,50 @@ function createToken(user) {
   });
 }
 
-router.post("/register", validate(registerSchema), async (req, res, next) => {
+async function createRegisteredUser(payload) {
+  const {
+    name, email, password, role = "volunteer", phone, city, interests,
+    acceptedTerms, organizationName, focusCategory, legalNumber, picTitle
+  } = payload;
+
+  const user = await User.create({
+    name,
+    email,
+    password,
+    role,
+    phone,
+    city,
+    interests,
+    acceptedTerms
+  });
+
+  if (role === "organization") {
+    const organization = await Organization.create({
+      name: organizationName,
+      email,
+      phone,
+      focusCategory,
+      legalNumber,
+      picTitle,
+      owner: user._id
+    });
+    user.organization = organization._id;
+    await user.save();
+  }
+
+  return user._id;
+}
+
+async function createRegisteredUserInTransaction(payload) {
+  const {
+    name, email, password, role = "volunteer", phone, city, interests,
+    acceptedTerms, organizationName, focusCategory, legalNumber, picTitle
+  } = payload;
+
   let session;
   try {
-    const {
-      name, email, password, role = "volunteer", phone, city, interests,
-      acceptedTerms, organizationName, focusCategory, legalNumber, picTitle
-    } = req.body;
-
     session = await User.startSession();
     let userId;
-
     await session.withTransaction(async () => {
       const [user] = await User.create([{
         name,
@@ -63,6 +96,28 @@ router.post("/register", validate(registerSchema), async (req, res, next) => {
 
       userId = user._id;
     });
+    return userId;
+  } finally {
+    if (session) await session.endSession();
+  }
+}
+
+function isReplicaSetRequiredError(error) {
+  return error?.code === 20
+    || /Transaction numbers are only allowed/i.test(error?.message || "")
+    || /replica set/i.test(error?.message || "");
+}
+
+router.post("/register", validate(registerSchema), async (req, res, next) => {
+  try {
+    let userId;
+    try {
+      userId = await createRegisteredUserInTransaction(req.body);
+    } catch (transactionError) {
+      if (!isReplicaSetRequiredError(transactionError)) throw transactionError;
+      // Local MongoDB without replica set: fall back to sequential writes
+      userId = await createRegisteredUser(req.body);
+    }
 
     const safeUser = await User.findById(userId)
       .select("-password")
@@ -74,8 +129,6 @@ router.post("/register", validate(registerSchema), async (req, res, next) => {
     return res.status(201).json({ token: createToken(safeUser), user: safeUser });
   } catch (error) {
     return next(error);
-  } finally {
-    if (session) await session.endSession();
   }
 });
 
@@ -151,11 +204,28 @@ router.post("/google", validate(googleAuthSchema), async (req, res, next) => {
         });
       }
 
-      session = await User.startSession();
       let userId;
-      await session.withTransaction(async () => {
-        const [user] = await User.create([newUserDetails], { session });
-        const [organization] = await Organization.create([{
+      try {
+        session = await User.startSession();
+        await session.withTransaction(async () => {
+          const [user] = await User.create([newUserDetails], { session });
+          const [organization] = await Organization.create([{
+            name: value.organizationName,
+            email: value.email || email,
+            phone: value.phone,
+            focusCategory: value.focusCategory,
+            legalNumber: value.legalNumber,
+            picTitle: value.picTitle,
+            owner: user._id
+          }], { session });
+          user.organization = organization._id;
+          await user.save({ session });
+          userId = user._id;
+        });
+      } catch (transactionError) {
+        if (!isReplicaSetRequiredError(transactionError)) throw transactionError;
+        const user = await User.create(newUserDetails);
+        const organization = await Organization.create({
           name: value.organizationName,
           email: value.email || email,
           phone: value.phone,
@@ -163,11 +233,11 @@ router.post("/google", validate(googleAuthSchema), async (req, res, next) => {
           legalNumber: value.legalNumber,
           picTitle: value.picTitle,
           owner: user._id
-        }], { session });
+        });
         user.organization = organization._id;
-        await user.save({ session });
+        await user.save();
         userId = user._id;
-      });
+      }
       newUserDetails = await User.findById(userId).select("-password").populate("organization");
     } else {
       if (req.body.acceptedTerms !== true) {
@@ -197,16 +267,9 @@ router.post("/google", validate(googleAuthSchema), async (req, res, next) => {
   }
 });
 
-router.get("/me", protect, async (req, res, next) => {
-  try {
-    if (!req.user) {
-      return res.status(401).json({ message: "Sesi tidak valid.", code: "INVALID_SESSION" });
-    }
-    const user = await req.user.populate("organization");
-    return res.json({ user: user.toObject() });
-  } catch (error) {
-    return next(error);
-  }
+router.get("/me", protect, async (req, res) => {
+  const user = await User.findById(req.user.id).select("-password").populate("organization");
+  return res.json({ user });
 });
 
 export default router;
