@@ -166,32 +166,65 @@
 }
 
 /*
- * Default offset under fixed floating pill.
- * Full-bleed pages (hero, register choice, volunteer/org split, auth)
- * remove the white gap so backgrounds meet the top edge.
+ * GLOBAL: no white strip under the floating pill on any page.
+ * Backgrounds (hero / banner / split register) meet the top edge.
+ * Content that is not full-bleed gets its own top offset below.
  */
 .main-content {
-  padding-top: 84px;
-}
-
-.main-content:has(> .hero-section:first-child),
-.main-content:has(> .home-hero:first-child),
-.main-content:has(> .registration-choice-page:first-child),
-.main-content:has(> .registration-split-page:first-child),
-.main-content:has(> .volunteer-signup-page:first-child),
-.main-content:has(> .organization-verification-page:first-child),
-.main-content:has(> .auth-layout:first-child) {
   padding-top: 0;
 }
 
-/* Hero image full-bleed under the floating pill; keep text clear of the bar */
+/* Full-bleed / image sections — content sits below the pill, image goes to top */
 .main-content > .hero-section:first-child,
-.main-content > .home-hero:first-child {
-  margin-top: 0;
-  padding-top: calc(84px + 28px);
-  min-height: max(510px, 72vh);
+.main-content > .home-hero:first-child,
+.main-content > .explore-hero:first-child,
+.main-content > .dashboard-hero:first-child,
+.main-content > .kabar-list-hero:first-child,
+.main-content > .kabar-detail-hero:first-child,
+.main-content > .organization-directory-hero:first-child,
+.main-content > .organization-profile-banner:first-child,
+.main-content > .activity-detail-banner:first-child,
+.main-content > .activity-detail-page:first-child > .activity-detail-banner,
+.hero-section,
+.home-hero,
+.explore-hero,
+.dashboard-hero,
+.kabar-list-hero,
+.kabar-detail-hero,
+.organization-directory-hero {
   background-position: center top;
   background-size: cover;
+}
+
+.hero-section,
+.home-hero,
+.explore-hero,
+.dashboard-hero,
+.kabar-list-hero,
+.kabar-detail-hero,
+.organization-directory-hero {
+  padding-top: calc(84px + 28px);
+}
+
+.home-hero {
+  min-height: max(510px, 72vh);
+}
+
+/* Plain pages (no image hero): keep content clear of the floating pill */
+.main-content > .container:first-child,
+.main-content > .page-space:first-child,
+.main-content > .container.page-space:first-child,
+.main-content > [class*="page-space"]:first-child {
+  padding-top: calc(84px + 16px);
+}
+
+/* Register / auth split already full-bleed by design — no extra white gap */
+.main-content > .registration-choice-page:first-child,
+.main-content > .registration-split-page:first-child,
+.main-content > .volunteer-signup-page:first-child,
+.main-content > .organization-verification-page:first-child,
+.main-content > .auth-layout:first-child {
+  margin-top: 0;
 }
 
 /* ===== Mobile bottom tab bar ===== */
@@ -222,24 +255,29 @@
   }
 
   .main-content {
-    padding-top: 72px;
+    padding-top: 0;
     padding-bottom: 88px;
   }
 
-  .main-content:has(> .hero-section:first-child),
-  .main-content:has(> .home-hero:first-child),
-  .main-content:has(> .registration-choice-page:first-child),
-  .main-content:has(> .registration-split-page:first-child),
-  .main-content:has(> .volunteer-signup-page:first-child),
-  .main-content:has(> .organization-verification-page:first-child),
-  .main-content:has(> .auth-layout:first-child) {
-    padding-top: 0;
+  .hero-section,
+  .home-hero,
+  .explore-hero,
+  .dashboard-hero,
+  .kabar-list-hero,
+  .kabar-detail-hero,
+  .organization-directory-hero {
+    padding-top: calc(72px + 20px);
   }
 
-  .main-content > .hero-section:first-child,
-  .main-content > .home-hero:first-child {
-    padding-top: calc(72px + 20px);
+  .home-hero {
     min-height: max(440px, 68vh);
+  }
+
+  .main-content > .container:first-child,
+  .main-content > .page-space:first-child,
+  .main-content > .container.page-space:first-child,
+  .main-content > [class*="page-space"]:first-child {
+    padding-top: calc(72px + 12px);
   }
 
   .bottom-tab-bar {
