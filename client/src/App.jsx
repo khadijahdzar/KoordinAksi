@@ -4,6 +4,7 @@ import { Instagram, Linkedin, Mail, MapPin, Phone } from "lucide-react";
 import api, { getErrorMessage } from "./api";
 import { getDashboardPath, useAuth } from "@/AuthContext";
 import HeroSection from "./components/HeroSection";
+import DonationImpact from "./components/DonationImpact";
 import SiteHeader from "./components/SiteHeader";
 import ActivityList from "./public/ActivityList";
 import ActivityDetail from "./public/ActivityDetail";
@@ -213,6 +214,7 @@ function Home() {
     <section className="stats-strip" data-reveal><div className="container stats-grid">
       <Stat value={stats?.volunteers} label="Relawan bergabung" /><Stat value={stats?.organizations} label="Organisasi terverifikasi" /><Stat value={stats?.activities} label="Aksi terbuka" /><Stat value={stats?.registrations} label="Partisipasi tercatat" />
     </div></section>
+    <DonationImpact />
     <section className="section container" data-reveal><div className="section-heading"><div><span className="eyebrow">Pilih cara berkontribusi</span><h2>Satu kepedulian,<br />banyak kemungkinan.</h2></div><Link to="/jelajah" className="text-link">Lihat semua kegiatan <span>→</span></Link></div>
       <div className="category-grid">{featuredCategories.map(({ label, category, icon, image }, index) => <Link className={`category-tile tile-${index}${image ? " category-tile-image" : ""}`} key={label} to={`/jelajah?category=${encodeURIComponent(category)}`}>
         {image && <img src={image} alt="" aria-hidden="true" loading="lazy" />}
