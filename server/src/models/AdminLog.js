@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const adminLogSchema = new mongoose.Schema({
   actorId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   action: { type: String, required: true, trim: true, maxlength: 100 },
-  targetModel: { type: String, enum: ["Organization", "Activity"], required: true },
+  targetModel: { type: String, enum: ["Organization", "Activity", "Payment"], required: true },
   targetId: { type: mongoose.Schema.Types.ObjectId, required: true },
   details: { type: mongoose.Schema.Types.Mixed, default: {} },
   timestamp: { type: Date, default: Date.now, required: true }
