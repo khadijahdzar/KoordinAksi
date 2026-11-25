@@ -167,8 +167,8 @@
 
 /*
  * Default offset under fixed floating pill.
- * When the first block is a hero (or full-bleed register page),
- * drop the white gap so the image runs edge-to-edge under the pill.
+ * Full-bleed pages (hero, register choice, volunteer/org split, auth)
+ * remove the white gap so backgrounds meet the top edge.
  */
 .main-content {
   padding-top: 84px;
@@ -177,6 +177,9 @@
 .main-content:has(> .hero-section:first-child),
 .main-content:has(> .home-hero:first-child),
 .main-content:has(> .registration-choice-page:first-child),
+.main-content:has(> .registration-split-page:first-child),
+.main-content:has(> .volunteer-signup-page:first-child),
+.main-content:has(> .organization-verification-page:first-child),
 .main-content:has(> .auth-layout:first-child) {
   padding-top: 0;
 }
@@ -226,6 +229,9 @@
   .main-content:has(> .hero-section:first-child),
   .main-content:has(> .home-hero:first-child),
   .main-content:has(> .registration-choice-page:first-child),
+  .main-content:has(> .registration-split-page:first-child),
+  .main-content:has(> .volunteer-signup-page:first-child),
+  .main-content:has(> .organization-verification-page:first-child),
   .main-content:has(> .auth-layout:first-child) {
     padding-top: 0;
   }
