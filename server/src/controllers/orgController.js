@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import Activity from "../models/Activity.js";
 import Organization from "../models/Organization.js";
 import OrganizationAction from "../models/OrganizationAction.js";
+import Payment from "../models/Payment.js";
 import Registration from "../models/Registration.js";
 import VolunteerLog from "../models/VolunteerLog.js";
 
@@ -53,7 +54,7 @@ export async function getDashboardStats(req, res, next) {
     periodStart.setHours(0, 0, 0, 0);
     periodStart.setMonth(periodStart.getMonth() - 5);
 
-    const [volunteerIds, logs, hoursResult] = await Promise.all([
+    const [volunteerIds, logs, hoursResult, donationResult] = await Promise.all([
       Registration.distinct("volunteer", {
         activity: { $in: actionIds },
         status: { $in: countedRegistrationStatuses }
@@ -66,7 +67,13 @@ export async function getDashboardStats(req, res, next) {
       VolunteerLog.aggregate([
         { $match: { actionId: { $in: actionIds }, attendanceStatus: "Hadir" } },
         { $group: { _id: null, totalHours: { $sum: "$hoursLogged" } } }
-      ])
+      ]),
+      actionIds.length
+        ? Payment.aggregate([
+          { $match: { activity: { $in: actionIds }, status: "paid" } },
+          { $group: { _id: null, totalDonations: { $sum: "$amount" }, donationCount: { $sum: 1 } } }
+        ])
+        : Promise.resolve([])
     ]);
 
     const monthlyImpact = Array.from({ length: 6 }, (_, index) => {
@@ -87,6 +94,8 @@ export async function getDashboardStats(req, res, next) {
       ? Math.round(((currentHours - previousHours) / previousHours) * 100)
       : currentHours ? 100 : 0;
     const totalHours = hoursResult[0]?.totalHours || 0;
+    const totalDonations = donationResult[0]?.totalDonations || 0;
+    const donationCount = donationResult[0]?.donationCount || 0;
 
     return res.json({
       stats: {
@@ -96,7 +105,9 @@ export async function getDashboardStats(req, res, next) {
         totalHours,
         impactScore: Math.round(totalHours + volunteerIds.length),
         impactGrowth,
-        monthlyImpact
+        monthlyImpact,
+        totalDonations,
+        donationCount
       }
     });
   } catch (error) {
