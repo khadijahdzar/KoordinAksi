@@ -1,9 +1,8 @@
-import React, { useEffect, useRef, useState } from "react";
-import { Link, NavLink, Navigate, Outlet, Route, Routes, useLocation, useNavigate, useParams } from "react-router-dom";
-import { Instagram, Linkedin, Mail, MapPin, Menu, Phone, X } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { Link, Navigate, Outlet, Route, Routes, useLocation, useNavigate } from "react-router-dom";
+import { Instagram, Linkedin, Mail, MapPin, Phone } from "lucide-react";
 import api, { getErrorMessage } from "./api";
 import { getDashboardPath, useAuth } from "@/AuthContext";
-import GoogleAuthButton from "./components/GoogleAuthButton";
 import HeroSection from "./components/HeroSection";
 import SiteHeader from "./components/SiteHeader";
 import ActivityList from "./public/ActivityList";
@@ -29,15 +28,11 @@ import OrganizationDashboard from "./organization/OrganizationDashboard";
 import ActivityParticipants from "./organization/ActivityParticipants";
 import VolunteerVerification from "./organization/VolunteerVerification";
 import OrganizationImpactReport from "./organization/OrganizationImpactReport";
-
-const volunteerInterests = ["Lingkungan & Konservasi", "Pendidikan & Literasi", "Medis & PKS", "Tanggap Bencana", "Logistik", "Dokumen & Media"];
-const organizationFocusCategories = ["Lingkungan & Konservasi", "Pendidikan & Literasi", "Kesehatan & Medis", "Tanggap Bencana", "Pemberdayaan Masyarakat", "Sosial & Kemanusiaan", "Lainnya"];
-const organizationDocumentTypes = [
-  { key: "skDocument", title: "SK Kemenkumham", detail: "Surat keputusan pengesahan atau akta notaris", icon: "▤" },
-  { key: "taxDocument", title: "NPWP Lembaga", detail: "Kartu atau surat keterangan NPWP lembaga", icon: "▣" }
-];
-const organizationRegistrationDraftKey = "koordinaksi_organization_verification_draft";
-const formatDate = (date) => new Intl.DateTimeFormat("id-ID", { dateStyle: "long" }).format(new Date(date));
+import AuthPage from "./pages/AuthPage";
+import RegistrationRolePage from "./pages/RegistrationRolePage";
+import VolunteerRegistration from "./pages/VolunteerRegistration";
+import OrganizationVerification from "./pages/OrganizationVerification";
+import { Notice, NotFound } from "./formHelpers";
 
 function Header() {
   return <SiteHeader />;
@@ -230,30 +225,6 @@ function Home() {
 
 function Stat({ value, label }) {
   return <div className="stat"><strong>{value == null ? "—" : Number(value).toLocaleString("id-ID")}<span>+</span></strong><small>{label}</small></div>;
-}
-
-function Notice({ message, success = false }) {
-  return <div className={`notice ${success ? "notice-success" : ""}`} role="status">{message}</div>;
-}
-
-function NotFound() {
-  return <div className="container page-space not-found"><span className="eyebrow">404 · Halaman tidak ditemukan</span><h1>Sepertinya jalan ini<br /><em>belum tersedia.</em></h1><Link className="button" to="/">Kembali ke beranda →</Link></div>;
-}
-
-function AuthPage({ mode }) {
-  return <div className="container page-space"><p>Auth page — silakan pull versi lengkap dari commit sebelumnya jika form tidak muncul.</p><Link to="/">Beranda</Link></div>;
-}
-
-function RegistrationRolePage() {
-  return <div className="container page-space"><Link to="/register/volunteer">Volunteer</Link> · <Link to="/register/organization">Organisasi</Link></div>;
-}
-
-function VolunteerRegistration() {
-  return <div className="container page-space"><p>Form pendaftaran volunteer</p></div>;
-}
-
-function OrganizationVerification() {
-  return <div className="container page-space"><p>Form verifikasi organisasi</p></div>;
 }
 
 export default function App() {
