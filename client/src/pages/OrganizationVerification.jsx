@@ -13,203 +13,321 @@ import {
 function OrganizationVerification() {
   const { register, googleAuth } = useAuth();
   const navigate = useNavigate();
-  const [step, setStep] = useState(1);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
-  const [fieldErrors, setFieldErrors] = useState({});
-  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [step, setStep] = useState(0);
   const [form, setForm] = useState({
-    name: "",
-    email: "",
-    password: "",
     organizationName: "",
-    focusCategory: organizationFocusCategories[0],
-    description: "",
-    website: "",
+    focusCategory: "",
+    legalNumber: "",
+    picName: "",
+    picTitle: "",
+    email: "",
     phone: "",
-    city: "",
-    skDocument: null,
-    taxDocument: null
+    password: ""
   });
+  const [documents, setDocuments] = useState({ skDocument: null, taxDocument: null });
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
+  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    document.title = "Daftar Organisasi - KoordinAksi";
+    const previousTitle = document.title;
+    document.title = "Pendaftaran Organisasi - KoordinAksi";
     try {
-      const draft = localStorage.getItem(organizationRegistrationDraftKey);
-      if (draft) {
-        const parsed = JSON.parse(draft);
-        setForm((prev) => ({ ...prev, ...parsed, password: "", skDocument: null, taxDocument: null }));
+      const savedDraft = localStorage.getItem(organizationRegistrationDraftKey);
+      if (savedDraft) {
+        const draft = JSON.parse(savedDraft);
+        if (draft && typeof draft === "object") {
+          setForm((current) => ({ ...current, ...draft.form }));
+          setStep(Math.min(2, Math.max(0, Number(draft.step) || 0)));
+        }
       }
-    } catch {}
+    } catch {
+      setError("Draft verifikasi tidak dapat dibaca. Silakan lanjutkan dengan formulir baru.");
+    }
+    return () => { document.title = previousTitle; };
   }, []);
 
-  useEffect(() => {
-    const { password, skDocument, taxDocument, ...draft } = form;
+  function updateField(event) {
+    const { name, value } = event.target;
+    setForm((current) => ({ ...current, [name]: value }));
+    setFieldErrors((current) => ({ ...current, [name]: "" }));
+  }
+
+  function saveDraft() {
     try {
-      localStorage.setItem(organizationRegistrationDraftKey, JSON.stringify(draft));
-    } catch {}
-  }, [form]);
-
-  function update(field, value) {
-    setForm((prev) => ({ ...prev, [field]: value }));
-    setFieldErrors((prev) => ({ ...prev, [field]: undefined }));
-  }
-
-  function validateStep1() {
-    const errors = {};
-    if (!form.organizationName.trim()) errors.organizationName = "Nama organisasi wajib.";
-    if (!form.name.trim()) errors.name = "Nama penanggung jawab wajib.";
-    if (!form.email.trim()) errors.email = "Email wajib.";
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errors.email = "Format email tidak valid.";
-    if (!form.password || form.password.length < 8) errors.password = "Password minimal 8 karakter.";
-    setFieldErrors(errors);
-    if (Object.keys(errors).length) {
-      focusFirstInvalidField();
-      return false;
+      localStorage.setItem(organizationRegistrationDraftKey, JSON.stringify({ form: { ...form, password: "" }, step }));
+      setError("");
+      setNotice("Draft berhasil disimpan di perangkat ini. Berkas yang dipilih belum diunggah ke server.");
+    } catch (saveError) {
+      setNotice("");
+      setError("Draft tidak dapat disimpan di perangkat ini. Pastikan penyimpanan browser tersedia.");
     }
-    return true;
   }
 
-  function nextStep() {
-    if (validateStep1()) setStep(2);
+  function validateStep(currentStep) {
+    const errors = {};
+    if (currentStep === 0) {
+      if (!form.organizationName.trim()) errors.organizationName = "Masukkan nama resmi organisasi atau yayasan.";
+      if (!form.focusCategory) errors.focusCategory = "Pilih kategori fokus lembaga.";
+      if (!form.legalNumber.trim()) errors.legalNumber = "Masukkan nomor SK Kemenkumham atau Akta Notaris.";
+    } else if (currentStep === 1) {
+      if (!form.picName.trim()) errors.picName = "Masukkan nama penanggung jawab.";
+      if (!form.picTitle.trim()) errors.picTitle = "Masukkan jabatan dalam organisasi.";
+      if (!form.email.trim()) errors.email = "Masukkan email resmi lembaga.";
+      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) errors.email = "Periksa kembali format alamat email.";
+      const phoneDigits = form.phone.replace(/\D/g, "");
+      if (!phoneDigits) errors.phone = "Masukkan nomor WhatsApp PIC.";
+      else if (!/^[+\d\s().-]+$/.test(form.phone.trim())) errors.phone = "Gunakan hanya angka, spasi, tanda +, tanda kurung, atau tanda hubung.";
+      else if (phoneDigits.length < 8 || phoneDigits.length > 15) errors.phone = "Masukkan nomor dengan 8–15 digit, termasuk kode negara bila ada.";
+      if (!form.password) errors.password = "Buat password untuk akun organisasi.";
+      else if (form.password.length < 8) errors.password = "Password harus terdiri dari minimal 8 karakter.";
+    }
+    return errors;
+  }
+
+  function continueWizard() {
+    const errors = validateStep(step);
+    if (Object.keys(errors).length) {
+      setFieldErrors((current) => ({ ...current, ...errors }));
+      setNotice("");
+      setError("");
+      focusFirstInvalidField();
+      return;
+    }
+    setFieldErrors({});
+    setError("");
+    setNotice("");
+    setStep((current) => Math.min(2, current + 1));
+  }
+
+  async function handleGoogleRegister(credential) {
+    const errors = {};
+    if (!form.organizationName.trim()) errors.organizationName = "Masukkan nama resmi organisasi atau yayasan.";
+    if (!form.focusCategory) errors.focusCategory = "Pilih kategori fokus lembaga.";
+    if (!form.legalNumber.trim()) errors.legalNumber = "Masukkan nomor SK Kemenkumham atau Akta Notaris.";
+    if (!form.picTitle.trim()) errors.picTitle = "Masukkan jabatan dalam organisasi.";
+    const phoneDigits = form.phone.replace(/\D/g, "");
+    if (!phoneDigits) errors.phone = "Masukkan nomor WhatsApp PIC.";
+    else if (!/^[+\d\s().-]+$/.test(form.phone.trim())) errors.phone = "Gunakan hanya angka, spasi, tanda +, tanda kurung, atau tanda hubung.";
+    else if (phoneDigits.length < 8 || phoneDigits.length > 15) errors.phone = "Masukkan nomor dengan 8–15 digit, termasuk kode negara bila ada.";
+    if (Object.keys(errors).length) {
+      setFieldErrors((current) => ({ ...current, ...errors }));
+      setStep(errors.organizationName || errors.focusCategory || errors.legalNumber ? 0 : 1);
+      setError("");
+      setNotice("");
+      focusFirstInvalidField();
+      return;
+    }
+
+    setBusy(true);
+    setError("");
+    setNotice("");
+    try {
+      const user = await googleAuth(credential, {
+        role: "organization",
+        name: form.picName.trim() || undefined,
+        organizationEmail: form.email.trim() || undefined,
+        phone: form.phone.trim(),
+        organizationName: form.organizationName.trim(),
+        focusCategory: form.focusCategory,
+        legalNumber: form.legalNumber.trim(),
+        picTitle: form.picTitle.trim()
+      });
+      localStorage.removeItem(organizationRegistrationDraftKey);
+      navigate(getDashboardPath(user.role));
+    } catch (err) {
+      const validationErrors = err.response?.data?.errors;
+      if (Array.isArray(validationErrors) && validationErrors.length) {
+        setFieldErrors((current) => ({
+          ...current,
+          ...Object.fromEntries(validationErrors.map(({ field, message }) => [
+            field === "organizationEmail" ? "email" : field,
+            message
+          ]))
+        }));
+        setStep(validationErrors.some(({ field }) => ["organizationName", "focusCategory", "legalNumber"].includes(field)) ? 0 : 1);
+        setError("");
+        focusFirstInvalidField();
+      } else {
+        setError(getErrorMessage(err));
+      }
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function submit(event) {
     event.preventDefault();
-    if (!acceptedTerms) {
-      setError("Centang persetujuan ketentuan layanan terlebih dahulu.");
+    const firstStepErrors = validateStep(0);
+    const secondStepErrors = validateStep(1);
+    const errors = { ...firstStepErrors, ...secondStepErrors };
+    if (Object.keys(errors).length) {
+      setFieldErrors(errors);
+      setError("");
+      setStep(Object.keys(firstStepErrors).length ? 0 : 1);
+      focusFirstInvalidField();
       return;
     }
     setBusy(true);
     setError("");
+    setNotice("");
     try {
       const user = await register({
-        name: form.name,
-        email: form.email,
+        name: form.picName.trim(),
+        email: form.email.trim(),
         password: form.password,
         role: "organization",
-        organizationName: form.organizationName,
+        phone: form.phone.trim(),
+        organizationName: form.organizationName.trim(),
         focusCategory: form.focusCategory,
-        description: form.description,
-        website: form.website,
-        phone: form.phone,
-        city: form.city
+        legalNumber: form.legalNumber.trim(),
+        picTitle: form.picTitle.trim()
       });
-      try { localStorage.removeItem(organizationRegistrationDraftKey); } catch {}
-      navigate(getDashboardPath(user.role || "organization"), { replace: true });
+      localStorage.removeItem(organizationRegistrationDraftKey);
+      navigate(getDashboardPath(user.role));
     } catch (err) {
-      setError(getErrorMessage(err));
+      const validationErrors = err.response?.data?.errors;
+      if (Array.isArray(validationErrors) && validationErrors.length) {
+        setFieldErrors((current) => ({
+          ...current,
+          ...Object.fromEntries(validationErrors.map(({ field, message }) => {
+            const formField = field === "name" ? "picName" : field;
+            return [formField, message];
+          }))
+        }));
+        setError("");
+        focusFirstInvalidField();
+      } else if (err.response?.status === 409) {
+        setFieldErrors((current) => ({ ...current, email: getErrorMessage(err) }));
+        setError("");
+        focusFirstInvalidField();
+      } else {
+        setError(getErrorMessage(err));
+      }
     } finally {
       setBusy(false);
     }
   }
 
-  async function handleGoogle(credential) {
-    if (!acceptedTerms) {
-      setError("Centang persetujuan ketentuan layanan terlebih dahulu.");
+  function selectDocument(event) {
+    const { name, files } = event.target;
+    const selectedFile = files?.[0] || null;
+    if (selectedFile && selectedFile.size > 10 * 1024 * 1024) {
+      setFieldErrors((current) => ({ ...current, [name]: "Ukuran berkas maksimal 10 MB." }));
+      setError("");
+      event.target.value = "";
       return;
     }
-    setBusy(true);
-    setError("");
-    try {
-      const user = await googleAuth(credential, {
-        role: "organization",
-        organizationName: form.organizationName,
-        acceptedTerms: true
-      });
-      try { localStorage.removeItem(organizationRegistrationDraftKey); } catch {}
-      navigate(getDashboardPath(user.role || "organization"), { replace: true });
-    } catch (err) {
-      setError(getErrorMessage(err));
-    } finally {
-      setBusy(false);
+    if (selectedFile && !["application/pdf", "image/jpeg", "image/png"].includes(selectedFile.type)) {
+      setFieldErrors((current) => ({ ...current, [name]: "Gunakan berkas PDF, JPG, atau PNG." }));
+      setError("");
+      event.target.value = "";
+      return;
     }
+    setFieldErrors((current) => ({ ...current, [name]: "" }));
+    setError("");
+    setDocuments((current) => ({ ...current, [name]: selectedFile }));
   }
 
-  return (
-    <section className="container page-space registration-page">
-      <span className="eyebrow">Pendaftaran organisasi</span>
-      <h1>Daftarkan lembaga sosialmu</h1>
-      <p className="lead">Lengkapi data organisasi agar dapat mempublikasikan aksi dan mengelola relawan.</p>
-      {error && <Notice message={error} />}
-      <form className="registration-form" onSubmit={submit}>
-        {step === 1 && (
-          <div className="registration-step">
-            <h2>Akun & identitas</h2>
-            <label aria-invalid={fieldErrors.organizationName ? "true" : undefined}>
-              Nama organisasi
-              <input required value={form.organizationName} onChange={(e) => update("organizationName", e.target.value)} placeholder="Nama lembaga" />
-              {fieldErrors.organizationName && <InlineFieldError>{fieldErrors.organizationName}</InlineFieldError>}
-            </label>
-            <label aria-invalid={fieldErrors.name ? "true" : undefined}>
-              Nama penanggung jawab
-              <input required value={form.name} onChange={(e) => update("name", e.target.value)} placeholder="Nama lengkap" />
-              {fieldErrors.name && <InlineFieldError>{fieldErrors.name}</InlineFieldError>}
-            </label>
-            <label aria-invalid={fieldErrors.email ? "true" : undefined}>
-              Email
-              <input required type="email" value={form.email} onChange={(e) => update("email", e.target.value)} placeholder="email@organisasi.org" />
-              {fieldErrors.email && <InlineFieldError>{fieldErrors.email}</InlineFieldError>}
-            </label>
-            <label aria-invalid={fieldErrors.password ? "true" : undefined}>
-              Password
-              <input required minLength={8} type="password" value={form.password} onChange={(e) => update("password", e.target.value)} placeholder="Minimal 8 karakter" />
-              {fieldErrors.password && <InlineFieldError>{fieldErrors.password}</InlineFieldError>}
-            </label>
-            <button type="button" className="button" onClick={nextStep}>Lanjut <span>→</span></button>
+  const steps = ["Identitas & Legalitas", "Penanggung Jawab (PIC)", "Berkas & Dokumen"];
+  return <section className="organization-verification-page registration-split-page">
+    <aside className="registration-split-visual">
+      <div className="registration-split-copy">
+        <span className="registration-split-kicker">KoordinAksi · Organisasi</span>
+        <h2>Kebaikan tumbuh saat bergerak bersama.</h2>
+        <p>Bangun kolaborasi dan hadirkan lebih banyak dampak untuk komunitasmu.</p>
+      </div>
+    </aside>
+    <section className="organization-verification-card" aria-labelledby="organization-verification-title">
+      <header className="organization-verification-header">
+        <Link className="organization-verification-brand" to="/"><img src="/logokoordinaski.png" alt="Logo KoordinAksi" /><span>Koordin<span>Aksi</span></span></Link>
+        <Link className="organization-verification-exit" to="/register">Kembali ke pilihan peran</Link>
+      </header>
+      <div className="organization-verification-title-row">
+        <div><span className="eyebrow">Pendaftaran organisasi</span><h1 id="organization-verification-title">Daftar sebagai Organisasi</h1><p>Lengkapi informasi berikut agar lembagamu dapat dipercaya komunitas.</p></div>
+        <span className="organization-verification-badge"><i /> Proses aman</span>
+      </div>
+
+      <nav className="organization-verification-steps" aria-label="Langkah verifikasi organisasi">
+        {steps.map((label, index) => <button
+          aria-current={step === index ? "step" : undefined}
+          className={`organization-verification-step${step === index ? " is-active" : ""}${step > index ? " is-complete" : ""}`}
+          key={label}
+          onClick={() => {
+            if (index < step) {
+              setStep(index);
+              setError("");
+              setNotice("");
+            } else if (index > step) {
+              continueWizard();
+            }
+          }}
+          type="button"
+        ><span>{step > index ? "✓" : `0${index + 1}`}</span><strong>{label}</strong></button>)}
+      </nav>
+
+      <form className="organization-verification-form" noValidate onSubmit={submit}>
+        {error && <Notice message={error} />}
+        {notice && <Notice success message={notice} />}
+        {step === 0 && <section className="organization-verification-section">
+          <div className="organization-verification-section-heading"><span>01</span><div><h2>Identitas &amp; Legalitas Lembaga</h2><p>Gunakan data resmi sesuai dokumen pendirian lembaga.</p></div></div>
+          <div className="organization-verification-grid">
+            <label className="organization-verification-wide">Nama Resmi Organisasi / Yayasan<input aria-describedby={fieldErrors.organizationName ? "organization-name-error" : undefined} aria-invalid={Boolean(fieldErrors.organizationName)} autoComplete="organization" maxLength="150" name="organizationName" onChange={updateField} placeholder="Contoh: Yayasan Peduli Sesama Indonesia" required value={form.organizationName} />{fieldErrors.organizationName && <InlineFieldError id="organization-name-error">{fieldErrors.organizationName}</InlineFieldError>}</label>
+            <label>Kategori Fokus Lembaga<select aria-describedby={fieldErrors.focusCategory ? "organization-category-error" : undefined} aria-invalid={Boolean(fieldErrors.focusCategory)} name="focusCategory" onChange={updateField} required value={form.focusCategory}><option value="">Pilih kategori fokus</option>{organizationFocusCategories.map((category) => <option key={category} value={category}>{category}</option>)}</select>{fieldErrors.focusCategory && <InlineFieldError id="organization-category-error">{fieldErrors.focusCategory}</InlineFieldError>}</label>
+            <label>Nomor SK Kemenkumham / Akta Notaris<input aria-describedby={fieldErrors.legalNumber ? "organization-legal-error" : undefined} aria-invalid={Boolean(fieldErrors.legalNumber)} maxLength="100" name="legalNumber" onChange={updateField} placeholder="Masukkan nomor dokumen legalitas" required value={form.legalNumber} />{fieldErrors.legalNumber && <InlineFieldError id="organization-legal-error">{fieldErrors.legalNumber}</InlineFieldError>}</label>
           </div>
-        )}
-        {step === 2 && (
-          <div className="registration-step">
-            <h2>Profil organisasi</h2>
-            <label>
-              Fokus kegiatan
-              <select value={form.focusCategory} onChange={(e) => update("focusCategory", e.target.value)}>
-                {organizationFocusCategories.map((cat) => (
-                  <option key={cat} value={cat}>{cat}</option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Deskripsi singkat
-              <textarea value={form.description} onChange={(e) => update("description", e.target.value)} rows={3} placeholder="Apa yang dilakukan organisasimu?" />
-            </label>
-            <label>
-              Website
-              <input value={form.website} onChange={(e) => update("website", e.target.value)} placeholder="https://" />
-            </label>
-            <label>
-              Telepon
-              <input value={form.phone} onChange={(e) => update("phone", e.target.value)} placeholder="08…" />
-            </label>
-            <label>
-              Kota
-              <input value={form.city} onChange={(e) => update("city", e.target.value)} placeholder="Kota basis" />
-            </label>
-            <div className="document-hints">
-              <p className="eyebrow">Dokumen verifikasi (opsional di tahap awal)</p>
-              <ul>
-                {organizationDocumentTypes.map((doc) => (
-                  <li key={doc.key}><strong>{doc.icon} {doc.title}</strong> — {doc.detail}</li>
-                ))}
-              </ul>
-            </div>
-            <label className="auth-google-terms">
-              <input type="checkbox" checked={acceptedTerms} onChange={(e) => setAcceptedTerms(e.target.checked)} />
-              Saya menyetujui Ketentuan Layanan & Kebijakan Privasi
-            </label>
-            <div className="registration-actions">
-              <button type="button" className="button button-ghost" onClick={() => setStep(1)}>Kembali</button>
-              <button className="button" disabled={busy}>{busy ? "Menyimpan…" : "Simpan akun organisasi"} <span>→</span></button>
-            </div>
-            <div className="google-login-divider"><span>atau daftar dengan</span></div>
-            <GoogleAuthButton onSuccess={handleGoogle} onError={setError} />
+        </section>}
+
+        {step === 1 && <section className="organization-verification-section">
+          <div className="organization-verification-section-heading"><span>02</span><div><h2>Penanggung Jawab (PIC) &amp; Narahubung</h2><p>Kontak ini digunakan untuk komunikasi verifikasi dan akun organisasi.</p></div></div>
+          <div className="organization-verification-grid">
+            <label>Nama Ketua / Penanggung Jawab<input aria-describedby={fieldErrors.picName ? "organization-pic-name-error" : undefined} aria-invalid={Boolean(fieldErrors.picName)} autoComplete="name" maxLength="100" name="picName" onChange={updateField} placeholder="Nama lengkap penanggung jawab" required value={form.picName} />{fieldErrors.picName && <InlineFieldError id="organization-pic-name-error">{fieldErrors.picName}</InlineFieldError>}</label>
+            <label>Jabatan dalam Organisasi<input aria-describedby={fieldErrors.picTitle ? "organization-pic-title-error" : undefined} aria-invalid={Boolean(fieldErrors.picTitle)} maxLength="100" name="picTitle" onChange={updateField} placeholder="Contoh: Ketua / Direktur" required value={form.picTitle} />{fieldErrors.picTitle && <InlineFieldError id="organization-pic-title-error">{fieldErrors.picTitle}</InlineFieldError>}</label>
+            <label>Email Resmi Lembaga<input aria-describedby={fieldErrors.email ? "organization-email-error" : undefined} aria-invalid={Boolean(fieldErrors.email)} autoComplete="email" maxLength="254" name="email" onChange={updateField} placeholder="kontak@organisasi.id" required type="email" value={form.email} />{fieldErrors.email && <InlineFieldError id="organization-email-error">{fieldErrors.email}</InlineFieldError>}</label>
+            <label>No. WhatsApp Layanan (PIC)<input aria-describedby={fieldErrors.phone ? "organization-phone-error" : undefined} aria-invalid={Boolean(fieldErrors.phone)} autoComplete="tel" maxLength="30" minLength="8" name="phone" onChange={updateField} placeholder="Contoh: 0812 3456 7890" required type="tel" value={form.phone} />{fieldErrors.phone && <InlineFieldError id="organization-phone-error">{fieldErrors.phone}</InlineFieldError>}</label>
+            <label className="organization-verification-wide">Password Akun Organisasi<input aria-describedby={fieldErrors.password ? "organization-password-error" : undefined} aria-invalid={Boolean(fieldErrors.password)} autoComplete="new-password" maxLength="128" minLength="8" name="password" onChange={updateField} placeholder="Minimal 8 karakter" required type="password" value={form.password} />{fieldErrors.password && <InlineFieldError id="organization-password-error">{fieldErrors.password}</InlineFieldError>}</label>
           </div>
-        )}
+        </section>}
+
+        {step === 2 && <section className="organization-verification-section">
+          <div className="organization-verification-section-heading"><span>03</span><div><h2>Berkas &amp; Dokumen</h2><p>Unggah dokumen yang jelas dan dapat dibaca (PDF, JPG, atau PNG; maksimal 10 MB).</p></div></div>
+          <div className="organization-verification-documents">
+            {organizationDocumentTypes.map((document) => {
+              const selectedFile = documents[document.key];
+              const documentError = fieldErrors[document.key];
+              return <label className={`organization-document-upload${selectedFile ? " is-selected" : ""}${documentError ? " has-error" : ""}`} key={document.key}>
+                <input aria-describedby={documentError ? `${document.key}-error` : undefined} aria-invalid={Boolean(documentError)} accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" name={document.key} onChange={selectDocument} type="file" />
+                <span className="organization-document-icon" aria-hidden="true">{document.icon}</span>
+                <span className="organization-document-copy"><strong>{document.title}</strong><small>{selectedFile ? selectedFile.name : document.detail}</small></span>
+                <span className={`organization-document-status${selectedFile ? " is-selected" : ""}`}>{selectedFile ? "Dipilih" : "Belum diunggah"}</span>
+                <span className="organization-document-action">{selectedFile ? "Ganti berkas" : "Pilih berkas"}</span>
+                {documentError && <InlineFieldError id={`${document.key}-error`}>{documentError}</InlineFieldError>}
+              </label>;
+            })}
+          </div>
+          <p className="organization-document-note">Berkas saat ini hanya dipilih di browser dan belum diunggah ke server.</p>
+        </section>}
+
+        <aside className="organization-verification-security">
+          <span aria-hidden="true">✓</span><div><strong>Jaminan Keamanan Verifikasi</strong><p>Dokumen lembaga hanya digunakan untuk proses verifikasi dan dijaga kerahasiaannya. Tim kami meninjau pengajuan dalam 1–3 hari kerja.</p></div>
+        </aside>
+        <aside className="organization-upload-warning" role="note">
+          <strong>Berkas belum diunggah</strong>
+          <p>File yang dipilih saat ini hanya tersimpan sementara di browser dan tidak dikirim bersama pembuatan akun. Pengiriman dan verifikasi berkas memerlukan endpoint upload backend yang belum tersedia.</p>
+        </aside>
+        <div className="organization-verification-actions">
+          {step > 0 && <button className="organization-verification-back" onClick={() => { setStep((current) => current - 1); setError(""); setNotice(""); }} type="button">← Kembali</button>}
+          <button className="organization-verification-save" onClick={saveDraft} type="button">Simpan Draft</button>
+          {step < 2
+            ? <button className="button organization-verification-next" onClick={continueWizard} type="button">Lanjutkan <span aria-hidden="true">→</span></button>
+            : <button className="button organization-verification-submit" disabled={busy} type="submit">{busy ? "Menyimpan akun..." : "Simpan Akun & Lanjutkan ke Verifikasi Berkas"} {!busy && <span aria-hidden="true">→</span>}</button>}
+        </div>
       </form>
-      <p className="auth-switch">Sudah punya akun? <Link to="/login">Masuk</Link></p>
+      <div className="organization-google-divider"><span>atau daftar dengan Google</span></div>
+      <GoogleAuthButton onSuccess={handleGoogleRegister} onError={setError} />
     </section>
-  );
+  </section>;
 }
 
 export default OrganizationVerification;
