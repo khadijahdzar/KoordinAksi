@@ -81,8 +81,8 @@ export default function ActivityDetail() {
   const [path, setPath] = useState("volunteer");
   const [packageId, setPackageId] = useState("regular");
   const [submitting, setSubmitting] = useState(false);
-  // null = belum dicek; true = gateway siap; false = endpoint belum tersedia
   const [paymentGatewayReady, setPaymentGatewayReady] = useState(null);
+  const [donationTotals, setDonationTotals] = useState({ totalAmount: 0, count: 0 });
 
   useEffect(() => {
     const controller = new AbortController();
@@ -100,6 +100,15 @@ export default function ActivityDetail() {
         if (!controller.signal.aborted) setLoading(false);
       });
 
+    return () => controller.abort();
+  }, [id]);
+
+  useEffect(() => {
+    if (!id) return undefined;
+    const controller = new AbortController();
+    api.get(`/payments/activity/${id}`, { signal: controller.signal })
+      .then(({ data }) => setDonationTotals({ totalAmount: data.totalAmount || 0, count: data.count || 0 }))
+      .catch(() => {});
     return () => controller.abort();
   }, [id]);
 
@@ -143,7 +152,6 @@ export default function ActivityDetail() {
         });
       } catch (requestError) {
         const status = requestError.response?.status;
-        // Gateway belum siap: endpoint /payments belum ada atau dinonaktifkan
         if (!requestError.response || status === 404 || status === 501 || status === 503) {
           setPaymentGatewayReady(false);
           setMessage("Pembayaran belum tersedia. Silakan pilih Jalur Relawan Murni untuk mendaftar, atau coba lagi nanti.");
@@ -187,7 +195,6 @@ export default function ActivityDetail() {
   const isVerified = activity.organization
     ? Boolean(activity.organization.verified)
     : Boolean(activity.isVerified);
-  const selectedPackage = donationPackages.find((item) => item.id === packageId) || donationPackages[0];
   const eventDate = formatActivityDate(activity.date);
   const endDate = activity.endDate ? formatActivityDate(activity.endDate) : "";
 
@@ -243,6 +250,12 @@ export default function ActivityDetail() {
           <span className="eyebrow">Ambil bagian</span>
           <h2>Pilih Jalur Keikutsertaan</h2>
           <p className="activity-join-intro">Pilih cara berkontribusi yang paling sesuai untukmu.</p>
+          {donationTotals.count > 0 && (
+            <p className="activity-donation-raised">
+              Sudah terkumpul <strong>Rp{donationTotals.totalAmount.toLocaleString("id-ID")}</strong>
+              {" "}dari {donationTotals.count} donasi untuk kegiatan ini.
+            </p>
+          )}
           {error && <Notice message={error} />}
           {message && <Notice message={message} success={message.startsWith("Pendaftaran berhasil") || message.startsWith("Pembayaran selesai") || message.startsWith("Pembayaran menunggu")} />}
 
