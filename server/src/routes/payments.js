@@ -27,10 +27,16 @@ function createHttpError(statusCode, message) {
   return error;
 }
 
+/** Hapus spasi & tanda kutip yang sering ikut ter-copy dari dashboard Midtrans */
+function cleanEnv(value) {
+  if (!value) return "";
+  return String(value).trim().replace(/^['"]|['"]$/g, "").trim();
+}
+
 function midtransConfig() {
-  const serverKey = process.env.MIDTRANS_SERVER_KEY?.trim();
-  const clientKey = process.env.MIDTRANS_CLIENT_KEY?.trim();
-  const isProduction = process.env.MIDTRANS_IS_PRODUCTION === "true";
+  const serverKey = cleanEnv(process.env.MIDTRANS_SERVER_KEY);
+  const clientKey = cleanEnv(process.env.MIDTRANS_CLIENT_KEY);
+  const isProduction = cleanEnv(process.env.MIDTRANS_IS_PRODUCTION) === "true";
   return { serverKey, clientKey, isProduction, ready: Boolean(serverKey && clientKey) };
 }
 
@@ -109,7 +115,6 @@ router.get("/status", (req, res) => {
   return res.json({ ready, isProduction });
 });
 
-/** Publik: total donasi lunas untuk satu kegiatan (detail page) */
 router.get("/activity/:activityId", async (req, res, next) => {
   try {
     if (!mongoose.isValidObjectId(req.params.activityId)) {

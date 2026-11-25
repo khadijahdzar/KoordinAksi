@@ -81,6 +81,7 @@ export default function ActivityDetail() {
   const [path, setPath] = useState("volunteer");
   const [packageId, setPackageId] = useState("regular");
   const [submitting, setSubmitting] = useState(false);
+  // null = belum dicek; true = gateway siap; false = key belum terbaca
   const [paymentGatewayReady, setPaymentGatewayReady] = useState(null);
   const [donationTotals, setDonationTotals] = useState({ totalAmount: 0, count: 0 });
 
@@ -112,6 +113,27 @@ export default function ActivityDetail() {
     return () => controller.abort();
   }, [id]);
 
+  // Cek status gateway saat halaman dibuka (dan bisa diulang)
+  useEffect(() => {
+    const controller = new AbortController();
+    api.get("/payments/status", { signal: controller.signal })
+      .then(({ data }) => setPaymentGatewayReady(Boolean(data.ready)))
+      .catch(() => setPaymentGatewayReady(null));
+    return () => controller.abort();
+  }, []);
+
+  async function refreshGatewayStatus() {
+    try {
+      const { data } = await api.get("/payments/status");
+      setPaymentGatewayReady(Boolean(data.ready));
+      if (data.ready) setMessage("");
+      return data.ready;
+    } catch {
+      setPaymentGatewayReady(null);
+      return null;
+    }
+  }
+
   async function joinActivity(event) {
     event.preventDefault();
     setMessage("");
@@ -121,9 +143,13 @@ export default function ActivityDetail() {
         return;
       }
 
+      // Cek ulang status sebelum menyerah
       if (paymentGatewayReady === false) {
-        setMessage("Pembayaran belum tersedia. Silakan pilih Jalur Relawan Murni untuk mendaftar, atau coba lagi nanti.");
-        return;
+        const ready = await refreshGatewayStatus();
+        if (!ready) {
+          setMessage("Pembayaran belum tersedia. Pastikan key Midtrans di server/.env sudah diisi, lalu restart server.");
+          return;
+        }
       }
 
       setSubmitting(true);
@@ -152,12 +178,19 @@ export default function ActivityDetail() {
         });
       } catch (requestError) {
         const status = requestError.response?.status;
-        if (!requestError.response || status === 404 || status === 501 || status === 503) {
+        const apiMessage = getErrorMessage(requestError);
+        if (status === 503) {
           setPaymentGatewayReady(false);
-          setMessage("Pembayaran belum tersedia. Silakan pilih Jalur Relawan Murni untuk mendaftar, atau coba lagi nanti.");
+          setMessage("Pembayaran belum tersedia. Pastikan key Midtrans di server/.env sudah diisi, lalu restart server.");
           setError("");
+        } else if (status === 401 || status === 403) {
+          setError("Sesi relawan diperlukan untuk donasi. Silakan masuk kembali.");
+        } else if (status === 502) {
+          setError(apiMessage || "Midtrans menolak transaksi. Periksa Server Key / Client Key sandbox.");
+        } else if (!requestError.response) {
+          setError("Tidak dapat terhubung ke server. Periksa koneksi lalu coba lagi.");
         } else {
-          setError(getErrorMessage(requestError));
+          setError(apiMessage);
         }
         setSubmitting(false);
       }
@@ -284,18 +317,20 @@ export default function ActivityDetail() {
               Pesan untuk penyelenggara (opsional)
               <textarea value={note} onChange={(event) => setNote(event.target.value)} rows="3" placeholder="Ceritakan motivasimu" />
             </label>}
-            <button className="activity-join-submit" type="submit" disabled={submitting || (path === "donation" && paymentGatewayReady === false)}>
+            <button className="activity-join-submit" type="submit" disabled={submitting}>
               {submitting
                 ? (path === "donation" ? "Menyiapkan pembayaran…" : "Mengirim pendaftaran…")
                 : path === "donation"
-                  ? (paymentGatewayReady === false ? "Pembayaran belum tersedia" : "Lanjut ke Pembayaran")
+                  ? "Lanjut ke Pembayaran"
                   : "Ikut Beraksi Sekarang"}
             </button>
             {path === "donation" && (
               <small className="activity-payment-note">
                 {paymentGatewayReady === false
-                  ? "Gateway pembayaran belum aktif. Pilih Jalur Relawan Murni atau coba lagi nanti."
-                  : "Pembayaran diproses dengan aman melalui Midtrans Snap setelah gateway diaktifkan."}
+                  ? "Key Midtrans belum terbaca server. Restart backend setelah mengisi server/.env."
+                  : paymentGatewayReady === true
+                    ? "Pembayaran diproses dengan aman melalui Midtrans Snap."
+                    : "Memeriksa status gateway pembayaran…"}
               </small>
             )}
           </form>
