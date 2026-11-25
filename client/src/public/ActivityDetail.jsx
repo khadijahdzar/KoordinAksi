@@ -19,6 +19,7 @@ const donationPackages = [
   { id: "regular", label: "Reguler", amount: 50000, description: "Dukungan bibit dan kebutuhan konservasi" },
   { id: "supporter", label: "Supporter", amount: 100000, description: "Dukungan konservasi plus paket apresiasi" }
 ];
+let midtransSnapPromise;
 
 function formatActivityDate(date) {
   const parsedDate = new Date(date);
@@ -34,6 +35,37 @@ function formatActivityDate(date) {
 
 function Notice({ message, success = false }) {
   return <div className={`notice${success ? " notice-success" : ""}`} role="status">{message}</div>;
+}
+
+function loadMidtransSnap(clientKey, isProduction) {
+  if (window.snap) return Promise.resolve(window.snap);
+  if (midtransSnapPromise) return midtransSnapPromise;
+  const scriptId = "midtrans-snap-script";
+  let script = document.getElementById(scriptId);
+  const isNewScript = !script;
+  if (!script) {
+    script = document.createElement("script");
+    script.id = scriptId;
+    script.src = `https://app${isProduction ? "" : ".sandbox"}.midtrans.com/snap/snap.js?client-key=${encodeURIComponent(clientKey)}`;
+    script.async = true;
+  }
+  midtransSnapPromise = new Promise((resolve, reject) => {
+    script.addEventListener("load", () => {
+      if (window.snap) resolve(window.snap);
+      else {
+        midtransSnapPromise = null;
+        script.remove();
+        reject(new Error("Checkout Midtrans gagal dimuat."));
+      }
+    }, { once: true });
+    script.addEventListener("error", () => {
+      midtransSnapPromise = null;
+      script.remove();
+      reject(new Error("Checkout Midtrans gagal dimuat."));
+    }, { once: true });
+    if (isNewScript) document.body.appendChild(script);
+  });
+  return midtransSnapPromise;
 }
 
 export default function ActivityDetail() {
@@ -73,7 +105,38 @@ export default function ActivityDetail() {
     event.preventDefault();
     setMessage("");
     if (path === "donation") {
-      setMessage("Pembayaran belum tersedia. Silakan pilih Jalur Relawan Murni untuk mendaftar.");
+      if (user?.role !== "volunteer") {
+        navigate("/login", { state: { from: location } });
+        return;
+      }
+
+      setSubmitting(true);
+      setError("");
+      try {
+        const { data } = await api.post("/payments", { activityId: id, packageId });
+        const snap = await loadMidtransSnap(data.clientKey, data.isProduction);
+        snap.pay(data.snapToken, {
+          onSuccess: () => {
+            setMessage("Pembayaran selesai di Midtrans. Status akhir akan dikonfirmasi melalui notifikasi.");
+            setSubmitting(false);
+          },
+          onPending: () => {
+            setMessage("Pembayaran menunggu konfirmasi di Midtrans.");
+            setSubmitting(false);
+          },
+          onError: () => {
+            setError("Pembayaran gagal diproses oleh Midtrans. Silakan coba lagi.");
+            setSubmitting(false);
+          },
+          onClose: () => {
+            setMessage("Checkout ditutup. Status pembayaran dapat diperiksa kembali nanti.");
+            setSubmitting(false);
+          }
+        });
+      } catch (requestError) {
+        setError(requestError.response ? getErrorMessage(requestError) : requestError.message);
+        setSubmitting(false);
+      }
       return;
     }
     if (user?.role !== "volunteer") {
@@ -165,7 +228,7 @@ export default function ActivityDetail() {
           <h2>Pilih Jalur Keikutsertaan</h2>
           <p className="activity-join-intro">Pilih cara berkontribusi yang paling sesuai untukmu.</p>
           {error && <Notice message={error} />}
-          {message && <Notice message={message} success={path === "volunteer" && message.startsWith("Pendaftaran berhasil")} />}
+          {message && <Notice message={message} success={message.startsWith("Pendaftaran berhasil") || message.startsWith("Pembayaran selesai")} />}
 
           <form onSubmit={joinActivity}>
             <label className={`activity-path-option${path === "volunteer" ? " is-selected" : ""}`}>
@@ -193,9 +256,9 @@ export default function ActivityDetail() {
               <textarea value={note} onChange={(event) => setNote(event.target.value)} rows="3" placeholder="Ceritakan motivasimu" />
             </label>}
             <button className="activity-join-submit" type="submit" disabled={submitting}>
-              {submitting ? "Mengirim pendaftaran…" : path === "donation" ? "Lanjut ke Pembayaran" : "Ikut Beraksi Sekarang"}
+              {submitting ? path === "donation" ? "Menyiapkan pembayaran…" : "Mengirim pendaftaran…" : path === "donation" ? "Lanjut ke Pembayaran" : "Ikut Beraksi Sekarang"}
             </button>
-            {path === "donation" && <small className="activity-payment-note">Pembayaran belum terhubung; belum ada transaksi yang akan diproses.</small>}
+            {path === "donation" && <small className="activity-payment-note">Pembayaran diproses dengan aman melalui Midtrans.</small>}
           </form>
         </aside>
       </div>
