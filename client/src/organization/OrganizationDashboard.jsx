@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Link, useOutletContext } from "react-router-dom";
-import { Building2, Clock3, Search, TrendingUp, Users } from "lucide-react";
+import { Building2, Clock3, HeartHandshake, Search, TrendingUp, Users } from "lucide-react";
 import api, { getErrorMessage } from "../api";
 import HeroSection from "../components/HeroSection";
 import ActivityFormModal from "./ActivityFormModal";
@@ -11,6 +11,10 @@ const formatDate = (date) => new Intl.DateTimeFormat("id-ID", {
   dateStyle: "long",
   timeStyle: "short"
 }).format(new Date(date));
+
+function formatRp(amount) {
+  return `Rp${Number(amount || 0).toLocaleString("id-ID")}`;
+}
 
 export default function OrganizationDashboard() {
   const { canManagePublishedActivities } = useOutletContext();
@@ -137,6 +141,7 @@ export default function OrganizationDashboard() {
       <article><span><Users size={16} /> Relawan aktif</span><strong>{statsLoading ? "—" : stats?.totalVolunteers ?? 0}</strong><small>Relawan terdaftar pada kegiatanmu</small></article>
       <article><span><Clock3 size={16} /> Jam kontribusi</span><strong>{statsLoading ? "—" : stats?.totalHours ?? 0}</strong><small>Jam kehadiran yang sudah dicatat</small></article>
       <article><span><TrendingUp size={16} /> Pertumbuhan dampak</span><strong>{statsLoading ? "—" : `${stats?.impactGrowth > 0 ? "+" : ""}${stats?.impactGrowth ?? 0}%`}</strong><small>Dibanding bulan sebelumnya</small></article>
+      <article><span><HeartHandshake size={16} /> Donasi terkumpul</span><strong>{statsLoading ? "—" : formatRp(stats?.totalDonations ?? 0)}</strong><small>{statsLoading ? "…" : `${stats?.donationCount ?? 0} transaksi lunas`}</small></article>
     </div>
     <div className="organization-list-heading">
       <div><h2>Kegiatan saya</h2><span>{loading ? "Memuat..." : `${visibleActivities.length} dari ${activities.length} kegiatan`}</span></div>
