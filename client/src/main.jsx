@@ -6,6 +6,7 @@ import { AuthProvider } from "@/AuthContext";
 import SmoothScroll from "./components/SmoothScroll";
 import App from "./App";
 import "./styles.css";
+import "./donation-impact.css";
 import "./activity-detail-fix.css";
 import "./nav-motion.css";
 

@@ -10,6 +10,7 @@ import adminRoutes from "./routes/adminRoutes.js";
 import volunteerRoutes from "./routes/volunteerRoutes.js";
 import leaderboardRoutes from "./routes/leaderboards.js";
 import orgRoutes from "./routes/orgRoutes.js";
+import paymentRoutes from "./routes/payments.js";
 import { errorHandler, notFound } from "./middleware/errors.js";
 
 const app = express();
@@ -28,6 +29,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/v1/admin", adminRoutes);
 app.use("/api/v1/volunteers", volunteerRoutes);
 app.use("/api/v1/organizations", orgRoutes);
+app.use("/api/payments", paymentRoutes);
 app.use(notFound);
 app.use(errorHandler);
 
