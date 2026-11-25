@@ -18,7 +18,7 @@ export default function OrganizationLayout() {
     <header className="site-header">
       <div className="container nav-wrap">
         <Link className="brand" to="/dashboard/organisasi">
-          <span className="brand-mark">K</span> Koordin<span>Aksi</span>
+          <img className="brand-logo" src="/logokoordinaski.png" alt="" /> Koordin<span>Aksi</span>
         </Link>
         <span className="organization-header-label">Portal organisasi</span>
         <div className="nav-actions">
@@ -56,7 +56,7 @@ export default function OrganizationLayout() {
       </main>
     </div>
     <footer className="footer"><div className="container footer-row">
-      <Link className="brand" to="/dashboard/organisasi"><span className="brand-mark">K</span> Koordin<span>Aksi</span></Link>
+      <Link className="brand" to="/dashboard/organisasi"><img className="brand-logo" src="/logokoordinaski.png" alt="" /> Koordin<span>Aksi</span></Link>
       <p>Ruang bertemu untuk setiap niat baik.</p>
       <small>© {new Date().getFullYear()} KoordinAksi</small>
     </div></footer>
