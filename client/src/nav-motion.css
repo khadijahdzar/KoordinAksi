@@ -165,9 +165,30 @@
   color: var(--green);
 }
 
-/* Offset content under fixed floating pill */
+/*
+ * Default offset under fixed floating pill.
+ * When the first block is a hero (or full-bleed register page),
+ * drop the white gap so the image runs edge-to-edge under the pill.
+ */
 .main-content {
   padding-top: 84px;
+}
+
+.main-content:has(> .hero-section:first-child),
+.main-content:has(> .home-hero:first-child),
+.main-content:has(> .registration-choice-page:first-child),
+.main-content:has(> .auth-layout:first-child) {
+  padding-top: 0;
+}
+
+/* Hero image full-bleed under the floating pill; keep text clear of the bar */
+.main-content > .hero-section:first-child,
+.main-content > .home-hero:first-child {
+  margin-top: 0;
+  padding-top: calc(84px + 28px);
+  min-height: max(510px, 72vh);
+  background-position: center top;
+  background-size: cover;
 }
 
 /* ===== Mobile bottom tab bar ===== */
@@ -200,6 +221,19 @@
   .main-content {
     padding-top: 72px;
     padding-bottom: 88px;
+  }
+
+  .main-content:has(> .hero-section:first-child),
+  .main-content:has(> .home-hero:first-child),
+  .main-content:has(> .registration-choice-page:first-child),
+  .main-content:has(> .auth-layout:first-child) {
+    padding-top: 0;
+  }
+
+  .main-content > .hero-section:first-child,
+  .main-content > .home-hero:first-child {
+    padding-top: calc(72px + 20px);
+    min-height: max(440px, 68vh);
   }
 
   .bottom-tab-bar {
