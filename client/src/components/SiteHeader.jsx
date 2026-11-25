@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
-import { Compass, Home, Menu, Newspaper, Users, X } from "lucide-react";
+import { Compass, Home, Newspaper, Users } from "lucide-react";
+import { motion } from "motion/react";
 import { getDashboardPath, useAuth } from "@/AuthContext";
 
 const publicLinks = [
@@ -15,7 +16,6 @@ export default function SiteHeader() {
   const navigate = useNavigate();
   const location = useLocation();
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [avatarError, setAvatarError] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const profileMenuRef = useRef(null);
@@ -25,7 +25,6 @@ export default function SiteHeader() {
 
   useEffect(() => {
     setProfileMenuOpen(false);
-    setMobileMenuOpen(false);
   }, [location.pathname]);
 
   useEffect(() => {
@@ -33,12 +32,22 @@ export default function SiteHeader() {
   }, [user?.avatarUrl]);
 
   useEffect(() => {
-    function onScroll() {
-      setScrolled(window.scrollY > 12);
+    function applyScroll(y) {
+      setScrolled(y > 12);
     }
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    function onLenisScroll(event) {
+      applyScroll(event.detail?.scroll ?? 0);
+    }
+    function onWindowScroll() {
+      applyScroll(window.scrollY || 0);
+    }
+    applyScroll(window.scrollY || 0);
+    window.addEventListener("lenis-scroll", onLenisScroll);
+    window.addEventListener("scroll", onWindowScroll, { passive: true });
+    return () => {
+      window.removeEventListener("lenis-scroll", onLenisScroll);
+      window.removeEventListener("scroll", onWindowScroll);
+    };
   }, []);
 
   useEffect(() => {
@@ -46,10 +55,7 @@ export default function SiteHeader() {
       if (profileMenuRef.current && !profileMenuRef.current.contains(event.target)) setProfileMenuOpen(false);
     }
     function handleKeyDown(event) {
-      if (event.key === "Escape") {
-        setProfileMenuOpen(false);
-        setMobileMenuOpen(false);
-      }
+      if (event.key === "Escape") setProfileMenuOpen(false);
     }
     document.addEventListener("pointerdown", handlePointerDown);
     document.addEventListener("keydown", handleKeyDown);
@@ -59,16 +65,10 @@ export default function SiteHeader() {
     };
   }, []);
 
-  useEffect(() => {
-    document.body.classList.toggle("mobile-menu-open", mobileMenuOpen);
-    return () => document.body.classList.remove("mobile-menu-open");
-  }, [mobileMenuOpen]);
-
   return (
     <>
-      {/* Desktop / tablet floating pill navbar */}
       <header className={`site-header floating-pill-header${scrolled ? " is-scrolled" : ""}`}>
-        <div className="floating-pill">
+        <motion.div className="floating-pill" initial={false} animate={{ y: 0 }} whileHover={{ y: -1 }} transition={{ duration: 0.2 }}>
           <Link className="brand" to="/">
             <img className="brand-logo" src="/logokoordinaski.png" alt="" />
             <span className="brand-text">Koordin<span>Aksi</span></span>
@@ -128,24 +128,10 @@ export default function SiteHeader() {
                 <Link className="button button-small" to="/register">Bergabung</Link>
               </>
             )}
-
-            <button
-              type="button"
-              className="mobile-nav-toggle"
-              aria-label={mobileMenuOpen ? "Tutup menu" : "Buka menu"}
-              aria-expanded={mobileMenuOpen}
-              onClick={() => {
-                setMobileMenuOpen((open) => !open);
-                setProfileMenuOpen(false);
-              }}
-            >
-              {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
-            </button>
           </div>
-        </div>
+        </motion.div>
       </header>
 
-      {/* Mobile bottom tab bar */}
       <nav className="bottom-tab-bar" aria-label="Navigasi mobile">
         {publicLinks.map(({ to, label, icon: Icon, end }) => (
           <NavLink key={to} to={to} end={Boolean(end)} className="bottom-tab-item">
