@@ -109,6 +109,26 @@ router.get("/status", (req, res) => {
   return res.json({ ready, isProduction });
 });
 
+/** Publik: total donasi lunas untuk satu kegiatan (detail page) */
+router.get("/activity/:activityId", async (req, res, next) => {
+  try {
+    if (!mongoose.isValidObjectId(req.params.activityId)) {
+      return res.status(400).json({ message: "ID kegiatan tidak valid." });
+    }
+    const activityObjectId = new mongoose.Types.ObjectId(req.params.activityId);
+    const [row] = await Payment.aggregate([
+      { $match: { activity: activityObjectId, status: "paid" } },
+      { $group: { _id: null, totalAmount: { $sum: "$amount" }, count: { $sum: 1 } } }
+    ]);
+    return res.json({
+      totalAmount: row?.totalAmount || 0,
+      count: row?.count || 0
+    });
+  } catch (error) {
+    return next(error);
+  }
+});
+
 router.post("/", validate(createPaymentSchema), protect, authorize("volunteer"), async (req, res, next) => {
   try {
     const { serverKey, clientKey, isProduction, ready } = midtransConfig();
