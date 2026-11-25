@@ -81,6 +81,8 @@ export default function ActivityDetail() {
   const [path, setPath] = useState("volunteer");
   const [packageId, setPackageId] = useState("regular");
   const [submitting, setSubmitting] = useState(false);
+  // null = belum dicek; true = gateway siap; false = endpoint belum tersedia
+  const [paymentGatewayReady, setPaymentGatewayReady] = useState(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -110,10 +112,16 @@ export default function ActivityDetail() {
         return;
       }
 
+      if (paymentGatewayReady === false) {
+        setMessage("Pembayaran belum tersedia. Silakan pilih Jalur Relawan Murni untuk mendaftar, atau coba lagi nanti.");
+        return;
+      }
+
       setSubmitting(true);
       setError("");
       try {
         const { data } = await api.post("/payments", { activityId: id, packageId });
+        setPaymentGatewayReady(true);
         const snap = await loadMidtransSnap(data.clientKey, data.isProduction);
         snap.pay(data.snapToken, {
           onSuccess: () => {
@@ -134,7 +142,15 @@ export default function ActivityDetail() {
           }
         });
       } catch (requestError) {
-        setError(requestError.response ? getErrorMessage(requestError) : requestError.message);
+        const status = requestError.response?.status;
+        // Gateway belum siap: endpoint /payments belum ada atau dinonaktifkan
+        if (!requestError.response || status === 404 || status === 501 || status === 503) {
+          setPaymentGatewayReady(false);
+          setMessage("Pembayaran belum tersedia. Silakan pilih Jalur Relawan Murni untuk mendaftar, atau coba lagi nanti.");
+          setError("");
+        } else {
+          setError(getErrorMessage(requestError));
+        }
         setSubmitting(false);
       }
       return;
@@ -228,7 +244,7 @@ export default function ActivityDetail() {
           <h2>Pilih Jalur Keikutsertaan</h2>
           <p className="activity-join-intro">Pilih cara berkontribusi yang paling sesuai untukmu.</p>
           {error && <Notice message={error} />}
-          {message && <Notice message={message} success={message.startsWith("Pendaftaran berhasil") || message.startsWith("Pembayaran selesai")} />}
+          {message && <Notice message={message} success={message.startsWith("Pendaftaran berhasil") || message.startsWith("Pembayaran selesai") || message.startsWith("Pembayaran menunggu")} />}
 
           <form onSubmit={joinActivity}>
             <label className={`activity-path-option${path === "volunteer" ? " is-selected" : ""}`}>
@@ -255,10 +271,20 @@ export default function ActivityDetail() {
               Pesan untuk penyelenggara (opsional)
               <textarea value={note} onChange={(event) => setNote(event.target.value)} rows="3" placeholder="Ceritakan motivasimu" />
             </label>}
-            <button className="activity-join-submit" type="submit" disabled={submitting}>
-              {submitting ? path === "donation" ? "Menyiapkan pembayaran…" : "Mengirim pendaftaran…" : path === "donation" ? "Lanjut ke Pembayaran" : "Ikut Beraksi Sekarang"}
+            <button className="activity-join-submit" type="submit" disabled={submitting || (path === "donation" && paymentGatewayReady === false)}>
+              {submitting
+                ? (path === "donation" ? "Menyiapkan pembayaran…" : "Mengirim pendaftaran…")
+                : path === "donation"
+                  ? (paymentGatewayReady === false ? "Pembayaran belum tersedia" : "Lanjut ke Pembayaran")
+                  : "Ikut Beraksi Sekarang"}
             </button>
-            {path === "donation" && <small className="activity-payment-note">Pembayaran diproses dengan aman melalui Midtrans.</small>}
+            {path === "donation" && (
+              <small className="activity-payment-note">
+                {paymentGatewayReady === false
+                  ? "Gateway pembayaran belum aktif. Pilih Jalur Relawan Murni atau coba lagi nanti."
+                  : "Pembayaran diproses dengan aman melalui Midtrans Snap setelah gateway diaktifkan."}
+              </small>
+            )}
           </form>
         </aside>
       </div>

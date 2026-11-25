@@ -27,6 +27,9 @@
 # ----------------------------------------------------------
 /vendor/
 /node_modules/
+**/node_modules/
+client/node_modules/
+server/node_modules/
 
 # ----------------------------------------------------------
 # 3. BUILD & CACHE LARAVEL
@@ -46,41 +49,48 @@
 # ----------------------------------------------------------
 # 4. LOG & CACHE TEST
 # ----------------------------------------------------------
-*.log
+/storage/logs
+/storage/framework/cache
+/storage/framework/sessions
+/storage/framework/views
 /storage/pail
-/.phpunit.cache
 .phpunit.result.cache
+.phpunit.cache
 
 # ----------------------------------------------------------
-# 5. IDE & EDITOR
+# 5. NODE / FRONTEND
 # ----------------------------------------------------------
-/.idea
-/.vscode
-/.zed
-/.fleet
-/.nova
-/.codex
-/.cursor/
-/.phpactor.json
-_ide_helper.php
-.claude/settings.local.json
-
-# ----------------------------------------------------------
-# 6. FILE OS (Windows / macOS / Linux)
-# ----------------------------------------------------------
+/npm-debug.log*
+/yarn-error.log*
+/pnpm-debug.log*
+/.pnp
+.pnp.js
 .DS_Store
+
+# Vite & build artifacts
+/dist/
+client/dist/
+
+# ----------------------------------------------------------
+# 6. IDE & OS
+# ----------------------------------------------------------
+.idea/
+.vscode/
+*.swp
+*.swo
 Thumbs.db
-desktop.ini
+.DS_Store
 
 # ----------------------------------------------------------
-# 7. DEV ENVIRONMENT
+# 7. LARAVEL / PHP EXTRA
 # ----------------------------------------------------------
-Homestead.json
-Homestead.yaml
+/Homestead.json
+/Homestead.yaml
+/.vagrant
 
-# MERN application
-/server/.env
-/client/.env
-/client/dist/
+# ----------------------------------------------------------
+# 8. COVERAGE & TEMP
+# ----------------------------------------------------------
 /coverage/
-npm-debug.log*
+*.tmp
+*.temp
