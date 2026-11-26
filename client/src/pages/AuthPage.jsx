@@ -17,7 +17,8 @@ function AuthPage({ mode }) {
   const [acceptedGoogleTerms, setAcceptedGoogleTerms] = useState(false);
   if (isRegister && requestedRole !== "volunteer" && requestedRole !== "organization") return <Navigate to="/register" replace />;
   function navigateAfterAuth(user) {
-    const requestedPath = location.state?.from?.pathname;
+    const from = location.state?.from;
+    const requestedPath = typeof from === "string" ? from : from?.pathname;
     const canReturnToRequestedPath = requestedPath?.startsWith("/") &&
       !requestedPath.startsWith("//") &&
       (!requestedPath.startsWith("/admin") || user.role === "admin");
@@ -48,6 +49,7 @@ function AuthPage({ mode }) {
     }
   }
   return <section className="auth-layout"><div className="auth-aside"><span className="eyebrow">KoordinAksi</span><h1>{isRegister ? "Kebaikan dimulai dari sini." : "Senang melihatmu kembali."}</h1><p>{isRegister ? "Buat akun dan temukan cara sederhana untuk membuat perubahan." : "Lanjutkan perjalananmu dalam membuat dampak yang berarti."}</p><div className="auth-decoration">✳</div></div><div className="auth-form-wrap"><form className="auth-form" onSubmit={submit}><span className="eyebrow">{isRegister ? "Buat akun baru" : "Selamat datang kembali"}</span><h2>{isRegister ? "Bergabung dengan kami" : "Masuk ke akunmu"}</h2><p>{isRegister ? "Isi informasi berikut untuk memulai." : "Masukkan email dan password untuk melanjutkan."}</p>
+      {location.state?.message && !error && <Notice message={location.state.message} />}
       {error && <Notice message={error} />}
       {isRegister && <><label>Nama lengkap<input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Nama kamu" /></label><label>Daftar sebagai<select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}><option value="volunteer">Relawan</option><option value="organization">Organisasi</option></select></label>{form.role === "organization" && <label>Nama organisasi<input required value={form.organizationName} onChange={(e) => setForm({ ...form, organizationName: e.target.value })} placeholder="Nama organisasi sosial" /></label>}</>}
       <label>Email<input required type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="nama@email.com" /></label><label>Password<input required minLength="8" type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="Minimal 8 karakter" /></label><button className="button full-width" disabled={busy}>{busy ? "Memproses..." : isRegister ? "Buat akun" : "Masuk"} <span>→</span></button>

@@ -4,6 +4,7 @@ import { Link, useParams } from "react-router-dom";
 import api, { getErrorMessage } from "../api";
 import { getOrganizationActivitiesUrl } from "./organizationUtils";
 import { useFollowOrganization } from "../hooks/useFollowOrganization";
+import "../organization-profile-fix.css";
 
 export default function OrganizationProfile() {
   const { id } = useParams();
