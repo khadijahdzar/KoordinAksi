@@ -338,6 +338,7 @@ const volunteers = [
 ];
 
 function assertSafeTarget() {
+
   if (!process.env.MONGO_URI) throw new Error("MONGO_URI is not configured.");
   if (process.env.NODE_ENV === "production") {
     throw new Error("Public directory seed data can only be loaded outside production.");
