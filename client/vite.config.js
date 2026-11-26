@@ -10,5 +10,14 @@ export default defineConfig({
     alias: {
       "@": srcDirectory
     }
+  },
+  preview: {
+    // SPA fallback for vite preview / some static hosts
+    port: 4173
+  },
+  build: {
+    outDir: "dist",
+    assetsDir: "assets",
+    sourcemap: false
   }
 });
