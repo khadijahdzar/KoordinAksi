@@ -18,7 +18,8 @@ const userSchema = new mongoose.Schema({
   city: { type: String, trim: true, maxlength: 100 },
   interests: { type: [String], default: [] },
   acceptedTerms: { type: Boolean, default: false },
-  organization: { type: mongoose.Schema.Types.ObjectId, ref: "Organization" }
+  organization: { type: mongoose.Schema.Types.ObjectId, ref: "Organization" },
+  followedOrganizations: [{ type: mongoose.Schema.Types.ObjectId, ref: "Organization" }]
 }, { timestamps: true });
 
 userSchema.pre("save", async function hashPassword() {
