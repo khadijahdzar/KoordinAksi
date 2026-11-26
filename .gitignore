@@ -1,96 +1,85 @@
 # ==========================================================
 #  KOORDINAKSI — .gitignore
-#  File sensitif & folder besar tetap aman di lokal,
-#  aman untuk di-push ke GitHub.
+#  Secrets & artefak lokal JANGAN pernah di-push ke GitHub.
 # ==========================================================
 
-# ----------------------------------------------------------
-# 1. SECRETS & FILE SENSITIF (JANGAN PERNAH DI-PUSH)
-# ----------------------------------------------------------
-/.env
-/.env.*
-!/.env.example
+# --- Secrets & environment (semua varian) ---
+.env
+.env.*
+!.env.example
+!**/.env.example
+**/.env
+**/.env.*
+!**/.env.example
+server/.env
+client/.env
+client/.env.local
+client/.env.production
+client/.env.development
 
-# Composer auth (API token / kredensial repo privat)
-/auth.json
-
-# Kunci aplikasi & OAuth (APP_KEY, passport, dll.)
-/storage/*.key
-
-# Jika file di bawah ini berisi token/API key, hapus tanda komentar:
-# /.mcp.json
-# /.npmrc
-
-# ----------------------------------------------------------
-# 2. FOLDER BESAR — di-install ulang via:
-#    composer install  &  npm install
-# ----------------------------------------------------------
-/vendor/
-/node_modules/
+# --- Dependencies ---
+node_modules/
 **/node_modules/
 client/node_modules/
 server/node_modules/
-
-# ----------------------------------------------------------
-# 3. BUILD & CACHE LARAVEL
-# ----------------------------------------------------------
-/bootstrap/cache/*.php
-/public/build
-/public/hot
-/public/storage
-/public/fonts-manifest.dev.json
-
-# Database SQLite lokal (berisi data asli, bukan sample)
-*.sqlite
-*.sqlite-journal
-*.sqlite-wal
-*.sqlite-shm
-
-# ----------------------------------------------------------
-# 4. LOG & CACHE TEST
-# ----------------------------------------------------------
-/storage/logs
-/storage/framework/cache
-/storage/framework/sessions
-/storage/framework/views
-/storage/pail
-.phpunit.result.cache
-.phpunit.cache
-
-# ----------------------------------------------------------
-# 5. NODE / FRONTEND
-# ----------------------------------------------------------
-/npm-debug.log*
-/yarn-error.log*
-/pnpm-debug.log*
-/.pnp
+.pnp
 .pnp.js
-.DS_Store
 
-# Vite & build artifacts
-/dist/
+# --- Build output ---
+dist/
+build/
 client/dist/
+server/dist/
+.vite/
+**/.vite/
 
-# ----------------------------------------------------------
-# 6. IDE & OS
-# ----------------------------------------------------------
+# --- Uploads & media lokal (ephemeral di Railway) ---
+uploads/
+**/uploads/
+!**/uploads/.gitkeep
+
+# --- Logs ---
+logs/
+*.log
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# --- Database dumps / exports ---
+*.sqlite
+*.sqlite-*
+*.dump
+*.sql
+*.csv
+*.tsv
+*.gz
+*.zip
+*.rar
+!package-lock.json
+
+# --- OS / IDE ---
+.DS_Store
+Thumbs.db
 .idea/
 .vscode/
 *.swp
 *.swo
-Thumbs.db
-.DS_Store
+*~
 
-# ----------------------------------------------------------
-# 7. LARAVEL / PHP EXTRA
-# ----------------------------------------------------------
-/Homestead.json
-/Homestead.yaml
-/.vagrant
-
-# ----------------------------------------------------------
-# 8. COVERAGE & TEMP
-# ----------------------------------------------------------
-/coverage/
+# --- Test / coverage / temp ---
+coverage/
+.phpunit.result.cache
+.phpunit.cache
 *.tmp
 *.temp
+*.bak
+*.backup
+
+# --- Auth / keys ---
+auth.json
+*.pem
+*.key
+
+# --- Optional local tooling ---
+.mcp.json
+.npmrc
