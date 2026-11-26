@@ -3,14 +3,14 @@ import { ArrowLeft, BadgeCheck, CalendarDays, Check, Heart, MapPin, UsersRound }
 import { Link, useParams } from "react-router-dom";
 import api, { getErrorMessage } from "../api";
 import { getOrganizationActivitiesUrl } from "./organizationUtils";
+import { useFollowOrganization } from "../hooks/useFollowOrganization";
 
 export default function OrganizationProfile() {
   const { id } = useParams();
   const [organization, setOrganization] = useState(null);
   const [error, setError] = useState("");
-  const [followed, setFollowed] = useState(() =>
-    (localStorage.getItem("koordinaksi_followed_organizations") || "").split(",").includes(id)
-  );
+  const { isFollowed, toggleFollow, busyId } = useFollowOrganization();
+  const followed = isFollowed(id);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -23,21 +23,6 @@ export default function OrganizationProfile() {
       });
     return () => controller.abort();
   }, [id]);
-
-  useEffect(() => {
-    setFollowed((localStorage.getItem("koordinaksi_followed_organizations") || "").split(",").includes(id));
-  }, [id]);
-
-  function toggleFollow() {
-    setFollowed((current) => {
-      const followedIds = (localStorage.getItem("koordinaksi_followed_organizations") || "").split(",").filter(Boolean);
-      const next = current
-        ? followedIds.filter((followedId) => followedId !== id)
-        : [...new Set([...followedIds, id])];
-      localStorage.setItem("koordinaksi_followed_organizations", next.join(","));
-      return !current;
-    });
-  }
 
   if (error) return <main className="container organization-profile-state" role="alert">
     <p>{error}</p><Link className="button" to="/organisasi">Kembali ke organisasi</Link>
@@ -61,9 +46,15 @@ export default function OrganizationProfile() {
           <p>{organization.focusCategory || "Organisasi sosial"} <span aria-hidden="true">·</span> <MapPin size={14} /> {organization.address || "Indonesia"}</p>
         </div>
         <div className="organization-profile-actions">
-          <button type="button" className={`organization-follow-button${followed ? " is-followed" : ""}`}
-            aria-pressed={followed} onClick={toggleFollow}>
-            {followed ? <Check size={14} /> : <Heart size={14} />}{followed ? "Diikuti" : "Ikuti"}
+          <button
+            type="button"
+            className={`organization-follow-button${followed ? " is-followed" : ""}`}
+            aria-pressed={followed}
+            disabled={busyId === String(id)}
+            onClick={() => toggleFollow(id, { from: `/organisasi/${id}` })}
+          >
+            {followed ? <Check size={14} /> : <Heart size={14} />}
+            {followed ? "Diikuti" : "Ikuti"}
           </button>
           <Link className="organization-active-actions-button" to={getOrganizationActivitiesUrl(organization)}>
             Lihat aksi <span className="organization-profile-action-count">({Number(organization.stats?.activeActionsCount || 0)})</span>
