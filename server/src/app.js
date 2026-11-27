@@ -18,7 +18,10 @@ import paymentRoutes from "./routes/payments.js";
 import { errorHandler, notFound } from "./middleware/errors.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const express = require('express');
 const app = express();
+
+app.set('trust proxy', 1);
 
 function normalizeOrigin(value) {
   if (!value || typeof value !== "string") return null;
