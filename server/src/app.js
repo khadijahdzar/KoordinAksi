@@ -38,7 +38,7 @@ const configuredOrigins = [
 
 const allowedOrigins = configuredOrigins.length
   ? configuredOrigins
-  : ["http://localhost:5173"];
+  : ["https://koordinaksi.netlify.app"];
 
 app.use(helmet({
   contentSecurityPolicy: false,
