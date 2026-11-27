@@ -256,7 +256,8 @@
 
   .main-content {
     padding-top: 0;
-    padding-bottom: 88px;
+    /* No padding-bottom here — footer already clears the tab bar.
+       Extra padding on main created a white gap above the dark footer. */
   }
 
   .hero-section,
