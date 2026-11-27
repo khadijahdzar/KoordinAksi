@@ -1,7 +1,10 @@
 import axios from "axios";
 
+const configuredApiUrl = import.meta.env.VITE_API_URL || "https://koordin-aksi.vercel.app";
+const apiBaseUrl = `${configuredApiUrl.trim().replace(/\/+$/, "").replace(/(?:\/api)+$/i, "")}/api`;
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "https://koordin-aksi.vercel.app",
+  baseURL: apiBaseUrl,
   headers: { "Content-Type": "application/json" }
 });
 

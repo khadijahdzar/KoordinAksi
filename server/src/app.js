@@ -1,3 +1,4 @@
+import "./config/loadEnv.js";
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
@@ -5,6 +6,7 @@ import rateLimit from "express-rate-limit";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
+import { connectDB } from "./config/db.js";
 import authRoutes from "./routes/auth.js";
 import activityRoutes from "./routes/activities.js";
 import registrationRoutes from "./routes/registrations.js";
@@ -28,6 +30,7 @@ function normalizeOrigin(value) {
 }
 
 const configuredOrigins = [
+  "https://koordinaksi.netlify.app",
   process.env.CLIENT_URL,
   process.env.CLIENT_URLS
 ]
@@ -36,9 +39,14 @@ const configuredOrigins = [
   .map(normalizeOrigin)
   .filter(Boolean);
 
-const allowedOrigins = configuredOrigins.length
-  ? configuredOrigins
-  : ["https://koordinaksi.netlify.app"];
+const allowedOrigins = [
+  ...new Set([
+    ...configuredOrigins,
+    ...(process.env.NODE_ENV === "production"
+      ? []
+      : ["http://localhost:5173", "http://127.0.0.1:5173"])
+  ])
+];
 
 app.use(helmet({
   contentSecurityPolicy: false,
@@ -58,6 +66,25 @@ app.use(cors({
 app.use(express.json({ limit: "1mb" }));
 app.use("/api/auth", rateLimit({ windowMs: 15 * 60 * 1000, limit: 100 }));
 app.get("/api/health", (req, res) => res.json({ status: "ok" }));
+app.use([
+  "/api/auth",
+  "/api/activities",
+  "/api/registrations",
+  "/api/organizations",
+  "/api/leaderboards",
+  "/api/admin",
+  "/api/v1/admin",
+  "/api/v1/volunteers",
+  "/api/v1/organizations",
+  "/api/payments"
+], async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
 app.use("/api/auth", authRoutes);
 app.use("/api/activities", activityRoutes);
 app.use("/api/registrations", registrationRoutes);

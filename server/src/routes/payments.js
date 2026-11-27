@@ -165,7 +165,11 @@ router.post("/", validate(createPaymentSchema), protect, authorize("volunteer"),
         transaction_details: { order_id: orderId, gross_amount: pack.amount },
         item_details: [{ id: pack.id, price: pack.amount, quantity: 1, name: `Donasi ${pack.label}`.slice(0, 50) }],
         customer_details: { first_name: (req.user.name || "Relawan").slice(0, 50), email: req.user.email },
-        callbacks: { finish: `${process.env.CLIENT_URL || "http://localhost:5173"}/kegiatan/${activity._id}` }
+        callbacks: {
+          finish: `${(process.env.CLIENT_URL || (process.env.NODE_ENV === "production"
+            ? "https://koordinaksi.netlify.app"
+            : "http://localhost:5173")).replace(/\/+$/, "")}/kegiatan/${activity._id}`
+        }
       })
     });
 

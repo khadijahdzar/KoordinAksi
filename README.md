@@ -65,6 +65,13 @@ Seeder menambahkan organisasi, kegiatan mendatang, relawan, serta catatan kegiat
 
 Untuk menjalankan frontend terpisah, opsional buat `client/.env` dan isi `VITE_API_URL=http://localhost:5000/api`.
 
+### Konfigurasi production (Netlify dan Vercel)
+
+- Netlify (`client/` sebagai base directory): set `VITE_API_URL` ke `https://koordin-aksi.vercel.app/api`, lalu build ulang/deploy. Akhiran `/api` opsional karena client menormalkan base URL.
+- Vercel (`server/` sebagai root directory): set `MONGO_URI` ke MongoDB Atlas, `JWT_SECRET` ke secret acak yang kuat, `NODE_ENV=production`, dan `CLIENT_URL=https://koordinaksi.netlify.app`. Untuk domain/preview frontend tambahan, tambahkan origin yang dipisahkan koma pada `CLIENT_URLS`.
+- Jika fitur pembayaran Midtrans dipakai, set `MIDTRANS_SERVER_KEY`, `MIDTRANS_CLIENT_KEY`, dan `MIDTRANS_IS_PRODUCTION` sesuai environment.
+- Pastikan MongoDB mendukung replica set untuk transaksi pendaftaran/pembayaran. Jangan set `VITE_API_URL` ke URL frontend atau menambahkan `/api` dua kali.
+
 ### Transaksi dan kapasitas pendaftaran
 
 Pendaftaran relawan menggunakan transaksi MongoDB dan penghitung `activeRegistrations` pada setiap kegiatan. Transaksi memerlukan MongoDB Atlas atau MongoDB lokal yang dikonfigurasi sebagai replica set; server standalone tidak mendukung transaksi. Untuk database yang sudah berisi kegiatan/pendaftaran, hentikan backend lalu jalankan migrasi satu kali sebelum menyalakannya kembali:
