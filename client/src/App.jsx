@@ -66,7 +66,7 @@ function Footer() {
       </section>
       <section className="footer-column footer-social">
         <h2>Ikuti Kami</h2>
-        <a href="https://instagram.com/ohh_deyyemm" target="_blank" rel="noreferrer"><Instagram size={17} />@ohh_deyyemm</a>
+        <a href="https://instagram.com/imkdijah" target="_blank" rel="noreferrer"><Instagram size={17} />@imkdijah</a>
         <a href="https://www.linkedin.com/in/khadijah-dzar-990355405" target="_blank" rel="noreferrer"><Linkedin size={17} /> Khadijah Dzar</a>
         </section>
     </div>
